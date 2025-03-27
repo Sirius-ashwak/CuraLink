@@ -1,18 +1,35 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { format } from "date-fns";
+import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Types for medicines
 interface Medicine {
@@ -21,10 +38,10 @@ interface Medicine {
   dosage: string;
   quantity: number;
   expiryDate: string;
+  reorderLevel: number;
   prescriptionRequired: boolean;
-  userId: number;
+  category: string;
   createdAt: string;
-  updatedAt: string;
 }
 
 interface MedicineFormData {
@@ -42,6 +59,13 @@ export default function MedicineTracker() {
   
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
+  const [showInfoDialog, setShowInfoDialog] = useState(false);
+  const [medicineInfo, setMedicineInfo] = useState<any>(null);
+  const [isLoadingInfo, setIsLoadingInfo] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [adjustQuantity, setAdjustQuantity] = useState(0);
+  const [showAdjustDialog, setShowAdjustDialog] = useState(false);
   const [formData, setFormData] = useState<MedicineFormData>({
     name: "",
     dosage: "",
@@ -54,131 +78,52 @@ export default function MedicineTracker() {
   const { 
     data: medicines = [], 
     isLoading,
-    isError: isMedicinesError 
-  } = useQuery<Medicine[]>({
+    isError,
+    refetch
+  } = useQuery({
     queryKey: ["/api/medicines"],
     enabled: !!user,
   });
   
   // Show error toast if medicines failed to load
   useEffect(() => {
-    if (isMedicinesError) {
+    if (isError) {
       toast({
         title: "Error",
         description: "Failed to load medicines. Please try again.",
         variant: "destructive",
       });
     }
-  }, [isMedicinesError, toast]);
-
-  // Add medicine mutation
-  const addMedicineMutation = useMutation({
-    mutationFn: (medicineData: MedicineFormData) => 
-      apiRequest("POST", "/api/medicines", medicineData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/medicines"] });
-      toast({
-        title: "Success",
-        description: "Medicine added successfully.",
-      });
-      setShowAddDialog(false);
-      resetForm();
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add medicine. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Update medicine quantity mutation
-  const updateQuantityMutation = useMutation({
-    mutationFn: ({ id, quantity }: { id: number; quantity: number }) => 
-      apiRequest("PATCH", `/api/medicines/${id}`, { quantity }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/medicines"] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update quantity. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Delete medicine mutation
-  const deleteMedicineMutation = useMutation({
-    mutationFn: (id: number) => 
-      apiRequest("DELETE", `/api/medicines/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/medicines"] });
-      toast({
-        title: "Success",
-        description: "Medicine removed successfully.",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to remove medicine. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+  }, [isError, toast]);
   
-  // Filter medicines based on search term and expiry status
-  const filterMedicines = (items: Medicine[], filter: string, searchText: string) => {
-    const now = new Date();
-    const lowercaseSearch = searchText.toLowerCase();
-    
-    return items.filter(medicine => {
-      // Search filter
-      const matchesSearch = medicine.name.toLowerCase().includes(lowercaseSearch) || 
-                            medicine.dosage.toLowerCase().includes(lowercaseSearch);
-      
-      // Status filter
-      const expiryDate = new Date(medicine.expiryDate);
-      const isExpired = expiryDate < now;
-      const isLowStock = medicine.quantity <= 5;
-      
-      switch(filter) {
-        case "all":
-          return matchesSearch;
-        case "expiring-soon":
-          // Within 30 days of expiry
-          const thirtyDaysFromNow = new Date();
-          thirtyDaysFromNow.setDate(now.getDate() + 30);
-          return matchesSearch && (expiryDate <= thirtyDaysFromNow && expiryDate >= now);
-        case "expired":
-          return matchesSearch && isExpired;
-        case "low-stock":
-          return matchesSearch && isLowStock && !isExpired;
-        default:
-          return matchesSearch;
-      }
-    });
+  // Filter medicines based on search term
+  const filteredMedicines = medicines.filter((medicine: Medicine) => 
+    medicine.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    medicine.category.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  // Check if medicine is expiring soon (within 30 days)
+  const isExpiringSoon = (expiryDate: string) => {
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const diffTime = expiry.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 30 && diffDays > 0;
   };
   
-  // Handle input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : type === "number" ? parseFloat(value) : value,
-    }));
+  // Check if medicine is expired
+  const isExpired = (expiryDate: string) => {
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    return expiry < today;
   };
   
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    addMedicineMutation.mutate(formData);
+  // Check if medicine is low on stock
+  const isLowStock = (medicine: Medicine) => {
+    return medicine.quantity <= medicine.reorderLevel;
   };
   
-  // Reset form to defaults
+  // Reset form data
   const resetForm = () => {
     setFormData({
       name: "",
@@ -189,274 +134,576 @@ export default function MedicineTracker() {
     });
   };
   
-  // Update medicine quantity
-  const updateQuantity = (id: number, change: number) => {
-    const medicine = (medicines as Medicine[]).find(m => m.id === id);
-    if (medicine) {
-      const newQuantity = Math.max(0, medicine.quantity + change);
-      updateQuantityMutation.mutate({ id, quantity: newQuantity });
+  // Handle form input change
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
+  
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      await apiRequest("/api/medicines", {
+        method: "POST",
+        body: JSON.stringify({
+          ...formData,
+          quantity: Number(formData.quantity),
+          category: "Not specified", // Default category
+          reorderLevel: 5, // Default reorder level
+        }),
+      });
+      
+      toast({
+        title: "Success",
+        description: "Medicine added successfully!",
+        variant: "default",
+      });
+      
+      // Refetch medicines
+      queryClient.invalidateQueries({ queryKey: ["/api/medicines"] });
+      
+      // Close dialog and reset form
+      setShowAddDialog(false);
+      resetForm();
+    } catch (error) {
+      console.error("Failed to add medicine:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add medicine. Please try again.",
+        variant: "destructive",
+      });
     }
   };
   
-  // Determine if medicine is expiring soon (within 30 days)
-  const isExpiringSoon = (expiryDate: string) => {
-    const now = new Date();
-    const expiry = new Date(expiryDate);
-    const thirtyDaysFromNow = new Date();
-    thirtyDaysFromNow.setDate(now.getDate() + 30);
+  // Handle getting medicine info
+  const handleGetInfo = async (medicine: Medicine) => {
+    setSelectedMedicine(medicine);
+    setShowInfoDialog(true);
+    setIsLoadingInfo(true);
     
-    return expiry <= thirtyDaysFromNow && expiry >= now;
+    try {
+      const info = await apiRequest(`/api/medicines/${medicine.id}/info`);
+      if (info) {
+        setMedicineInfo(info);
+      }
+    } catch (error) {
+      console.error("Failed to get medicine info:", error);
+      toast({
+        title: "Error",
+        description: "Failed to get medicine information. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingInfo(false);
+    }
   };
   
-  // Determine if medicine is expired
-  const isExpired = (expiryDate: string) => {
-    const now = new Date();
-    const expiry = new Date(expiryDate);
-    return expiry < now;
+  // Handle adjusting medicine quantity
+  const handleAdjustQuantity = async () => {
+    if (!selectedMedicine) return;
+    
+    try {
+      await apiRequest(`/api/medicines/${selectedMedicine.id}/adjust-stock`, {
+        method: "POST",
+        body: JSON.stringify({
+          adjustment: Number(adjustQuantity),
+        }),
+      });
+      
+      toast({
+        title: "Success",
+        description: `Updated ${selectedMedicine.name} quantity by ${adjustQuantity > 0 ? '+' : ''}${adjustQuantity}.`,
+        variant: "default",
+      });
+      
+      // Refetch medicines
+      queryClient.invalidateQueries({ queryKey: ["/api/medicines"] });
+      
+      // Close dialog and reset
+      setShowAdjustDialog(false);
+      setAdjustQuantity(0);
+      setSelectedMedicine(null);
+    } catch (error) {
+      console.error("Failed to adjust medicine quantity:", error);
+      toast({
+        title: "Error",
+        description: "Failed to adjust quantity. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
-  // Format expiry date for display
-  const formatExpiryDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return format(date, "MMM d, yyyy");
+  // Handle deleting medicine
+  const handleDelete = async () => {
+    if (!selectedMedicine) return;
+    
+    try {
+      await apiRequest(`/api/medicines/${selectedMedicine.id}`, {
+        method: "DELETE",
+      });
+      
+      toast({
+        title: "Success",
+        description: `Deleted ${selectedMedicine.name} successfully.`,
+        variant: "default",
+      });
+      
+      // Refetch medicines
+      queryClient.invalidateQueries({ queryKey: ["/api/medicines"] });
+      
+      // Close dialog and reset
+      setShowDeleteDialog(false);
+      setSelectedMedicine(null);
+    } catch (error) {
+      console.error("Failed to delete medicine:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete medicine. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   return (
-    <Card className="shadow-lg">
-      <CardHeader className="bg-primary bg-opacity-10 border-b border-neutral-dark">
-        <CardTitle className="flex items-center justify-center">
-          <span className="material-icons mr-2 text-primary">medication</span>
-          Medicine Stock Tracker
-        </CardTitle>
-        <CardDescription>Track and manage your medications</CardDescription>
-      </CardHeader>
-      
-      <CardContent className="p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div className="relative flex-grow">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary material-icons text-sm">search</span>
+    <div className="p-4">
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
+          <TabsTrigger value="all">All Medicines</TabsTrigger>
+          <TabsTrigger value="low-stock">Low Stock</TabsTrigger>
+          <TabsTrigger value="expiring">Expiring Soon</TabsTrigger>
+        </TabsList>
+        
+        <div className="flex justify-between items-center mb-4">
+          <div className="w-1/2">
             <Input
-              placeholder="Search medications..."
-              className="pl-9"
+              placeholder="Search medicines..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-md"
             />
           </div>
-          
-          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-            <DialogTrigger asChild>
-              <Button className="whitespace-nowrap">
-                <span className="material-icons mr-1 text-sm">add</span>
-                Add Medicine
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Medicine</DialogTitle>
-              </DialogHeader>
-              
-              <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Medicine Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    placeholder="e.g., Ibuprofen"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="dosage">Dosage</Label>
-                  <Input
-                    id="dosage"
-                    name="dosage"
-                    placeholder="e.g., 200mg"
-                    value={formData.dosage}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="quantity">Quantity</Label>
-                    <Input
-                      id="quantity"
-                      name="quantity"
-                      type="number"
-                      min="1"
-                      value={formData.quantity}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="expiryDate">Expiry Date</Label>
-                    <Input
-                      id="expiryDate"
-                      name="expiryDate"
-                      type="date"
-                      value={formData.expiryDate}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="prescriptionRequired"
-                    name="prescriptionRequired"
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-neutral-dark text-primary focus:ring-primary"
-                    checked={formData.prescriptionRequired}
-                    onChange={handleInputChange}
-                  />
-                  <Label htmlFor="prescriptionRequired" className="font-normal">
-                    Prescription Required
-                  </Label>
-                </div>
-                
-                <DialogFooter>
-                  <Button variant="outline" type="button" onClick={() => setShowAddDialog(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={addMedicineMutation.isPending}>
-                    {addMedicineMutation.isPending ? "Adding..." : "Add Medicine"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setShowAddDialog(true)}>
+            Add Medicine
+          </Button>
         </div>
         
-        <Tabs defaultValue="all">
-          <TabsList className="grid grid-cols-4 mb-6">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="low-stock">Low Stock</TabsTrigger>
-            <TabsTrigger value="expiring-soon">Expiring Soon</TabsTrigger>
-            <TabsTrigger value="expired">Expired</TabsTrigger>
-          </TabsList>
+        <TabsContent value="all">
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p>Loading medicines...</p>
+            </div>
+          ) : filteredMedicines.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Dosage</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Expires</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredMedicines.map((medicine: Medicine) => (
+                  <TableRow key={medicine.id}>
+                    <TableCell>{medicine.name}</TableCell>
+                    <TableCell>{medicine.dosage}</TableCell>
+                    <TableCell>{medicine.category}</TableCell>
+                    <TableCell>{medicine.quantity}</TableCell>
+                    <TableCell>{new Date(medicine.expiryDate).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      {isExpired(medicine.expiryDate) ? (
+                        <Badge variant="destructive">Expired</Badge>
+                      ) : isExpiringSoon(medicine.expiryDate) ? (
+                        <Badge variant="warning">Expiring Soon</Badge>
+                      ) : isLowStock(medicine) ? (
+                        <Badge variant="outline" className="bg-orange-100 text-orange-800 hover:bg-orange-100">Low Stock</Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">Good</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedMedicine(medicine);
+                            setShowAdjustDialog(true);
+                          }}
+                        >
+                          Adjust
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleGetInfo(medicine)}
+                        >
+                          Info
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedMedicine(medicine);
+                            setShowDeleteDialog(true);
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-text-secondary mb-4">
+                No medicines found. Add your first medicine to get started.
+              </p>
+              <Button onClick={() => setShowAddDialog(true)}>
+                Add Medicine
+              </Button>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="low-stock">
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p>Loading medicines...</p>
+            </div>
+          ) : filteredMedicines.filter((m: Medicine) => isLowStock(m)).length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Reorder Level</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredMedicines
+                  .filter((m: Medicine) => isLowStock(m))
+                  .map((medicine: Medicine) => (
+                    <TableRow key={medicine.id}>
+                      <TableCell>{medicine.name}</TableCell>
+                      <TableCell>{medicine.quantity}</TableCell>
+                      <TableCell>{medicine.reorderLevel}</TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedMedicine(medicine);
+                            setShowAdjustDialog(true);
+                            setAdjustQuantity(medicine.reorderLevel * 2 - medicine.quantity); // Suggest a reasonable restock amount
+                          }}
+                        >
+                          Restock
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-text-secondary">
+                No medicines are currently low on stock. Good job!
+              </p>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="expiring">
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p>Loading medicines...</p>
+            </div>
+          ) : filteredMedicines.filter((m: Medicine) => isExpiringSoon(m.expiryDate) || isExpired(m.expiryDate)).length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Expiry Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredMedicines
+                  .filter((m: Medicine) => isExpiringSoon(m.expiryDate) || isExpired(m.expiryDate))
+                  .sort((a: Medicine, b: Medicine) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime())
+                  .map((medicine: Medicine) => (
+                    <TableRow key={medicine.id}>
+                      <TableCell>{medicine.name}</TableCell>
+                      <TableCell>{new Date(medicine.expiryDate).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {isExpired(medicine.expiryDate) ? (
+                          <Badge variant="destructive">Expired</Badge>
+                        ) : (
+                          <Badge variant="warning">Expiring Soon</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedMedicine(medicine);
+                            setShowDeleteDialog(true);
+                          }}
+                        >
+                          Dispose
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-text-secondary">
+                No medicines are expiring soon. All your medicines are up to date!
+              </p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+      
+      {/* Add Medicine Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Medicine</DialogTitle>
+            <DialogDescription>
+              Enter the details of the medicine you want to add to your inventory.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Name
+                </Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="dosage" className="text-right">
+                  Dosage
+                </Label>
+                <Input
+                  id="dosage"
+                  name="dosage"
+                  placeholder="e.g., 500mg, 5ml"
+                  value={formData.dosage}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="quantity" className="text-right">
+                  Quantity
+                </Label>
+                <Input
+                  id="quantity"
+                  name="quantity"
+                  type="number"
+                  min="0"
+                  value={formData.quantity}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="expiryDate" className="text-right">
+                  Expiry Date
+                </Label>
+                <Input
+                  id="expiryDate"
+                  name="expiryDate"
+                  type="date"
+                  value={formData.expiryDate}
+                  onChange={handleInputChange}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="prescriptionRequired" className="text-right">
+                  Prescription Required
+                </Label>
+                <div className="col-span-3 flex items-center">
+                  <Switch
+                    id="prescriptionRequired"
+                    name="prescriptionRequired"
+                    checked={formData.prescriptionRequired}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, prescriptionRequired: checked })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Add Medicine</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Medicine Info Dialog */}
+      <Dialog open={showInfoDialog} onOpenChange={setShowInfoDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedMedicine?.name} Information
+            </DialogTitle>
+            <DialogDescription>
+              Detailed information about this medication.
+            </DialogDescription>
+          </DialogHeader>
           
-          {["all", "low-stock", "expiring-soon", "expired"].map((tab) => (
-            <TabsContent key={tab} value={tab} className="pt-2">
-              <ScrollArea className="h-[450px] pr-4">
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3, 4].map(i => (
-                      <Skeleton key={i} className="h-24 w-full" />
-                    ))}
-                  </div>
-                ) : filterMedicines(medicines as Medicine[], tab, searchTerm).length === 0 ? (
-                  <div className="text-center py-8 text-text-secondary">
-                    <span className="material-icons text-4xl">medication</span>
-                    <p className="mt-2">No medicines found</p>
-                    {searchTerm && (
-                      <p className="text-sm">Try a different search term</p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {filterMedicines(medicines as Medicine[], tab, searchTerm).map((medicine) => (
-                      <Card key={medicine.id} className="relative overflow-hidden">
-                        {isExpired(medicine.expiryDate) && (
-                          <div className="absolute top-0 right-0 bg-red-500 text-white text-xs px-2 py-1">
-                            Expired
-                          </div>
-                        )}
-                        
-                        {!isExpired(medicine.expiryDate) && isExpiringSoon(medicine.expiryDate) && (
-                          <div className="absolute top-0 right-0 bg-yellow-500 text-white text-xs px-2 py-1">
-                            Expiring Soon
-                          </div>
-                        )}
-                        
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="flex items-center">
-                                <h4 className="font-medium">{medicine.name}</h4>
-                                {medicine.prescriptionRequired && (
-                                  <Badge variant="outline" className="ml-2 text-xs">
-                                    Prescription
-                                  </Badge>
-                                )}
-                              </div>
-                              
-                              <p className="text-sm text-text-secondary">
-                                {medicine.dosage}
-                              </p>
-                              
-                              <div className="mt-2 grid grid-cols-2 gap-x-4 text-sm">
-                                <div>
-                                  <span className="text-text-secondary">Quantity: </span>
-                                  <span className={
-                                    medicine.quantity <= 0 ? "text-red-500" :
-                                    medicine.quantity <= 5 ? "text-yellow-500" : ""
-                                  }>
-                                    {medicine.quantity}
-                                  </span>
-                                </div>
-                                
-                                <div>
-                                  <span className="text-text-secondary">Expires: </span>
-                                  <span className={
-                                    isExpired(medicine.expiryDate) ? "text-red-500" :
-                                    isExpiringSoon(medicine.expiryDate) ? "text-yellow-500" : ""
-                                  }>
-                                    {formatExpiryDate(medicine.expiryDate)}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="flex flex-col sm:flex-row gap-2">
-                              <div className="flex border rounded-md">
-                                <Button 
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-r-none"
-                                  onClick={() => updateQuantity(medicine.id, -1)}
-                                  disabled={medicine.quantity <= 0}
-                                >
-                                  <span className="material-icons text-sm">remove</span>
-                                </Button>
-                                <Button 
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-l-none"
-                                  onClick={() => updateQuantity(medicine.id, 1)}
-                                >
-                                  <span className="material-icons text-sm">add</span>
-                                </Button>
-                              </div>
-                              
-                              <Button 
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-text-secondary hover:text-red-500"
-                                onClick={() => 
-                                  deleteMedicineMutation.mutate(medicine.id)
-                                }
-                              >
-                                <span className="material-icons text-sm">delete</span>
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-            </TabsContent>
-          ))}
-        </Tabs>
-      </CardContent>
-    </Card>
+          <div className="space-y-4">
+            {isLoadingInfo ? (
+              <div className="text-center py-4">
+                <p>Loading information...</p>
+              </div>
+            ) : medicineInfo ? (
+              <>
+                <div>
+                  <h4 className="font-medium mb-2">Uses</h4>
+                  <p className="text-sm">{medicineInfo.uses || "Information not available"}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Side Effects</h4>
+                  <p className="text-sm">{medicineInfo.sideEffects || "Information not available"}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Precautions</h4>
+                  <p className="text-sm">{medicineInfo.precautions || "Information not available"}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Alternatives</h4>
+                  <p className="text-sm">{medicineInfo.alternatives || "Information not available"}</p>
+                </div>
+              </>
+            ) : (
+              <p className="text-text-secondary">No information available for this medicine.</p>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button onClick={() => setShowInfoDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Adjust Quantity Dialog */}
+      <Dialog open={showAdjustDialog} onOpenChange={setShowAdjustDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Adjust {selectedMedicine?.name} Quantity
+            </DialogTitle>
+            <DialogDescription>
+              Enter a positive number to add or a negative number to remove.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="adjustQuantity" className="text-right">
+                Adjustment
+              </Label>
+              <Input
+                id="adjustQuantity"
+                type="number"
+                value={adjustQuantity}
+                onChange={(e) => setAdjustQuantity(parseInt(e.target.value) || 0)}
+                className="col-span-3"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">
+                Current
+              </Label>
+              <div className="col-span-3">
+                {selectedMedicine?.quantity || 0}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">
+                New Total
+              </Label>
+              <div className="col-span-3 font-medium">
+                {(selectedMedicine?.quantity || 0) + adjustQuantity}
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowAdjustDialog(false);
+                setAdjustQuantity(0);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAdjustQuantity}
+              disabled={(selectedMedicine?.quantity || 0) + adjustQuantity < 0}
+            >
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {selectedMedicine?.name} from your inventory.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }
