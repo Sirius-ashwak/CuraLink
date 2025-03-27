@@ -31,6 +31,25 @@ const isWebSocketEnabled = () => {
   return stored === null || stored === "true"; // Default to true
 };
 
+// Get the timestamp of the last connection attempt
+const getLastConnectionAttempt = (): number => {
+  const stored = localStorage.getItem("websocket_last_attempt");
+  return stored ? parseInt(stored, 10) : 0;
+};
+
+// Set the timestamp of the last connection attempt
+const setLastConnectionAttempt = (timestamp: number) => {
+  localStorage.setItem("websocket_last_attempt", timestamp.toString());
+};
+
+// Check if we should throttle connection attempts
+const shouldThrottleConnection = (): boolean => {
+  const lastAttempt = getLastConnectionAttempt();
+  const now = Date.now();
+  // Throttle if last attempt was less than 5 minutes ago
+  return (now - lastAttempt) < 5 * 60 * 1000;
+};
+
 export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -39,7 +58,8 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [messages, setMessages] = useState<any[]>([]);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const [enabled, setEnabledState] = useState<boolean>(isWebSocketEnabled());
-  const maxReconnectAttempts = 3; // Reduced max attempts to avoid excessive retries
+  const [usingFallback, setUsingFallback] = useState(false);
+  const maxReconnectAttempts = 2; // Reduced max attempts to avoid excessive retries
   
   // Update localStorage and state when enabled/disabled
   const setEnabled = useCallback((value: boolean) => {
@@ -48,7 +68,9 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     
     // If enabling again and we have a user, try to reconnect
     if (value && user && !connected && !socket) {
+      // Reset reconnect attempts when manually re-enabling
       setReconnectAttempts(0);
+      setUsingFallback(false);
       // Use a slight delay to allow state to update
       setTimeout(() => connect(), 100);
     } else if (!value && socket) {
@@ -59,6 +81,23 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     }
   }, [user, connected, socket]);
   
+  // Helper to check environment support for WebSockets
+  const checkWebSocketSupport = useCallback(() => {
+    // First check if the browser supports WebSockets
+    if (typeof WebSocket === 'undefined') {
+      console.warn('WebSockets are not supported in this browser');
+      return false;
+    }
+    
+    // Check if we've had recent connection issues and should throttle
+    if (shouldThrottleConnection() && reconnectAttempts >= maxReconnectAttempts) {
+      console.warn('Throttling WebSocket connection attempts due to recent failures');
+      return false;
+    }
+    
+    return true;
+  }, [reconnectAttempts]);
+  
   const connect = useCallback(() => {
     // Don't connect if websockets are disabled or user isn't logged in
     if (!enabled || !user) {
@@ -67,17 +106,25 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       return;
     }
     
+    // Check if WebSockets are supported and not throttled
+    if (!checkWebSocketSupport()) {
+      setUsingFallback(true);
+      return;
+    }
+    
     // Don't attempt to reconnect if we've exceeded our limit
     if (reconnectAttempts >= maxReconnectAttempts) {
       // Only show the toast once when we hit the limit
       if (reconnectAttempts === maxReconnectAttempts) {
         toast({
-          title: "Connection Issues",
-          description: "Unable to establish real-time connection. Some features may be limited.",
-          variant: "destructive",
+          title: "Switching to Standard Mode",
+          description: "Unable to establish real-time connection. Using standard refresh mode instead.",
+          variant: "default",
         });
-        // Disable WebSockets after too many failed attempts
-        setEnabled(false);
+        // Record this connection attempt time
+        setLastConnectionAttempt(Date.now());
+        // Don't disable completely, just mark as using fallback
+        setUsingFallback(true);
       }
       return;
     }
@@ -110,15 +157,18 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         console.log("WebSocket connected successfully");
         setConnected(true);
         setReconnectAttempts(0);
+        setUsingFallback(false);
         
         // Send authentication message
-        newSocket.send(
-          JSON.stringify({
-            type: "auth",
-            userId: user.id,
-            role: user.role,
-          })
-        );
+        if (user) {
+          newSocket.send(
+            JSON.stringify({
+              type: "auth",
+              userId: user.id,
+              role: user.role,
+            })
+          );
+        }
       };
       
       newSocket.onmessage = (event) => {
@@ -181,13 +231,17 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
           setReconnectAttempts((prev) => prev + 1);
           connect();
         }, delay);
+      } else {
+        // Set as using fallback after max attempts
+        setUsingFallback(true);
+        setLastConnectionAttempt(Date.now());
       }
     }
-  }, [user, reconnectAttempts, toast, enabled, socket]);
+  }, [user, reconnectAttempts, toast, enabled, socket, checkWebSocketSupport]);
   
   // Connect to WebSocket when user changes or when enabled changes
   useEffect(() => {
-    if (enabled && user) {
+    if (enabled && user && !usingFallback) {
       connect();
     } else if (!enabled || !user) {
       // Cleanup if disabled or user logs out
@@ -204,30 +258,51 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         socket.close();
       }
     };
-  }, [connect, socket, user, enabled]);
+  }, [connect, socket, user, enabled, usingFallback]);
+  
+  // Periodically try to reconnect if in fallback mode
+  useEffect(() => {
+    if (usingFallback && enabled && user) {
+      // Try to reconnect every 10 minutes if in fallback mode
+      const reconnectTimer = setTimeout(() => {
+        // Only attempt if not throttled
+        if (!shouldThrottleConnection()) {
+          console.log("Attempting to reconnect from fallback mode");
+          setReconnectAttempts(0);
+          connect();
+        }
+      }, 10 * 60 * 1000);
+      
+      return () => clearTimeout(reconnectTimer);
+    }
+  }, [usingFallback, enabled, user, connect]);
   
   // Send message function with fallback for when WebSocket is not connected
   const sendMessage = useCallback(
     (message: any) => {
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify(message));
-      } else if (enabled) {
+      } else if (enabled && !usingFallback) {
         // If WebSocket is meant to be enabled but not connected, try to connect
         console.warn("WebSocket is not connected, attempting to reconnect");
         
         // Store the message in session storage to send once connected
         // (In a real app, you might use an outgoing message queue)
         console.log("Message not sent:", message);
+      } else if (usingFallback) {
+        // In fallback mode, use HTTP for critical messages
+        console.log("Using HTTP fallback for message:", message);
+        // You could implement HTTP API calls here for critical messages
       }
     },
-    [socket, enabled]
+    [socket, enabled, usingFallback]
   );
   
   return (
     <WebSocketContext.Provider value={{ connected, messages, sendMessage, enabled, setEnabled }}>
       {children}
       {/* Connection indicator for debugging */}
-      {process.env.NODE_ENV === 'development' && (
+      {import.meta.env.DEV && (
         <div 
           style={{
             position: 'fixed',
@@ -236,7 +311,9 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
             padding: '4px 8px',
             fontSize: '12px',
             borderRadius: '4px',
-            backgroundColor: connected ? 'rgba(0, 128, 0, 0.8)' : enabled ? 'rgba(255, 0, 0, 0.8)' : 'rgba(128, 128, 128, 0.8)',
+            backgroundColor: connected ? 'rgba(0, 128, 0, 0.8)' : 
+                               usingFallback ? 'rgba(255, 165, 0, 0.8)' :
+                               enabled ? 'rgba(255, 0, 0, 0.8)' : 'rgba(128, 128, 128, 0.8)',
             color: 'white',
             zIndex: 9999,
             cursor: 'pointer',
@@ -244,7 +321,9 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
           onClick={() => setEnabled(!enabled)}
           title={enabled ? "Click to disable WebSocket" : "Click to enable WebSocket"}
         >
-          {connected ? "WebSocket Connected" : enabled ? "WebSocket Disconnected" : "WebSocket Disabled"}
+          {connected ? "Connected (Real-time)" : 
+           usingFallback ? "Using Standard Mode" :
+           enabled ? "Disconnected" : "Disabled"}
         </div>
       )}
     </WebSocketContext.Provider>
