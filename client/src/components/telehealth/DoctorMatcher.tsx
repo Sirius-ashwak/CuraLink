@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -52,16 +52,20 @@ export default function DoctorMatcher() {
   const [matchResults, setMatchResults] = useState<Array<MatchResult & { doctor: DoctorWithUserInfo }>>([]);
   
   // Fetch symptom categories
-  const { data: categories = [], isLoading: isCategoriesLoading } = useQuery({
-    queryKey: ["/api/symptom-categories"],
-    onError: () => {
+  const { data: categories = [], isLoading: isCategoriesLoading, isError: isCategoriesError } = useQuery<SymptomCategory[]>({
+    queryKey: ["/api/doctor-match/symptom-categories"],
+  });
+  
+  // Show error toast if categories failed to load
+  useEffect(() => {
+    if (isCategoriesError) {
       toast({
         title: "Error",
         description: "Failed to load symptom categories.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  }, [isCategoriesError, toast]);
   
   // Fetch doctors for manual search
   const { data: allDoctors = [], isLoading: isDoctorsLoading } = useQuery({
