@@ -51,17 +51,25 @@ export default function MedicineTracker() {
   });
   
   // Fetch user's medicines
-  const { data: medicines = [], isLoading } = useQuery({
+  const { 
+    data: medicines = [], 
+    isLoading,
+    isError: isMedicinesError 
+  } = useQuery<Medicine[]>({
     queryKey: ["/api/medicines"],
     enabled: !!user,
-    onError: () => {
+  });
+  
+  // Show error toast if medicines failed to load
+  useEffect(() => {
+    if (isMedicinesError) {
       toast({
         title: "Error",
         description: "Failed to load medicines. Please try again.",
         variant: "destructive",
       });
-    },
-  });
+    }
+  }, [isMedicinesError, toast]);
 
   // Add medicine mutation
   const addMedicineMutation = useMutation({
