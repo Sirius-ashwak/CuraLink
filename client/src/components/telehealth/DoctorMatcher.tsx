@@ -32,10 +32,9 @@ interface SymptomCategory {
 }
 
 interface MatchResult {
-  score: number;
   doctorId: number;
-  specialty: string;
-  reasoning: string;
+  matchScore: number;
+  matchReason: string;
 }
 
 export default function DoctorMatcher() {
@@ -52,33 +51,39 @@ export default function DoctorMatcher() {
   const [matchResults, setMatchResults] = useState<Array<MatchResult & { doctor: DoctorWithUserInfo }>>([]);
   
   // Fetch symptom categories
-  const { data: categories = [], isLoading: isCategoriesLoading, isError: isCategoriesError } = useQuery<SymptomCategory[]>({
+  const { data: categories = [], isLoading: isCategoriesLoading } = useQuery<SymptomCategory[]>({
     queryKey: ["/api/doctor-match/symptom-categories"],
-  });
-  
-  // Show error toast if categories failed to load
-  useEffect(() => {
-    if (isCategoriesError) {
+    onError: (error) => {
       toast({
         title: "Error",
         description: "Failed to load symptom categories.",
         variant: "destructive",
       });
     }
-  }, [isCategoriesError, toast]);
+  });
   
   // Fetch doctors for manual search
-  const { data: allDoctors = [], isLoading: isDoctorsLoading } = useQuery({
+  const { data: allDoctors = [], isLoading: isDoctorsLoading } = useQuery<DoctorWithUserInfo[]>({
     queryKey: ["/api/doctors"],
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to load doctors.",
+        variant: "destructive",
+      });
+    }
   });
   
   // Filter doctors by specialty
   const filteredDoctors = specialty 
-    ? (allDoctors as DoctorWithUserInfo[]).filter(doc => doc.specialty === specialty)
-    : (allDoctors as DoctorWithUserInfo[]);
+    ? allDoctors.filter(doc => doc.specialty === specialty)
+    : allDoctors;
   
-  // Handle selecting/deselecting symptoms
-  const toggleSymptom = (symptomId: string) => {
+  // Get available specialties from doctors
+  const specialties = Array.from(new Set(allDoctors.map(doc => doc.specialty))).sort();
+  
+  // Handle symptom selection
+  const handleSymptomSelect = (symptomId: string) => {
     if (selectedSymptoms.includes(symptomId)) {
       setSelectedSymptoms(selectedSymptoms.filter(id => id !== symptomId));
     } else {
@@ -86,44 +91,47 @@ export default function DoctorMatcher() {
     }
   };
   
-  // Handle doctor match submission
+  // Handle category selection
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+  };
+  
+  // Handle doctor matching
   const handleDoctorMatch = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to use the doctor matching service.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (selectedSymptoms.length === 0) return;
     
     setIsMatchLoading(true);
     
     try {
-      const response = await apiRequest("POST", "/api/doctor-match", {
-        urgency,
-        symptoms: selectedSymptoms,
-        description,
-        userId: user.id,
+      const urgencyMapping = {
+        "emergency": 10,
+        "urgent": 7,
+        "soon": 5,
+        "routine": 3
+      };
+      
+      const urgencyLevel = urgencyMapping[urgency as keyof typeof urgencyMapping] || 3;
+      
+      const response = await apiRequest<{matches: Array<MatchResult & { doctor: DoctorWithUserInfo }>}>("/api/doctor-match", {
+        method: "POST",
+        body: JSON.stringify({ 
+          symptoms: selectedSymptoms,
+          description,
+          urgencyLevel
+        }),
       });
       
-      const data = await response.json();
-      
-      if (data && data.matches) {
-        // Convert match results to include doctor information
-        const doctorsWithScores = data.matches.map((match: MatchResult) => {
-          const doctor = (allDoctors as DoctorWithUserInfo[]).find(d => d.id === match.doctorId);
-          return { ...match, doctor };
-        }).filter((item: any) => !!item.doctor);
-        
-        setMatchResults(doctorsWithScores);
+      if (response?.matches) {
+        setMatchResults(response.matches);
         setStep(3);
+      } else {
+        throw new Error("Invalid response format");
       }
     } catch (error) {
-      console.error("Error in doctor matching:", error);
+      console.error("Failed to match doctors:", error);
       toast({
-        title: "Matching Failed",
-        description: "Unable to find matching doctors. Please try again or use manual search.",
+        title: "Error",
+        description: "Failed to find matching doctors. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -131,318 +139,351 @@ export default function DoctorMatcher() {
     }
   };
   
-  // Book appointment with selected doctor
-  const bookAppointment = (doctorId: number) => {
-    setLocation(`/dashboard?bookAppointment=${doctorId}`);
+  // Reset the form
+  const handleReset = () => {
+    setStep(1);
+    setUrgency("routine");
+    setSelectedCategory("");
+    setSelectedSymptoms([]);
+    setDescription("");
+    setMatchResults([]);
   };
   
   return (
-    <div className="mx-auto max-w-3xl">
-      <Card className="shadow-lg">
-        <CardHeader className="text-center bg-primary bg-opacity-10 border-b border-neutral-dark">
-          <CardTitle className="flex items-center justify-center">
-            <span className="material-icons mr-2 text-primary">medical_services</span>
-            Telehealth Doctor Matching
-          </CardTitle>
-          <CardDescription>Find the right healthcare provider for your needs</CardDescription>
-        </CardHeader>
+    <div className="p-4">
+      <Tabs defaultValue="symptoms" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="symptoms">Symptom Matcher</TabsTrigger>
+          <TabsTrigger value="browse">Browse Doctors</TabsTrigger>
+        </TabsList>
         
-        <CardContent className="p-6">
-          <Tabs defaultValue="guided" className="w-full">
-            <TabsList className="grid grid-cols-2 mb-6">
-              <TabsTrigger value="guided">AI-Guided Match</TabsTrigger>
-              <TabsTrigger value="manual">Manual Search</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="guided" className="pt-2">
-              {step === 1 && (
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-medium">How urgent is your medical need?</h3>
-                    <RadioGroup 
-                      value={urgency} 
-                      onValueChange={setUrgency}
-                      className="grid grid-cols-1 gap-2 md:grid-cols-3"
-                    >
-                      <div className="flex items-center space-x-2 border p-3 rounded-md">
-                        <RadioGroupItem value="urgent" id="urgent" />
-                        <Label htmlFor="urgent" className="flex flex-col">
-                          <span className="font-medium">Urgent</span>
-                          <span className="text-xs text-text-secondary">Need help within 24 hours</span>
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2 border p-3 rounded-md">
-                        <RadioGroupItem value="soon" id="soon" />
-                        <Label htmlFor="soon" className="flex flex-col">
-                          <span className="font-medium">Soon</span>
-                          <span className="text-xs text-text-secondary">Within a few days</span>
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2 border p-3 rounded-md">
-                        <RadioGroupItem value="routine" id="routine" />
-                        <Label htmlFor="routine" className="flex flex-col">
-                          <span className="font-medium">Routine</span>
-                          <span className="text-xs text-text-secondary">General checkup</span>
-                        </Label>
-                      </div>
-                    </RadioGroup>
+        <TabsContent value="symptoms">
+          {step === 1 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Tell us about your symptoms</CardTitle>
+                <CardDescription>
+                  Select a category and the symptoms you're experiencing.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isCategoriesLoading ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-40 w-full" />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-medium">Select symptoms category</h3>
-                    {isCategoriesLoading ? (
-                      <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                        {[1, 2, 3, 4, 5, 6].map(i => (
-                          <Skeleton key={i} className="h-12 w-full" />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                        {categories.map((category: SymptomCategory) => (
+                ) : (
+                  <>
+                    <div className="mb-6">
+                      <Label htmlFor="urgency" className="mb-2 block">How soon do you need to see a doctor?</Label>
+                      <RadioGroup 
+                        id="urgency" 
+                        value={urgency} 
+                        onValueChange={setUrgency}
+                        className="flex flex-col space-y-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="emergency" id="emergency" />
+                          <Label htmlFor="emergency" className="font-normal text-red-600">Emergency - Need immediate care</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="urgent" id="urgent" />
+                          <Label htmlFor="urgent" className="font-normal text-orange-600">Urgent - Within 24 hours</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="soon" id="soon" />
+                          <Label htmlFor="soon" className="font-normal text-yellow-600">Soon - Within a few days</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="routine" id="routine" />
+                          <Label htmlFor="routine" className="font-normal">Routine checkup</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <Label htmlFor="category" className="mb-2 block">Select a symptom category</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {categories.map((category) => (
                           <Button
                             key={category.id}
                             variant={selectedCategory === category.id ? "default" : "outline"}
+                            onClick={() => handleCategorySelect(category.id)}
                             className="justify-start"
-                            onClick={() => setSelectedCategory(category.id)}
                           >
                             {category.name}
                           </Button>
                         ))}
                       </div>
+                    </div>
+                    
+                    {selectedCategory && (
+                      <div className="mb-4">
+                        <Label className="mb-2 block">Select all symptoms that apply</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {categories
+                            .find(cat => cat.id === selectedCategory)
+                            ?.symptoms.map((symptom) => (
+                              <div key={symptom.id} className="flex items-center">
+                                <Button
+                                  variant={selectedSymptoms.includes(symptom.id) ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => handleSymptomSelect(symptom.id)}
+                                  className="justify-start w-full"
+                                >
+                                  {symptom.name}
+                                </Button>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
                     )}
+                    
+                    <div className="mb-4">
+                      <Label htmlFor="description" className="mb-2 block">Additional details (optional)</Label>
+                      <Textarea
+                        id="description"
+                        placeholder="Describe your symptoms in more detail..."
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+              <CardFooter className="flex justify-end">
+                <Button 
+                  onClick={() => setStep(2)} 
+                  disabled={isCategoriesLoading || selectedSymptoms.length === 0}
+                >
+                  Next
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
+          
+          {step === 2 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Review your symptoms</CardTitle>
+                <CardDescription>
+                  Confirm your symptoms before we find matching doctors.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium mb-2">Urgency Level</h4>
+                    <p className={`inline-block px-3 py-1 rounded-full text-sm ${
+                      urgency === "emergency" ? "bg-red-100 text-red-800" :
+                      urgency === "urgent" ? "bg-orange-100 text-orange-800" :
+                      urgency === "soon" ? "bg-yellow-100 text-yellow-800" :
+                      "bg-green-100 text-green-800"
+                    }`}>
+                      {urgency === "emergency" ? "Emergency" :
+                       urgency === "urgent" ? "Urgent (24 hours)" :
+                       urgency === "soon" ? "Soon (Few days)" :
+                       "Routine checkup"
+                      }
+                    </p>
                   </div>
                   
-                  {selectedCategory && (
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-medium">Select specific symptoms</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {categories
-                          .find((c: SymptomCategory) => c.id === selectedCategory)
-                          ?.symptoms.map(symptom => (
-                            <div 
-                              key={symptom.id}
-                              className={`border p-3 rounded-md cursor-pointer ${
-                                selectedSymptoms.includes(symptom.id) 
-                                  ? "bg-primary bg-opacity-10 border-primary" 
-                                  : ""
-                              }`}
-                              onClick={() => toggleSymptom(symptom.id)}
-                            >
-                              <div className="flex items-center">
-                                <span className="material-icons text-sm mr-2">
-                                  {selectedSymptoms.includes(symptom.id) ? "check_circle" : "circle"}
-                                </span>
-                                {symptom.name}
-                              </div>
-                            </div>
-                          ))}
-                      </div>
+                  <div>
+                    <h4 className="font-medium mb-2">Selected Symptoms</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedSymptoms.map(symptomId => {
+                        const category = categories.find((c) => 
+                          c.symptoms.some(s => s.id === symptomId)
+                        );
+                        const symptom = category?.symptoms.find(s => s.id === symptomId);
+                        
+                        return (
+                          <span 
+                            key={symptomId}
+                            className="bg-neutral-dark px-2 py-1 rounded-full text-xs"
+                          >
+                            {symptom?.name || ""}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  
+                  {description && (
+                    <div>
+                      <h4 className="font-medium mb-2">Additional Details</h4>
+                      <p className="text-sm">{description}</p>
                     </div>
                   )}
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  Back
+                </Button>
+                <Button 
+                  onClick={handleDoctorMatch}
+                  disabled={isMatchLoading}
+                >
+                  {isMatchLoading ? "Finding doctors..." : "Find matching doctors"}
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
+          
+          {step === 3 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Matching Doctors</CardTitle>
+                <CardDescription>
+                  Based on your symptoms, we found these doctors who may be able to help.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {matchResults.length > 0 ? (
+                  <div className="space-y-4">
+                    {matchResults.map((result) => (
+                      <Card key={result.doctorId} className="border">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg">
+                            Dr. {result.doctor.user.firstName} {result.doctor.user.lastName}
+                          </CardTitle>
+                          <CardDescription>
+                            {result.doctor.specialty} • Match Score: {Math.round(result.matchScore * 100)}%
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pb-2">
+                          <p className="text-sm">{result.matchReason}</p>
+                        </CardContent>
+                        <CardFooter>
+                          <Button 
+                            className="w-full" 
+                            onClick={() => setLocation(`/dashboard?doctorId=${result.doctorId}&book=true`)}
+                          >
+                            Book Appointment
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-text-secondary mb-4">
+                      No doctors found that match your symptoms. Please try with different symptoms or browse all doctors.
+                    </p>
+                    <Button 
+                      onClick={() => setStep(1)}
+                      variant="outline"
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={handleReset}>
+                  Start Over
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="browse">
+          <Card>
+            <CardHeader>
+              <CardTitle>Browse All Doctors</CardTitle>
+              <CardDescription>
+                Search and filter by specialty to find the right doctor for you.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="w-full md:w-1/3">
+                    <Label htmlFor="specialty" className="mb-2 block">Filter by Specialty</Label>
+                    <Select value={specialty} onValueChange={setSpecialty}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Specialties" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Specialties</SelectItem>
+                        {specialties.map((specialty) => (
+                          <SelectItem key={specialty} value={specialty}>
+                            {specialty}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Additional details (optional)</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Describe your symptoms or medical concerns in more detail..."
-                      value={description}
-                      onChange={e => setDescription(e.target.value)}
-                      className="min-h-32"
+                  <div className="w-full md:w-2/3">
+                    <Label htmlFor="search" className="mb-2 block">Search by Name</Label>
+                    <Input 
+                      id="search" 
+                      placeholder="Search doctors..." 
+                      className="w-full" 
                     />
                   </div>
-                  
-                  <div className="flex justify-end">
-                    <Button onClick={() => setStep(2)}>
-                      Next Step
-                    </Button>
-                  </div>
-                </div>
-              )}
-              
-              {step === 2 && (
-                <div className="space-y-6">
-                  <h3 className="text-lg font-medium">Review Your Information</h3>
-                  
-                  <div className="space-y-4 border-b pb-4">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="text-sm text-text-secondary">Urgency</p>
-                        <p className="font-medium capitalize">{urgency}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-text-secondary">Category</p>
-                        <p className="font-medium">
-                          {categories.find((c: SymptomCategory) => c.id === selectedCategory)?.name || ""}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm text-text-secondary">Selected Symptoms</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {selectedSymptoms.map(symptomId => {
-                          const category = categories.find((c: SymptomCategory) => 
-                            c.symptoms.some(s => s.id === symptomId)
-                          );
-                          const symptom = category?.symptoms.find(s => s.id === symptomId);
-                          
-                          return (
-                            <span 
-                              key={symptomId}
-                              className="bg-neutral-dark px-2 py-1 rounded-full text-xs"
-                            >
-                              {symptom?.name || ""}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    
-                    {description && (
-                      <div>
-                        <p className="text-sm text-text-secondary">Additional Details</p>
-                        <p className="text-sm mt-1">{description}</p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <Button variant="outline" onClick={() => setStep(1)}>
-                      Back
-                    </Button>
-                    <Button 
-                      onClick={handleDoctorMatch}
-                      disabled={isMatchLoading || selectedSymptoms.length === 0}
-                    >
-                      {isMatchLoading ? "Finding Matches..." : "Find Matching Doctors"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-              
-              {step === 3 && (
-                <div className="space-y-6">
-                  <h3 className="text-lg font-medium">Recommended Healthcare Providers</h3>
-                  
-                  {matchResults.length === 0 ? (
-                    <div className="text-center py-8">
-                      <span className="material-icons text-4xl text-text-secondary">search_off</span>
-                      <p className="mt-2 text-text-secondary">No matching doctors found</p>
-                      <Button 
-                        variant="outline" 
-                        className="mt-4"
-                        onClick={() => setStep(1)}
-                      >
-                        Try Different Symptoms
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {matchResults.map((result) => (
-                        <Card key={result.doctorId} className="border-l-4 border-l-primary">
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className="font-medium">
-                                  Dr. {result.doctor.user.firstName} {result.doctor.user.lastName}
-                                </h4>
-                                <p className="text-sm text-text-secondary">{result.doctor.specialty}</p>
-                                <div className="mt-2 text-xs">
-                                  <span className="font-medium">Match Score:</span> {result.score}%
-                                </div>
-                                <p className="mt-2 text-sm">{result.reasoning}</p>
-                              </div>
-                              <Button 
-                                size="sm"
-                                onClick={() => bookAppointment(result.doctor.id)}
-                              >
-                                Book Appointment
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                      
-                      <div className="flex justify-between">
-                        <Button variant="outline" onClick={() => setStep(1)}>
-                          Start Over
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="manual" className="pt-2">
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="specialty">Select Specialty</Label>
-                  <Select value={specialty} onValueChange={setSpecialty}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Specialties" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All Specialties</SelectItem>
-                      <SelectItem value="General Physician">General Physician</SelectItem>
-                      <SelectItem value="Pediatrician">Pediatrician</SelectItem>
-                      <SelectItem value="Cardiologist">Cardiologist</SelectItem>
-                      <SelectItem value="Dermatologist">Dermatologist</SelectItem>
-                      <SelectItem value="Mental Health Specialist">Mental Health Specialist</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
                 
-                <div>
-                  <h3 className="text-lg font-medium mb-4">Available Doctors</h3>
-                  
-                  {isDoctorsLoading ? (
-                    <div className="space-y-4">
-                      {[1, 2, 3].map(i => (
-                        <Skeleton key={i} className="h-24 w-full" />
-                      ))}
-                    </div>
-                  ) : filteredDoctors.length === 0 ? (
-                    <div className="text-center py-8 text-text-secondary">
-                      No doctors found for the selected specialty
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {filteredDoctors.map((doctor) => (
-                        <Card key={doctor.id}>
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className="font-medium">
-                                  Dr. {doctor.user.firstName} {doctor.user.lastName}
-                                </h4>
-                                <p className="text-sm text-text-secondary">{doctor.specialty}</p>
-                                <div className="flex items-center mt-1">
-                                  <span className="material-icons text-yellow-500 text-sm">star</span>
-                                  <span className="text-xs ml-1">
-                                    {doctor.averageRating || "New"} 
-                                    {doctor.reviewCount ? ` (${doctor.reviewCount} reviews)` : ""}
-                                  </span>
-                                </div>
-                              </div>
-                              <Button 
-                                size="sm"
-                                onClick={() => bookAppointment(doctor.id)}
-                              >
-                                Book Appointment
-                              </Button>
+                {isDoctorsLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-24 w-full" />
+                    ))}
+                  </div>
+                ) : filteredDoctors.length > 0 ? (
+                  <div className="space-y-4">
+                    {filteredDoctors.map((doctor) => (
+                      <Card key={doctor.id} className="border">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg">
+                            Dr. {doctor.user.firstName} {doctor.user.lastName}
+                          </CardTitle>
+                          <CardDescription>
+                            {doctor.specialty}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pb-2">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <span className="mr-1 text-yellow-500">★</span>
+                              <span>{doctor.averageRating.toFixed(1)}</span>
+                              <span className="text-text-secondary text-sm ml-1">
+                                ({doctor.reviewCount} reviews)
+                              </span>
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                            <span className={`px-2 py-1 rounded-full text-xs ${doctor.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                              {doctor.isAvailable ? 'Available' : 'Unavailable'}
+                            </span>
+                          </div>
+                        </CardContent>
+                        <CardFooter>
+                          <Button 
+                            className="w-full" 
+                            disabled={!doctor.isAvailable}
+                            onClick={() => setLocation(`/dashboard?doctorId=${doctor.id}&book=true`)}
+                          >
+                            Book Appointment
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-text-secondary">
+                      No doctors found matching the selected specialty.
+                    </p>
+                  </div>
+                )}
               </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

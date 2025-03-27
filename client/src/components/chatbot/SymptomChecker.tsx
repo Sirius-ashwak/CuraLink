@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { apiRequest } from "@/lib/queryClient";
 
-// Types for chat messages
+// Define message types
 type MessageType = "user" | "bot" | "system";
 
 interface ChatMessage {
@@ -72,40 +72,55 @@ export default function SymptomChecker() {
       ]);
       
       // Make API request to symptom checker
-      const response = await apiRequest(
-        "POST",
-        "/api/symptom-checker",
-        { message: userMessage.content, userId: user?.id }
-      );
+      const response = await apiRequest("/api/ai-chat", {
+        method: "POST",
+        body: JSON.stringify({ 
+          message: userMessage.content,
+          history: messages
+            .filter(m => m.type !== "system")
+            .map(m => ({
+              role: m.type === "user" ? "user" : "assistant",
+              content: m.content
+            }))
+        }),
+      });
       
-      const data = await response.json();
+      // Remove typing indicator
+      setMessages(prev => prev.filter(m => m.id !== "typing"));
       
-      // Remove typing indicator and add bot response
-      setMessages(prev => 
-        prev.filter(msg => msg.id !== "typing").concat({
+      // Add bot response
+      if (response && typeof response === 'object' && 'response' in response) {
+        const botMessage: ChatMessage = {
           id: `bot-${Date.now()}`,
           type: "bot",
-          content: data.response,
+          content: response.response as string,
           timestamp: new Date(),
-        })
-      );
-      
+        };
+        
+        setMessages(prev => [...prev, botMessage]);
+      } else {
+        throw new Error("Invalid response format");
+      }
     } catch (error) {
-      console.error("Error processing symptom check:", error);
+      console.error("Failed to get AI response:", error);
       
-      // Remove typing indicator and add error message
-      setMessages(prev => 
-        prev.filter(msg => msg.id !== "typing").concat({
+      // Remove typing indicator
+      setMessages(prev => prev.filter(m => m.id !== "typing"));
+      
+      // Add error message
+      setMessages(prev => [
+        ...prev,
+        {
           id: `error-${Date.now()}`,
           type: "system",
-          content: "Sorry, I couldn't process your symptoms. Please try again or contact a healthcare provider directly if you're experiencing severe symptoms.",
+          content: "Sorry, I couldn't process your request. Please try again.",
           timestamp: new Date(),
-        })
-      );
+        },
+      ]);
       
       toast({
         title: "Error",
-        description: "Failed to analyze symptoms. Please try again.",
+        description: "Failed to get a response. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -113,68 +128,83 @@ export default function SymptomChecker() {
     }
   };
   
-  // Handle Enter key press in input
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
   
+  const renderMessageContent = (content: string) => {
+    // Simple markdown-like rendering
+    return content.split("\n").map((line, i) => (
+      <p key={i} className={line.startsWith("*") ? "font-semibold" : ""}>
+        {line.startsWith("*") ? line.substring(1) : line}
+      </p>
+    ));
+  };
+  
   return (
-    <Card className="flex flex-col h-full shadow-lg">
-      <CardHeader className="bg-primary bg-opacity-10 border-b border-neutral-dark">
-        <CardTitle className="text-center relative flex items-center justify-center">
-          <span className="material-icons mr-2 text-primary">health_and_safety</span>
-          AI Symptom Checker
-        </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="flex-grow overflow-y-auto p-4 space-y-4">
+    <div className="flex flex-col h-full">
+      {/* Chat messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${
-              message.type === "user" ? "justify-end" : "justify-start"
-            }`}
+            className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
           >
+            {message.type === "bot" && (
+              <Avatar className="w-8 h-8 mr-2">
+                <AvatarFallback className="bg-primary text-white">AI</AvatarFallback>
+              </Avatar>
+            )}
+            
             <div
-              className={`max-w-3/4 rounded-lg px-4 py-2 ${
+              className={`px-4 py-2 rounded-lg max-w-[80%] ${
                 message.type === "user"
-                  ? "bg-primary text-white"
+                  ? "bg-primary text-white rounded-tr-none"
                   : message.type === "bot"
-                  ? "bg-neutral-dark"
-                  : "bg-secondary bg-opacity-10 text-center w-full italic"
+                  ? "bg-secondary-light text-text-primary rounded-tl-none"
+                  : "bg-neutral-light text-text-secondary text-sm italic"
               }`}
             >
-              {message.content}
+              {renderMessageContent(message.content)}
+              <div className="text-xs opacity-70 mt-1">
+                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
             </div>
+            
+            {message.type === "user" && (
+              <Avatar className="w-8 h-8 ml-2">
+                <AvatarFallback className="bg-accent text-white">
+                  {user?.firstName?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />
-      </CardContent>
+      </div>
       
-      <CardFooter className="border-t border-neutral-dark p-4">
-        <div className="flex items-center w-full gap-2">
-          <Textarea
+      {/* Input area */}
+      <div className="border-t p-4">
+        <div className="flex">
+          <Input
+            placeholder="Describe your symptoms..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Describe your symptoms..."
-            className="flex-grow resize-none"
-            maxLength={500}
-            rows={2}
+            onKeyDown={handleKeyPress}
             disabled={isLoading}
+            className="flex-1 mr-2"
           />
-          <Button 
-            onClick={handleSendMessage} 
-            disabled={isLoading || !input.trim()}
-            className="h-full"
-          >
-            <span className="material-icons">send</span>
+          <Button onClick={handleSendMessage} disabled={isLoading || !input.trim()}>
+            {isLoading ? "Sending..." : "Send"}
           </Button>
         </div>
-      </CardFooter>
-    </Card>
+        <p className="text-xs text-text-secondary mt-2">
+          This AI assistant provides general health information. Always consult with a healthcare professional for medical advice.
+        </p>
+      </div>
+    </div>
   );
 }
