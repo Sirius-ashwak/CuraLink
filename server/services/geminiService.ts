@@ -1,13 +1,15 @@
 import { GoogleGenerativeAI, GenerativeModel, GenerationConfig } from '@google/generative-ai';
 
 // Initialize the Gemini API
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.GEMINI_API_KEY || '';
 
 if (!apiKey) {
   console.error('GEMINI_API_KEY is not defined. AI features will not work.');
+} else {
+  console.log('GEMINI_API_KEY is configured. AI features are available.');
 }
 
-const genAI = new GoogleGenerativeAI(apiKey || '');
+const genAI = new GoogleGenerativeAI(apiKey);
 
 // Model configuration
 const modelName = 'gemini-1.5-pro';  // Updated to the latest Gemini model

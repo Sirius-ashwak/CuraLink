@@ -51,27 +51,13 @@ export default function DoctorMatcher() {
   const [matchResults, setMatchResults] = useState<Array<MatchResult & { doctor: DoctorWithUserInfo }>>([]);
   
   // Fetch symptom categories
-  const { data: categories = [], isLoading: isCategoriesLoading } = useQuery<SymptomCategory[]>({
+  const { data: categories = [], isLoading: isCategoriesLoading } = useQuery({
     queryKey: ["/api/doctor-match/symptom-categories"],
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to load symptom categories.",
-        variant: "destructive",
-      });
-    }
   });
   
   // Fetch doctors for manual search
-  const { data: allDoctors = [], isLoading: isDoctorsLoading } = useQuery<DoctorWithUserInfo[]>({
+  const { data: allDoctors = [], isLoading: isDoctorsLoading } = useQuery({
     queryKey: ["/api/doctors"],
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to load doctors.",
-        variant: "destructive",
-      });
-    }
   });
   
   // Filter doctors by specialty
@@ -112,16 +98,19 @@ export default function DoctorMatcher() {
       
       const urgencyLevel = urgencyMapping[urgency as keyof typeof urgencyMapping] || 3;
       
-      const response = await apiRequest<{matches: Array<MatchResult & { doctor: DoctorWithUserInfo }>}>("/api/doctor-match", {
+      const response = await fetch("/api/doctor-match", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ 
           symptoms: selectedSymptoms,
           description,
           urgencyLevel
         }),
-      });
+      }).then(res => res.json());
       
-      if (response?.matches) {
+      if (response && response.matches) {
         setMatchResults(response.matches);
         setStep(3);
       } else {
