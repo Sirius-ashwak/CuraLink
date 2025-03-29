@@ -68,7 +68,7 @@ export default function DateSelection({ doctorId, onDateSelect, selectedDate }: 
   if (isLoading || isLoadingAppointments) {
     return (
       <div className="mb-6">
-        <label className="block text-sm font-medium text-text-secondary mb-2">Select Date</label>
+        <label className="block text-sm font-medium mb-2">Select Date</label>
         <Skeleton className="h-60 w-full" />
       </div>
     );
@@ -76,31 +76,31 @@ export default function DateSelection({ doctorId, onDateSelect, selectedDate }: 
   
   return (
     <div className="mb-6">
-      <label className="block text-sm font-medium text-text-secondary mb-2">Select Date</label>
-      <div className="bg-neutral rounded-lg p-4">
+      <label className="block text-sm font-medium mb-2">Select Date</label>
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex justify-between items-center mb-4">
           <button 
-            className="p-1 hover:bg-neutral-dark rounded-full"
+            className="p-1 hover:bg-gray-200 rounded-full"
             onClick={prevMonth}
           >
             <span className="material-icons">chevron_left</span>
           </button>
           <h4 className="font-medium">{format(currentMonth, 'MMMM yyyy')}</h4>
           <button 
-            className="p-1 hover:bg-neutral-dark rounded-full"
+            className="p-1 hover:bg-gray-200 rounded-full"
             onClick={nextMonth}
           >
             <span className="material-icons">chevron_right</span>
           </button>
         </div>
         <div className="grid grid-cols-7 gap-1 text-center">
-          <div className="text-xs font-medium text-text-secondary">Sun</div>
-          <div className="text-xs font-medium text-text-secondary">Mon</div>
-          <div className="text-xs font-medium text-text-secondary">Tue</div>
-          <div className="text-xs font-medium text-text-secondary">Wed</div>
-          <div className="text-xs font-medium text-text-secondary">Thu</div>
-          <div className="text-xs font-medium text-text-secondary">Fri</div>
-          <div className="text-xs font-medium text-text-secondary">Sat</div>
+          <div className="text-xs font-medium text-gray-600">Sun</div>
+          <div className="text-xs font-medium text-gray-600">Mon</div>
+          <div className="text-xs font-medium text-gray-600">Tue</div>
+          <div className="text-xs font-medium text-gray-600">Wed</div>
+          <div className="text-xs font-medium text-gray-600">Thu</div>
+          <div className="text-xs font-medium text-gray-600">Fri</div>
+          <div className="text-xs font-medium text-gray-600">Sat</div>
           
           {/* Empty cells for days of the week before the start of the month */}
           {Array(startOfMonth(currentMonth).getDay())
