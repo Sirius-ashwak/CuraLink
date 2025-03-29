@@ -15,13 +15,13 @@ export default function Login() {
   
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center px-6">
+      <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center px-6">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-light mb-4">
-            <span className="material-icons text-white text-2xl">health_and_safety</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500 mb-4">
+            <span className="material-icons text-black text-2xl">health_and_safety</span>
           </div>
-          <h3 className="text-lg font-medium text-text-primary mb-1">AI Health Bridge</h3>
-          <p className="text-text-secondary">Loading your healthcare portal...</p>
+          <h3 className="text-lg font-medium text-white mb-1">AI Health Bridge</h3>
+          <p className="text-gray-400">Loading your healthcare portal...</p>
         </div>
       </div>
     );
@@ -32,7 +32,7 @@ export default function Login() {
   }
   
   return (
-    <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center px-6">
+    <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center px-6">
       <LoginForm />
     </div>
   );
