@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppointments } from "@/hooks/useAppointments";
+import { useLocation } from "wouter";
 import AppointmentCard from "./AppointmentCard";
 import AppointmentBooking from "./AppointmentBooking";
 import OfflineIndicator from "../notifications/OfflineIndicator";
@@ -14,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function PatientDashboard() {
   const { user } = useAuth();
   const { appointments, isLoading } = useAppointments();
+  const [, setLocation] = useLocation();
   const [showNotification, setShowNotification] = useState(false);
   const [notification, setNotification] = useState({ title: "", message: "" });
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -87,7 +89,7 @@ export default function PatientDashboard() {
               </div>
               <span className="text-sm font-medium text-center text-white">Find Doctor</span>
             </a>
-            <a href="#" className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors border border-gray-800">
+            <a onClick={() => setLocation("/video-call")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
               <div className="w-12 h-12 rounded-full bg-blue-900 flex items-center justify-center mb-2">
                 <span className="material-icons text-white">videocam</span>
               </div>
