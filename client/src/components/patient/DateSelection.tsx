@@ -13,7 +13,7 @@ export default function DateSelection({ doctorId, onDateSelect, selectedDate }: 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   
   // Get doctor's availability for the current month
-  const { data: availabilityData, isLoading } = useQuery({
+  const { data: availabilityData = { timeOffs: [] }, isLoading } = useQuery<{ timeOffs: any[] }>({
     queryKey: [`/api/doctors/${doctorId}/availability`],
   });
   

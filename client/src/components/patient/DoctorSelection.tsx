@@ -63,7 +63,7 @@ export default function DoctorSelection({
                 <div className="flex items-center mt-1">
                   <span className="material-icons text-yellow-500 text-sm">star</span>
                   <span className="text-xs ml-1">
-                    {(doctor.averageRating / 10).toFixed(1)} ({doctor.reviewCount} reviews)
+                    {((doctor.averageRating || 0) / 10).toFixed(1)} ({doctor.reviewCount} reviews)
                   </span>
                 </div>
               </div>

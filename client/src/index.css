@@ -11,3 +11,20 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Calendar styling */
+.calendar-day {
+  @apply h-10 w-10 flex items-center justify-center rounded-full cursor-default text-sm;
+}
+
+.calendar-day.available {
+  @apply cursor-pointer hover:bg-blue-100 text-gray-800;
+}
+
+.calendar-day.unavailable {
+  @apply text-gray-400;
+}
+
+.calendar-day.selected {
+  @apply bg-blue-500 text-white;
+}
