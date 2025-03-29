@@ -158,17 +158,17 @@ export default function SymptomChecker() {
           >
             {message.type === "bot" && (
               <Avatar className="w-8 h-8 mr-2">
-                <AvatarFallback className="bg-primary text-white">AI</AvatarFallback>
+                <AvatarFallback className="bg-blue-600 text-white">AI</AvatarFallback>
               </Avatar>
             )}
             
             <div
               className={`px-4 py-2 rounded-lg max-w-[80%] ${
                 message.type === "user"
-                  ? "bg-primary text-white rounded-tr-none"
+                  ? "bg-blue-600 text-white rounded-tr-none"
                   : message.type === "bot"
-                  ? "bg-secondary-light text-text-primary rounded-tl-none"
-                  : "bg-neutral-light text-text-secondary text-sm italic"
+                  ? "bg-gray-800 text-gray-100 rounded-tl-none border border-gray-700"
+                  : "bg-gray-900 text-gray-400 text-sm italic border border-gray-800"
               }`}
             >
               {renderMessageContent(message.content)}
@@ -179,7 +179,7 @@ export default function SymptomChecker() {
             
             {message.type === "user" && (
               <Avatar className="w-8 h-8 ml-2">
-                <AvatarFallback className="bg-accent text-white">
+                <AvatarFallback className="bg-blue-700 text-white">
                   {user?.firstName?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
@@ -190,7 +190,7 @@ export default function SymptomChecker() {
       </div>
       
       {/* Input area */}
-      <div className="border-t p-4">
+      <div className="border-t border-gray-800 p-4 bg-gray-900">
         <div className="flex">
           <Input
             placeholder="Describe your symptoms..."
@@ -198,13 +198,17 @@ export default function SymptomChecker() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
             disabled={isLoading}
-            className="flex-1 mr-2"
+            className="flex-1 mr-2 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
           />
-          <Button onClick={handleSendMessage} disabled={isLoading || !input.trim()}>
+          <Button 
+            onClick={handleSendMessage} 
+            disabled={isLoading || !input.trim()}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
             {isLoading ? "Sending..." : "Send"}
           </Button>
         </div>
-        <p className="text-xs text-text-secondary mt-2">
+        <p className="text-xs text-gray-400 mt-2">
           This AI assistant provides general health information. Always consult with a healthcare professional for medical advice.
         </p>
       </div>

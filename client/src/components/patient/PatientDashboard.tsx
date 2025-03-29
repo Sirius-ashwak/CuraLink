@@ -45,67 +45,67 @@ export default function PatientDashboard() {
     <>
       {/* Welcome Section */}
       <div className="mb-6">
-        <h2 className="text-xl font-medium text-text-primary">Welcome back, {user.firstName}</h2>
-        <p className="text-text-secondary">How can we help you today?</p>
+        <h2 className="text-xl font-medium text-white">Welcome back, {user.firstName}</h2>
+        <p className="text-gray-400">How can we help you today?</p>
       </div>
       
       {/* Main Tabs Navigation */}
       <Tabs defaultValue="dashboard" className="mb-8" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full mb-6">
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="ai-chat">AI Companion</TabsTrigger>
-          <TabsTrigger value="medicine-tracker">Medicine Tracker</TabsTrigger>
-          <TabsTrigger value="doctor-matcher">Doctor Matcher</TabsTrigger>
-          <TabsTrigger value="appointments">Appointments</TabsTrigger>
+        <TabsList className="grid grid-cols-5 w-full mb-6 bg-gray-900">
+          <TabsTrigger value="dashboard" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Dashboard</TabsTrigger>
+          <TabsTrigger value="ai-chat" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">AI Companion</TabsTrigger>
+          <TabsTrigger value="medicine-tracker" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Medicine Tracker</TabsTrigger>
+          <TabsTrigger value="doctor-matcher" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Doctor Matcher</TabsTrigger>
+          <TabsTrigger value="appointments" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Appointments</TabsTrigger>
         </TabsList>
         
         {/* Dashboard Tab */}
         <TabsContent value="dashboard">
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-5">
-            <a onClick={() => setActiveTab("appointments")} className="flex flex-col items-center p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-              <div className="w-12 h-12 rounded-full bg-primary-light flex items-center justify-center mb-2">
+            <a onClick={() => setActiveTab("appointments")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
+              <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center mb-2">
                 <span className="material-icons text-white">calendar_month</span>
               </div>
-              <span className="text-sm font-medium text-center">Book Appointment</span>
+              <span className="text-sm font-medium text-center text-white">Book Appointment</span>
             </a>
-            <a onClick={() => setActiveTab("ai-chat")} className="flex flex-col items-center p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-              <div className="w-12 h-12 rounded-full bg-secondary-light flex items-center justify-center mb-2">
+            <a onClick={() => setActiveTab("ai-chat")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
+              <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center mb-2">
                 <span className="material-icons text-white">smart_toy</span>
               </div>
-              <span className="text-sm font-medium text-center">AI Health Chat</span>
+              <span className="text-sm font-medium text-center text-white">AI Health Chat</span>
             </a>
-            <a onClick={() => setActiveTab("medicine-tracker")} className="flex flex-col items-center p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-              <div className="w-12 h-12 rounded-full bg-accent-light flex items-center justify-center mb-2">
+            <a onClick={() => setActiveTab("medicine-tracker")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
+              <div className="w-12 h-12 rounded-full bg-blue-700 flex items-center justify-center mb-2">
                 <span className="material-icons text-white">medication</span>
               </div>
-              <span className="text-sm font-medium text-center">Medicine Tracker</span>
+              <span className="text-sm font-medium text-center text-white">Medicine Tracker</span>
             </a>
-            <a onClick={() => setActiveTab("doctor-matcher")} className="flex flex-col items-center p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-              <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center mb-2">
+            <a onClick={() => setActiveTab("doctor-matcher")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
+              <div className="w-12 h-12 rounded-full bg-blue-800 flex items-center justify-center mb-2">
                 <span className="material-icons text-white">person_search</span>
               </div>
-              <span className="text-sm font-medium text-center">Find Doctor</span>
+              <span className="text-sm font-medium text-center text-white">Find Doctor</span>
             </a>
-            <a href="#" className="flex flex-col items-center p-4 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-full bg-neutral-dark flex items-center justify-center mb-2">
+            <a href="#" className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors border border-gray-800">
+              <div className="w-12 h-12 rounded-full bg-blue-900 flex items-center justify-center mb-2">
                 <span className="material-icons text-white">videocam</span>
               </div>
-              <span className="text-sm font-medium text-center">Video Consult</span>
+              <span className="text-sm font-medium text-center text-white">Video Consult</span>
             </a>
           </div>
           
           {/* Upcoming Appointments */}
           <section id="upcoming-appointments" className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">Upcoming Appointments</h3>
-              <a onClick={() => setActiveTab("appointments")} className="text-primary text-sm cursor-pointer">View all</a>
+              <h3 className="text-lg font-medium text-white">Upcoming Appointments</h3>
+              <a onClick={() => setActiveTab("appointments")} className="text-blue-500 text-sm cursor-pointer hover:text-blue-400">View all</a>
             </div>
             
             {isLoading ? (
               <div className="space-y-4">
                 {[1, 2].map((i) => (
-                  <div key={i} className="h-32 bg-gray-100 animate-pulse rounded-lg"></div>
+                  <div key={i} className="h-32 bg-gray-800 animate-pulse rounded-lg"></div>
                 ))}
               </div>
             ) : appointments.length > 0 ? (
@@ -115,9 +115,9 @@ export default function PatientDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-                <p className="text-text-secondary">You don't have any upcoming appointments.</p>
-                <a onClick={() => setActiveTab("appointments")} className="text-primary font-medium mt-2 inline-block cursor-pointer">
+              <div className="bg-gray-900 rounded-lg shadow-sm p-6 text-center border border-gray-800">
+                <p className="text-gray-400">You don't have any upcoming appointments.</p>
+                <a onClick={() => setActiveTab("appointments")} className="text-blue-500 font-medium mt-2 inline-block cursor-pointer hover:text-blue-400">
                   Book your first appointment
                 </a>
               </div>
@@ -126,42 +126,42 @@ export default function PatientDashboard() {
           
           {/* Health Overview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <Card>
-              <CardHeader className="bg-primary bg-opacity-10 pb-2">
-                <CardTitle className="text-base flex items-center">
-                  <span className="material-icons mr-2 text-primary text-sm">smart_toy</span>
+            <Card className="bg-gray-900 border border-gray-800">
+              <CardHeader className="bg-blue-900 bg-opacity-30 pb-2 border-b border-gray-800">
+                <CardTitle className="text-base flex items-center text-white">
+                  <span className="material-icons mr-2 text-blue-500 text-sm">smart_toy</span>
                   AI Health Assistant
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4">
-                <p className="text-sm text-text-secondary mb-3">Get instant answers to your health questions and symptoms from our AI companion.</p>
-                <a onClick={() => setActiveTab("ai-chat")} className="text-primary text-sm font-medium cursor-pointer">Chat with AI Assistant →</a>
+                <p className="text-sm text-gray-400 mb-3">Get instant answers to your health questions and symptoms from our AI companion.</p>
+                <a onClick={() => setActiveTab("ai-chat")} className="text-blue-500 text-sm font-medium cursor-pointer hover:text-blue-400">Chat with AI Assistant →</a>
               </CardContent>
             </Card>
             
-            <Card>
-              <CardHeader className="bg-green-100 pb-2">
-                <CardTitle className="text-base flex items-center">
-                  <span className="material-icons mr-2 text-green-600 text-sm">person_search</span>
+            <Card className="bg-gray-900 border border-gray-800">
+              <CardHeader className="bg-blue-800 bg-opacity-30 pb-2 border-b border-gray-800">
+                <CardTitle className="text-base flex items-center text-white">
+                  <span className="material-icons mr-2 text-blue-500 text-sm">person_search</span>
                   Find the Right Doctor
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4">
-                <p className="text-sm text-text-secondary mb-3">Answer a few questions about your symptoms to find doctors who specialize in your needs.</p>
-                <a onClick={() => setActiveTab("doctor-matcher")} className="text-green-600 text-sm font-medium cursor-pointer">Find Matching Doctors →</a>
+                <p className="text-sm text-gray-400 mb-3">Answer a few questions about your symptoms to find doctors who specialize in your needs.</p>
+                <a onClick={() => setActiveTab("doctor-matcher")} className="text-blue-500 text-sm font-medium cursor-pointer hover:text-blue-400">Find Matching Doctors →</a>
               </CardContent>
             </Card>
             
-            <Card>
-              <CardHeader className="bg-accent bg-opacity-10 pb-2">
-                <CardTitle className="text-base flex items-center">
-                  <span className="material-icons mr-2 text-accent text-sm">medication</span>
+            <Card className="bg-gray-900 border border-gray-800">
+              <CardHeader className="bg-blue-700 bg-opacity-30 pb-2 border-b border-gray-800">
+                <CardTitle className="text-base flex items-center text-white">
+                  <span className="material-icons mr-2 text-blue-500 text-sm">medication</span>
                   Medicine Tracker
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4">
-                <p className="text-sm text-text-secondary mb-3">Keep track of your medications, get reminders, and learn more about your prescriptions.</p>
-                <a onClick={() => setActiveTab("medicine-tracker")} className="text-accent text-sm font-medium cursor-pointer">Manage Medicines →</a>
+                <p className="text-sm text-gray-400 mb-3">Keep track of your medications, get reminders, and learn more about your prescriptions.</p>
+                <a onClick={() => setActiveTab("medicine-tracker")} className="text-blue-500 text-sm font-medium cursor-pointer hover:text-blue-400">Manage Medicines →</a>
               </CardContent>
             </Card>
           </div>
@@ -169,10 +169,10 @@ export default function PatientDashboard() {
         
         {/* AI Companion Chat Tab */}
         <TabsContent value="ai-chat">
-          <Card className="mb-4">
-            <CardHeader className="bg-primary bg-opacity-10">
-              <CardTitle className="flex items-center">
-                <span className="material-icons mr-2 text-primary">smart_toy</span>
+          <Card className="mb-4 bg-gray-900 border border-gray-800">
+            <CardHeader className="bg-blue-900 bg-opacity-30 border-b border-gray-800">
+              <CardTitle className="flex items-center text-white">
+                <span className="material-icons mr-2 text-blue-500">smart_toy</span>
                 AI Health Companion
               </CardTitle>
             </CardHeader>
@@ -186,10 +186,10 @@ export default function PatientDashboard() {
         
         {/* Medicine Tracker Tab */}
         <TabsContent value="medicine-tracker">
-          <Card className="mb-4">
-            <CardHeader className="bg-accent bg-opacity-10">
-              <CardTitle className="flex items-center">
-                <span className="material-icons mr-2 text-accent">medication</span>
+          <Card className="mb-4 bg-gray-900 border border-gray-800">
+            <CardHeader className="bg-blue-700 bg-opacity-30 border-b border-gray-800">
+              <CardTitle className="flex items-center text-white">
+                <span className="material-icons mr-2 text-blue-500">medication</span>
                 Medicine Tracker
               </CardTitle>
             </CardHeader>
@@ -203,10 +203,10 @@ export default function PatientDashboard() {
         
         {/* Doctor Matcher Tab */}
         <TabsContent value="doctor-matcher">
-          <Card className="mb-4">
-            <CardHeader className="bg-green-100">
-              <CardTitle className="flex items-center">
-                <span className="material-icons mr-2 text-green-600">person_search</span>
+          <Card className="mb-4 bg-gray-900 border border-gray-800">
+            <CardHeader className="bg-blue-800 bg-opacity-30 border-b border-gray-800">
+              <CardTitle className="flex items-center text-white">
+                <span className="material-icons mr-2 text-blue-500">person_search</span>
                 Find the Right Doctor
               </CardTitle>
             </CardHeader>
@@ -220,10 +220,10 @@ export default function PatientDashboard() {
         
         {/* Appointments Tab */}
         <TabsContent value="appointments">
-          <Card className="mb-4">
-            <CardHeader className="bg-primary bg-opacity-10">
-              <CardTitle className="flex items-center">
-                <span className="material-icons mr-2 text-primary">calendar_month</span>
+          <Card className="mb-4 bg-gray-900 border border-gray-800">
+            <CardHeader className="bg-blue-600 bg-opacity-30 border-b border-gray-800">
+              <CardTitle className="flex items-center text-white">
+                <span className="material-icons mr-2 text-blue-500">calendar_month</span>
                 Schedule an Appointment
               </CardTitle>
             </CardHeader>
