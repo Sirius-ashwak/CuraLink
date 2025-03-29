@@ -73,24 +73,24 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
   };
   
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
+    <div className="rounded-lg shadow-sm p-4 border border-gray-200">
       <div className="flex items-start">
-        <div className="bg-primary w-2 h-full rounded-full mr-4 self-stretch"></div>
+        <div className="bg-blue-500 w-2 h-full rounded-full mr-4 self-stretch"></div>
         <div className="flex-grow">
           <div className="flex justify-between">
             <h4 className="font-medium">Dr. {doctor.user.firstName} {doctor.user.lastName}</h4>
-            <span className="text-sm text-secondary font-medium">{status}</span>
+            <span className="text-sm text-blue-600 font-medium">{status}</span>
           </div>
-          <p className="text-text-secondary text-sm">{reason}</p>
+          <p className="text-gray-600 text-sm">{reason}</p>
           <div className="mt-2 flex items-center">
-            <span className="material-icons text-text-secondary text-sm mr-1">calendar_today</span>
+            <span className="material-icons text-gray-500 text-sm mr-1">calendar_today</span>
             <span className="text-sm">{formattedDate}, {formattedTime}</span>
           </div>
         </div>
       </div>
-      <div className="mt-3 pt-3 border-t border-neutral-dark flex justify-between">
+      <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between">
         <button 
-          className="text-error text-sm font-medium flex items-center"
+          className="text-red-600 text-sm font-medium flex items-center"
           onClick={handleCancel}
           disabled={isLoading || status === "canceled"}
         >
@@ -99,7 +99,7 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
         </button>
         {canJoinCall() ? (
           <button 
-            className="text-primary text-sm font-medium flex items-center"
+            className="text-blue-600 text-sm font-medium flex items-center"
             onClick={handleJoinCall}
           >
             <span className="material-icons text-sm mr-1">videocam</span>
@@ -107,7 +107,7 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
           </button>
         ) : (
           <button 
-            className="text-primary text-sm font-medium flex items-center"
+            className="text-blue-600 text-sm font-medium flex items-center"
             onClick={() => alert("You can reschedule this appointment by canceling and booking a new one.")}
           >
             <span className="material-icons text-sm mr-1">schedule</span>
