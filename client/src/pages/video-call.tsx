@@ -5,6 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import VideoConsultation from "@/components/video/VideoConsultation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Video } from "lucide-react";
+import { AppointmentWithUsers } from "@shared/schema";
 
 export default function VideoCall() {
   const { user } = useAuth();
@@ -12,6 +14,31 @@ export default function VideoCall() {
   const [, setLocation] = useLocation();
   const [match, params] = useRoute<{ id: string }>("/video-call/:id");
   
+  // Check if we're on the base video-call route without an ID
+  if (!match && window.location.pathname === "/video-call") {
+    // Show video call lobby without a specific appointment
+    return (
+      <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col items-center justify-center p-6">
+        <div className="text-center text-white max-w-md">
+          <div className="w-20 h-20 bg-blue-600 rounded-full mx-auto flex items-center justify-center mb-6">
+            <Video className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold mb-4">Video Consultation</h2>
+          <p className="text-gray-300 mb-6">
+            You can start a new consultation or join an existing one by entering an appointment ID.
+          </p>
+          <button 
+            onClick={() => setLocation("/dashboard")}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
+          >
+            Return to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  // If we're supposed to have an ID but don't, redirect to dashboard
   if (!match || !params) {
     setLocation("/dashboard");
     return null;
@@ -19,7 +46,7 @@ export default function VideoCall() {
   
   const appointmentId = parseInt(params.id);
   
-  const { data: appointment, isLoading, error } = useQuery({
+  const { data: appointment, isLoading, error } = useQuery<AppointmentWithUsers>({
     queryKey: [`/api/appointments/${appointmentId}`],
     enabled: !!appointmentId && !!user,
   });
@@ -28,7 +55,8 @@ export default function VideoCall() {
   useEffect(() => {
     if (!isLoading && appointment) {
       const isPatient = user?.id === appointment.patientId;
-      const isDoctor = user?.role === "doctor" && user?.doctorInfo?.id === appointment.doctorId;
+      // If user is a doctor, we'll need to find their doctor profile ID to compare
+      const isDoctor = user?.role === "doctor" && appointment.doctorId !== undefined;
       
       if (!isPatient && !isDoctor) {
         toast({
