@@ -220,9 +220,9 @@ export default function PatientDashboard() {
         
         {/* Appointments Tab */}
         <TabsContent value="appointments">
-          <Card className="mb-4 border">
-            <CardHeader className="bg-blue-50 border-b">
-              <CardTitle className="flex items-center">
+          <Card className="mb-4 bg-gray-900 border border-gray-800">
+            <CardHeader className="bg-blue-600 bg-opacity-30 border-b border-gray-800">
+              <CardTitle className="flex items-center text-white">
                 <span className="material-icons mr-2 text-blue-500">calendar_month</span>
                 Schedule an Appointment
               </CardTitle>

@@ -18,13 +18,13 @@
 }
 
 .calendar-day.available {
-  @apply cursor-pointer hover:bg-blue-100 text-gray-800;
+  @apply cursor-pointer hover:bg-blue-700 hover:border-blue-500 text-gray-200;
 }
 
 .calendar-day.unavailable {
-  @apply text-gray-400;
+  @apply text-gray-500;
 }
 
 .calendar-day.selected {
-  @apply bg-blue-500 text-white;
+  @apply bg-blue-600 text-white;
 }

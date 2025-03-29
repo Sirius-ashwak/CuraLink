@@ -120,15 +120,15 @@ export default function AppointmentBooking() {
   };
   
   return (
-    <section id="book-appointment" className="rounded-lg shadow-sm p-6 mb-8 border border-gray-200 bg-white">
-      <h3 className="text-lg font-medium mb-4 text-gray-800">Book an Appointment</h3>
+    <section id="book-appointment" className="rounded-lg shadow-sm p-6 mb-8 border border-gray-700 bg-gray-800">
+      <h3 className="text-lg font-medium mb-4 text-white">Book an Appointment</h3>
       
       {/* Specialist Selection */}
       <div className="mb-6">
-        <label className="block text-sm font-medium mb-2">Select Specialist</label>
+        <label className="block text-sm font-medium mb-2 text-gray-200">Select Specialist</label>
         <div className="relative">
           <select 
-            className="block appearance-none w-full border border-gray-300 rounded py-2 px-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="block appearance-none w-full bg-gray-700 border border-gray-600 text-white rounded py-2 px-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={selectedSpecialty}
             onChange={handleSpecialtyChange}
           >
@@ -138,7 +138,7 @@ export default function AppointmentBooking() {
             <option>Dermatologist</option>
             <option>Mental Health Specialist</option>
           </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-300">
             <span className="material-icons text-sm">expand_more</span>
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function AppointmentBooking() {
           {selectedTime && (
             <>
               <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">Consultation Type</label>
+                <label className="block text-sm font-medium mb-2 text-gray-200">Consultation Type</label>
                 <RadioGroup 
                   value={consultationType} 
                   onValueChange={(value) => setConsultationType(value as "video" | "audio")}
@@ -184,18 +184,18 @@ export default function AppointmentBooking() {
                 >
                   <div className="flex items-center">
                     <RadioGroupItem value="video" id="video-consultation" />
-                    <Label htmlFor="video-consultation" className="ml-2">Video Consultation</Label>
+                    <Label htmlFor="video-consultation" className="ml-2 text-gray-200">Video Consultation</Label>
                   </div>
                   <div className="flex items-center">
                     <RadioGroupItem value="audio" id="audio-only" />
-                    <Label htmlFor="audio-only" className="ml-2">Audio Only</Label>
+                    <Label htmlFor="audio-only" className="ml-2 text-gray-200">Audio Only</Label>
                   </div>
                 </RadioGroup>
               </div>
               
               {/* Consultation Reason */}
               <div className="mb-6">
-                <label htmlFor="reason" className="block text-sm font-medium mb-2">
+                <label htmlFor="reason" className="block text-sm font-medium mb-2 text-gray-200">
                   Reason for Consultation
                 </label>
                 <Textarea
@@ -204,7 +204,7 @@ export default function AppointmentBooking() {
                   rows={3}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  className="border-gray-300"
+                  className="border-gray-600 bg-gray-700 text-white placeholder:text-gray-400"
                 />
               </div>
               
