@@ -19,7 +19,13 @@ export const WebSocketContext = createContext<WebSocketContextType>({
 });
 
 // Create the useWebSocket hook
-export const useWebSocket = () => useContext(WebSocketContext);
+export const useWebSocket = () => {
+  const context = useContext(WebSocketContext);
+  if (context === undefined) {
+    throw new Error('useWebSocket must be used within a WebSocketProvider');
+  }
+  return context;
+};
 
 interface WebSocketProviderProps {
   children: ReactNode;

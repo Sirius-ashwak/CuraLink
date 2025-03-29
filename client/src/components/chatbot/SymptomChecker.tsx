@@ -72,8 +72,11 @@ export default function SymptomChecker() {
       ]);
       
       // Make API request to symptom checker
-      const response = await apiRequest("/api/ai-chat", {
+      const response = await fetch("/api/ai-chat", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ 
           message: userMessage.content,
           history: messages
@@ -83,7 +86,7 @@ export default function SymptomChecker() {
               content: m.content
             }))
         }),
-      });
+      }).then(res => res.json());
       
       // Remove typing indicator
       setMessages(prev => prev.filter(m => m.id !== "typing"));
