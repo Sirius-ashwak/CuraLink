@@ -141,30 +141,30 @@ export default function DoctorMatcher() {
   return (
     <div className="p-4">
       <Tabs defaultValue="symptoms" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="symptoms">Symptom Matcher</TabsTrigger>
-          <TabsTrigger value="browse">Browse Doctors</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-900">
+          <TabsTrigger value="symptoms" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Symptom Matcher</TabsTrigger>
+          <TabsTrigger value="browse" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Browse Doctors</TabsTrigger>
         </TabsList>
         
         <TabsContent value="symptoms">
           {step === 1 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Tell us about your symptoms</CardTitle>
-                <CardDescription>
+            <Card className="bg-gray-900 border border-gray-800">
+              <CardHeader className="bg-blue-900 bg-opacity-30 border-b border-gray-800">
+                <CardTitle className="text-white">Tell us about your symptoms</CardTitle>
+                <CardDescription className="text-gray-400">
                   Select a category and the symptoms you're experiencing.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="text-gray-200">
                 {isCategoriesLoading ? (
                   <div className="space-y-4">
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-40 w-full" />
+                    <Skeleton className="h-8 w-full bg-gray-800" />
+                    <Skeleton className="h-40 w-full bg-gray-800" />
                   </div>
                 ) : (
                   <>
                     <div className="mb-6">
-                      <Label htmlFor="urgency" className="mb-2 block">How soon do you need to see a doctor?</Label>
+                      <Label htmlFor="urgency" className="mb-2 block text-gray-300">How soon do you need to see a doctor?</Label>
                       <RadioGroup 
                         id="urgency" 
                         value={urgency} 
@@ -191,14 +191,14 @@ export default function DoctorMatcher() {
                     </div>
                     
                     <div className="mb-4">
-                      <Label htmlFor="category" className="mb-2 block">Select a symptom category</Label>
+                      <Label htmlFor="category" className="mb-2 block text-gray-300">Select a symptom category</Label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                         {categories.map((category) => (
                           <Button
                             key={category.id}
                             variant={selectedCategory === category.id ? "default" : "outline"}
                             onClick={() => handleCategorySelect(category.id)}
-                            className="justify-start"
+                            className={`justify-start ${selectedCategory === category.id ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"}`}
                           >
                             {category.name}
                           </Button>
@@ -208,7 +208,7 @@ export default function DoctorMatcher() {
                     
                     {selectedCategory && (
                       <div className="mb-4">
-                        <Label className="mb-2 block">Select all symptoms that apply</Label>
+                        <Label className="mb-2 block text-gray-300">Select all symptoms that apply</Label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {categories
                             .find(cat => cat.id === selectedCategory)
@@ -218,7 +218,7 @@ export default function DoctorMatcher() {
                                   variant={selectedSymptoms.includes(symptom.id) ? "default" : "outline"}
                                   size="sm"
                                   onClick={() => handleSymptomSelect(symptom.id)}
-                                  className="justify-start w-full"
+                                  className={`justify-start w-full ${selectedSymptoms.includes(symptom.id) ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"}`}
                                 >
                                   {symptom.name}
                                 </Button>
@@ -229,22 +229,23 @@ export default function DoctorMatcher() {
                     )}
                     
                     <div className="mb-4">
-                      <Label htmlFor="description" className="mb-2 block">Additional details (optional)</Label>
+                      <Label htmlFor="description" className="mb-2 block text-gray-300">Additional details (optional)</Label>
                       <Textarea
                         id="description"
                         placeholder="Describe your symptoms in more detail..."
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        className="w-full"
+                        className="w-full bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
                       />
                     </div>
                   </>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-end">
+              <CardFooter className="flex justify-end border-t border-gray-800">
                 <Button 
                   onClick={() => setStep(2)} 
                   disabled={isCategoriesLoading || selectedSymptoms.length === 0}
+                  className="bg-blue-600 hover:bg-blue-700"
                 >
                   Next
                 </Button>
@@ -253,22 +254,22 @@ export default function DoctorMatcher() {
           )}
           
           {step === 2 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Review your symptoms</CardTitle>
-                <CardDescription>
+            <Card className="bg-gray-900 border border-gray-800">
+              <CardHeader className="bg-blue-900 bg-opacity-30 border-b border-gray-800">
+                <CardTitle className="text-white">Review your symptoms</CardTitle>
+                <CardDescription className="text-gray-400">
                   Confirm your symptoms before we find matching doctors.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="text-gray-200">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-medium mb-2">Urgency Level</h4>
+                    <h4 className="font-medium mb-2 text-gray-300">Urgency Level</h4>
                     <p className={`inline-block px-3 py-1 rounded-full text-sm ${
-                      urgency === "emergency" ? "bg-red-100 text-red-800" :
-                      urgency === "urgent" ? "bg-orange-100 text-orange-800" :
-                      urgency === "soon" ? "bg-yellow-100 text-yellow-800" :
-                      "bg-green-100 text-green-800"
+                      urgency === "emergency" ? "bg-red-900 bg-opacity-40 text-red-200 border border-red-800" :
+                      urgency === "urgent" ? "bg-orange-900 bg-opacity-40 text-orange-200 border border-orange-800" :
+                      urgency === "soon" ? "bg-yellow-900 bg-opacity-40 text-yellow-200 border border-yellow-800" :
+                      "bg-green-900 bg-opacity-40 text-green-200 border border-green-800"
                     }`}>
                       {urgency === "emergency" ? "Emergency" :
                        urgency === "urgent" ? "Urgent (24 hours)" :
@@ -279,7 +280,7 @@ export default function DoctorMatcher() {
                   </div>
                   
                   <div>
-                    <h4 className="font-medium mb-2">Selected Symptoms</h4>
+                    <h4 className="font-medium mb-2 text-gray-300">Selected Symptoms</h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedSymptoms.map(symptomId => {
                         const category = categories.find((c) => 
@@ -290,7 +291,7 @@ export default function DoctorMatcher() {
                         return (
                           <span 
                             key={symptomId}
-                            className="bg-neutral-dark px-2 py-1 rounded-full text-xs"
+                            className="bg-blue-900 bg-opacity-40 text-blue-100 px-3 py-1 rounded-full text-xs border border-blue-800"
                           >
                             {symptom?.name || ""}
                           </span>
@@ -301,19 +302,24 @@ export default function DoctorMatcher() {
                   
                   {description && (
                     <div>
-                      <h4 className="font-medium mb-2">Additional Details</h4>
-                      <p className="text-sm">{description}</p>
+                      <h4 className="font-medium mb-2 text-gray-300">Additional Details</h4>
+                      <p className="text-sm text-gray-300">{description}</p>
                     </div>
                   )}
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(1)}>
+              <CardFooter className="flex justify-between border-t border-gray-800">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStep(1)}
+                  className="bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
+                >
                   Back
                 </Button>
                 <Button 
                   onClick={handleDoctorMatch}
                   disabled={isMatchLoading}
+                  className="bg-blue-600 hover:bg-blue-700"
                 >
                   {isMatchLoading ? "Finding doctors..." : "Find matching doctors"}
                 </Button>
@@ -322,32 +328,32 @@ export default function DoctorMatcher() {
           )}
           
           {step === 3 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Matching Doctors</CardTitle>
-                <CardDescription>
+            <Card className="bg-gray-900 border border-gray-800">
+              <CardHeader className="bg-blue-900 bg-opacity-30 border-b border-gray-800">
+                <CardTitle className="text-white">Matching Doctors</CardTitle>
+                <CardDescription className="text-gray-400">
                   Based on your symptoms, we found these doctors who may be able to help.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="text-gray-200">
                 {matchResults.length > 0 ? (
                   <div className="space-y-4">
                     {matchResults.map((result) => (
-                      <Card key={result.doctorId} className="border">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-lg">
+                      <Card key={result.doctorId} className="border border-gray-700 bg-gray-800">
+                        <CardHeader className="pb-2 bg-blue-900 bg-opacity-20 border-b border-gray-700">
+                          <CardTitle className="text-lg text-white">
                             Dr. {result.doctor.user.firstName} {result.doctor.user.lastName}
                           </CardTitle>
-                          <CardDescription>
+                          <CardDescription className="text-gray-400">
                             {result.doctor.specialty} • Match Score: {Math.round(result.matchScore * 100)}%
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="pb-2">
+                        <CardContent className="pb-2 text-gray-300">
                           <p className="text-sm">{result.matchReason}</p>
                         </CardContent>
-                        <CardFooter>
+                        <CardFooter className="border-t border-gray-700">
                           <Button 
-                            className="w-full" 
+                            className="w-full bg-blue-600 hover:bg-blue-700" 
                             onClick={() => setLocation(`/dashboard?doctorId=${result.doctorId}&book=true`)}
                           >
                             Book Appointment
@@ -358,20 +364,25 @@ export default function DoctorMatcher() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-text-secondary mb-4">
+                    <p className="text-gray-400 mb-4">
                       No doctors found that match your symptoms. Please try with different symptoms or browse all doctors.
                     </p>
                     <Button 
                       onClick={() => setStep(1)}
                       variant="outline"
+                      className="bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
                     >
                       Try Again
                     </Button>
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={handleReset}>
+              <CardFooter className="flex justify-between border-t border-gray-800">
+                <Button 
+                  variant="outline" 
+                  onClick={handleReset}
+                  className="bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
+                >
                   Start Over
                 </Button>
               </CardFooter>
@@ -380,23 +391,23 @@ export default function DoctorMatcher() {
         </TabsContent>
         
         <TabsContent value="browse">
-          <Card>
-            <CardHeader>
-              <CardTitle>Browse All Doctors</CardTitle>
-              <CardDescription>
+          <Card className="bg-gray-900 border border-gray-800">
+            <CardHeader className="bg-blue-900 bg-opacity-30 border-b border-gray-800">
+              <CardTitle className="text-white">Browse All Doctors</CardTitle>
+              <CardDescription className="text-gray-400">
                 Search and filter by specialty to find the right doctor for you.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="text-gray-200">
               <div className="space-y-4">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="w-full md:w-1/3">
-                    <Label htmlFor="specialty" className="mb-2 block">Filter by Specialty</Label>
+                    <Label htmlFor="specialty" className="mb-2 block text-gray-300">Filter by Specialty</Label>
                     <Select value={specialty} onValueChange={setSpecialty}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-gray-800 border-gray-700 text-gray-200">
                         <SelectValue placeholder="All Specialties" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-gray-800 border-gray-700 text-gray-200">
                         <SelectItem value="">All Specialties</SelectItem>
                         {specialties.map((specialty) => (
                           <SelectItem key={specialty} value={specialty}>
@@ -408,11 +419,11 @@ export default function DoctorMatcher() {
                   </div>
                   
                   <div className="w-full md:w-2/3">
-                    <Label htmlFor="search" className="mb-2 block">Search by Name</Label>
+                    <Label htmlFor="search" className="mb-2 block text-gray-300">Search by Name</Label>
                     <Input 
                       id="search" 
                       placeholder="Search doctors..." 
-                      className="w-full" 
+                      className="w-full bg-gray-800 border-gray-700 text-gray-200 placeholder:text-gray-500" 
                     />
                   </div>
                 </div>
@@ -420,38 +431,42 @@ export default function DoctorMatcher() {
                 {isDoctorsLoading ? (
                   <div className="space-y-4">
                     {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-24 w-full" />
+                      <Skeleton key={i} className="h-24 w-full bg-gray-800" />
                     ))}
                   </div>
                 ) : filteredDoctors.length > 0 ? (
                   <div className="space-y-4">
                     {filteredDoctors.map((doctor) => (
-                      <Card key={doctor.id} className="border">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-lg">
+                      <Card key={doctor.id} className="border border-gray-700 bg-gray-800">
+                        <CardHeader className="pb-2 bg-blue-900 bg-opacity-20 border-b border-gray-700">
+                          <CardTitle className="text-lg text-white">
                             Dr. {doctor.user.firstName} {doctor.user.lastName}
                           </CardTitle>
-                          <CardDescription>
+                          <CardDescription className="text-gray-400">
                             {doctor.specialty}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="pb-2">
+                        <CardContent className="pb-2 text-gray-300">
                           <div className="flex justify-between items-center">
                             <div className="flex items-center">
                               <span className="mr-1 text-yellow-500">★</span>
                               <span>{doctor.averageRating.toFixed(1)}</span>
-                              <span className="text-text-secondary text-sm ml-1">
+                              <span className="text-gray-400 text-sm ml-1">
                                 ({doctor.reviewCount} reviews)
                               </span>
                             </div>
-                            <span className={`px-2 py-1 rounded-full text-xs ${doctor.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              doctor.isAvailable 
+                                ? 'bg-green-900 bg-opacity-40 text-green-200 border border-green-800' 
+                                : 'bg-red-900 bg-opacity-40 text-red-200 border border-red-800'
+                            }`}>
                               {doctor.isAvailable ? 'Available' : 'Unavailable'}
                             </span>
                           </div>
                         </CardContent>
-                        <CardFooter>
+                        <CardFooter className="border-t border-gray-700">
                           <Button 
-                            className="w-full" 
+                            className="w-full bg-blue-600 hover:bg-blue-700" 
                             disabled={!doctor.isAvailable}
                             onClick={() => setLocation(`/dashboard?doctorId=${doctor.id}&book=true`)}
                           >
@@ -463,7 +478,7 @@ export default function DoctorMatcher() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-text-secondary">
+                    <p className="text-gray-400">
                       No doctors found matching the selected specialty.
                     </p>
                   </div>
