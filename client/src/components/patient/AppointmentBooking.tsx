@@ -25,7 +25,7 @@ export default function AppointmentBooking() {
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { data: doctors = [], isLoading: isLoadingDoctors } = useQuery({
+  const { data: doctors = [], isLoading: isLoadingDoctors } = useQuery<DoctorWithUserInfo[]>({
     queryKey: [`/api/doctors?specialty=${selectedSpecialty}`],
     enabled: !!selectedSpecialty,
   });
@@ -120,8 +120,8 @@ export default function AppointmentBooking() {
   };
   
   return (
-    <section id="book-appointment" className="rounded-lg shadow-sm p-6 mb-8 border border-gray-200">
-      <h3 className="text-lg font-medium mb-4">Book an Appointment</h3>
+    <section id="book-appointment" className="rounded-lg shadow-sm p-6 mb-8 border border-gray-200 bg-white">
+      <h3 className="text-lg font-medium mb-4 text-gray-800">Book an Appointment</h3>
       
       {/* Specialist Selection */}
       <div className="mb-6">

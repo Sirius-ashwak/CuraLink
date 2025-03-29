@@ -19,7 +19,7 @@ export default function TimeSelection({
   const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([]);
   
   // Get doctor's appointments for this date
-  const { data: appointments = [], isLoading } = useQuery({
+  const { data: appointments = [], isLoading } = useQuery<any[]>({
     queryKey: [`/api/appointments?doctorId=${doctorId}&date=${date.toISOString().split('T')[0]}`],
   });
   
