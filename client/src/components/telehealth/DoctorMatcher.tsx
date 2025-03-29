@@ -391,23 +391,23 @@ export default function DoctorMatcher() {
         </TabsContent>
         
         <TabsContent value="browse">
-          <Card className="bg-gray-900 border border-gray-800">
+          <Card className="border border-gray-800">
             <CardHeader className="bg-blue-900 bg-opacity-30 border-b border-gray-800">
-              <CardTitle className="text-white">Browse All Doctors</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardTitle>Browse All Doctors</CardTitle>
+              <CardDescription>
                 Search and filter by specialty to find the right doctor for you.
               </CardDescription>
             </CardHeader>
-            <CardContent className="text-gray-200">
+            <CardContent>
               <div className="space-y-4">
                 <div className="flex flex-col md:flex-row gap-4">
                   <div className="w-full md:w-1/3">
-                    <Label htmlFor="specialty" className="mb-2 block text-gray-300">Filter by Specialty</Label>
+                    <Label htmlFor="specialty" className="mb-2 block">Filter by Specialty</Label>
                     <Select value={specialty} onValueChange={setSpecialty}>
-                      <SelectTrigger className="bg-gray-800 border-gray-700 text-gray-200">
+                      <SelectTrigger>
                         <SelectValue placeholder="All Specialties" />
                       </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-700 text-gray-200">
+                      <SelectContent>
                         <SelectItem value="">All Specialties</SelectItem>
                         {specialties.map((specialty) => (
                           <SelectItem key={specialty} value={specialty}>
@@ -419,11 +419,11 @@ export default function DoctorMatcher() {
                   </div>
                   
                   <div className="w-full md:w-2/3">
-                    <Label htmlFor="search" className="mb-2 block text-gray-300">Search by Name</Label>
+                    <Label htmlFor="search" className="mb-2 block">Search by Name</Label>
                     <Input 
                       id="search" 
                       placeholder="Search doctors..." 
-                      className="w-full bg-gray-800 border-gray-700 text-gray-200 placeholder:text-gray-500" 
+                      className="w-full" 
                     />
                   </div>
                 </div>
@@ -431,42 +431,38 @@ export default function DoctorMatcher() {
                 {isDoctorsLoading ? (
                   <div className="space-y-4">
                     {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-24 w-full bg-gray-800" />
+                      <Skeleton key={i} className="h-24 w-full" />
                     ))}
                   </div>
                 ) : filteredDoctors.length > 0 ? (
                   <div className="space-y-4">
                     {filteredDoctors.map((doctor) => (
-                      <Card key={doctor.id} className="border border-gray-700 bg-gray-800">
-                        <CardHeader className="pb-2 bg-blue-900 bg-opacity-20 border-b border-gray-700">
-                          <CardTitle className="text-lg text-white">
+                      <Card key={doctor.id} className="border">
+                        <CardHeader className="pb-2 border-b border-gray-200 bg-blue-50">
+                          <CardTitle className="text-lg">
                             Dr. {doctor.user.firstName} {doctor.user.lastName}
                           </CardTitle>
-                          <CardDescription className="text-gray-400">
+                          <CardDescription>
                             {doctor.specialty}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="pb-2 text-gray-300">
+                        <CardContent className="pb-2">
                           <div className="flex justify-between items-center">
                             <div className="flex items-center">
                               <span className="mr-1 text-yellow-500">★</span>
                               <span>{doctor.averageRating.toFixed(1)}</span>
-                              <span className="text-gray-400 text-sm ml-1">
+                              <span className="text-gray-500 text-sm ml-1">
                                 ({doctor.reviewCount} reviews)
                               </span>
                             </div>
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              doctor.isAvailable 
-                                ? 'bg-green-900 bg-opacity-40 text-green-200 border border-green-800' 
-                                : 'bg-red-900 bg-opacity-40 text-red-200 border border-red-800'
-                            }`}>
+                            <span className={`px-2 py-1 rounded-full text-xs ${doctor.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                               {doctor.isAvailable ? 'Available' : 'Unavailable'}
                             </span>
                           </div>
                         </CardContent>
-                        <CardFooter className="border-t border-gray-700">
+                        <CardFooter className="border-t border-gray-200">
                           <Button 
-                            className="w-full bg-blue-600 hover:bg-blue-700" 
+                            className="w-full" 
                             disabled={!doctor.isAvailable}
                             onClick={() => setLocation(`/dashboard?doctorId=${doctor.id}&book=true`)}
                           >
@@ -478,7 +474,7 @@ export default function DoctorMatcher() {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-gray-400">
+                    <p className="text-gray-500">
                       No doctors found matching the selected specialty.
                     </p>
                   </div>
