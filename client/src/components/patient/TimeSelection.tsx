@@ -69,8 +69,8 @@ export default function TimeSelection({
   if (isLoading) {
     return (
       <div className="mb-6">
-        <label className="block text-sm font-medium mb-2">Select Time</label>
-        <Skeleton className="h-24 w-full" />
+        <label className="block text-sm font-medium mb-2 text-gray-200">Select Time</label>
+        <Skeleton className="h-24 w-full bg-gray-700" />
       </div>
     );
   }
@@ -78,9 +78,9 @@ export default function TimeSelection({
   if (availableTimeSlots.length === 0) {
     return (
       <div className="mb-6">
-        <label className="block text-sm font-medium mb-2">Select Time</label>
-        <div className="p-4 border border-gray-200 rounded-lg text-center">
-          <p className="text-gray-500">No available time slots for this date</p>
+        <label className="block text-sm font-medium mb-2 text-gray-200">Select Time</label>
+        <div className="p-4 border border-gray-600 bg-gray-700 rounded-lg text-center">
+          <p className="text-gray-300">No available time slots for this date</p>
         </div>
       </div>
     );
@@ -88,19 +88,19 @@ export default function TimeSelection({
   
   return (
     <div className="mb-6">
-      <label className="block text-sm font-medium mb-2">Select Time</label>
+      <label className="block text-sm font-medium mb-2 text-gray-200">Select Time</label>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
         {availableTimeSlots.map((time) => (
           <div 
             key={time}
             className={`time-slot border rounded-lg py-2 px-3 text-center cursor-pointer ${
               selectedTime === time 
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-blue-500'
+                ? 'border-blue-600 bg-blue-900 bg-opacity-30'
+                : 'border-gray-600 bg-gray-700 hover:border-blue-500'
             }`}
             onClick={() => onTimeSelect(time)}
           >
-            <span className={`text-sm ${selectedTime === time ? 'text-blue-600 font-medium' : ''}`}>
+            <span className={`text-sm ${selectedTime === time ? 'text-blue-400 font-medium' : 'text-gray-200'}`}>
               {format(parse(time, 'HH:mm', new Date()), 'h:mm a')}
             </span>
           </div>
