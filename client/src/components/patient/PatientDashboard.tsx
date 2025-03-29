@@ -11,6 +11,7 @@ import DoctorMatcher from "../telehealth/DoctorMatcher";
 import MedicineTracker from "../medicines/MedicineTracker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CalendarDays, Video, Bot, Pill, UserSearch, Clock } from "lucide-react";
 
 export default function PatientDashboard() {
   const { user } = useAuth();
@@ -67,31 +68,31 @@ export default function PatientDashboard() {
           <div className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-5">
             <a onClick={() => setActiveTab("appointments")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
               <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center mb-2">
-                <span className="material-icons text-white">calendar_month</span>
+                <CalendarDays className="h-6 w-6 text-white" />
               </div>
               <span className="text-sm font-medium text-center text-white">Book Appointment</span>
             </a>
             <a onClick={() => setActiveTab("ai-chat")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
               <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center mb-2">
-                <span className="material-icons text-white">smart_toy</span>
+                <Bot className="h-6 w-6 text-white" />
               </div>
               <span className="text-sm font-medium text-center text-white">AI Health Chat</span>
             </a>
             <a onClick={() => setActiveTab("medicine-tracker")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
               <div className="w-12 h-12 rounded-full bg-blue-700 flex items-center justify-center mb-2">
-                <span className="material-icons text-white">medication</span>
+                <Pill className="h-6 w-6 text-white" />
               </div>
               <span className="text-sm font-medium text-center text-white">Medicine Tracker</span>
             </a>
             <a onClick={() => setActiveTab("doctor-matcher")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
               <div className="w-12 h-12 rounded-full bg-blue-800 flex items-center justify-center mb-2">
-                <span className="material-icons text-white">person_search</span>
+                <UserSearch className="h-6 w-6 text-white" />
               </div>
               <span className="text-sm font-medium text-center text-white">Find Doctor</span>
             </a>
             <a onClick={() => setLocation("/video-call")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
               <div className="w-12 h-12 rounded-full bg-blue-900 flex items-center justify-center mb-2">
-                <span className="material-icons text-white">videocam</span>
+                <Video className="h-6 w-6 text-white" />
               </div>
               <span className="text-sm font-medium text-center text-white">Video Consult</span>
             </a>
@@ -131,7 +132,7 @@ export default function PatientDashboard() {
             <Card className="bg-gray-900 border border-gray-800">
               <CardHeader className="bg-blue-900 bg-opacity-30 pb-2 border-b border-gray-800">
                 <CardTitle className="text-base flex items-center text-white">
-                  <span className="material-icons mr-2 text-blue-500 text-sm">smart_toy</span>
+                  <Bot className="h-4 w-4 mr-2 text-blue-500" />
                   AI Health Assistant
                 </CardTitle>
               </CardHeader>
@@ -144,7 +145,7 @@ export default function PatientDashboard() {
             <Card className="bg-gray-900 border border-gray-800">
               <CardHeader className="bg-blue-800 bg-opacity-30 pb-2 border-b border-gray-800">
                 <CardTitle className="text-base flex items-center text-white">
-                  <span className="material-icons mr-2 text-blue-500 text-sm">person_search</span>
+                  <UserSearch className="h-4 w-4 mr-2 text-blue-500" />
                   Find the Right Doctor
                 </CardTitle>
               </CardHeader>
@@ -157,7 +158,7 @@ export default function PatientDashboard() {
             <Card className="bg-gray-900 border border-gray-800">
               <CardHeader className="bg-blue-700 bg-opacity-30 pb-2 border-b border-gray-800">
                 <CardTitle className="text-base flex items-center text-white">
-                  <span className="material-icons mr-2 text-blue-500 text-sm">medication</span>
+                  <Pill className="h-4 w-4 mr-2 text-blue-500" />
                   Medicine Tracker
                 </CardTitle>
               </CardHeader>
@@ -174,7 +175,7 @@ export default function PatientDashboard() {
           <Card className="mb-4 bg-gray-900 border border-gray-800">
             <CardHeader className="bg-blue-900 bg-opacity-30 border-b border-gray-800">
               <CardTitle className="flex items-center text-white">
-                <span className="material-icons mr-2 text-blue-500">smart_toy</span>
+                <Bot className="w-5 h-5 mr-2 text-blue-500" />
                 AI Health Companion
               </CardTitle>
             </CardHeader>
@@ -191,7 +192,7 @@ export default function PatientDashboard() {
           <Card className="mb-4 bg-gray-900 border border-gray-800">
             <CardHeader className="bg-blue-700 bg-opacity-30 border-b border-gray-800">
               <CardTitle className="flex items-center text-white">
-                <span className="material-icons mr-2 text-blue-500">medication</span>
+                <Pill className="w-5 h-5 mr-2 text-blue-500" />
                 Medicine Tracker
               </CardTitle>
             </CardHeader>
@@ -208,7 +209,7 @@ export default function PatientDashboard() {
           <Card className="mb-4 bg-gray-900 border border-gray-800">
             <CardHeader className="bg-blue-800 bg-opacity-30 border-b border-gray-800">
               <CardTitle className="flex items-center text-white">
-                <span className="material-icons mr-2 text-blue-500">person_search</span>
+                <UserSearch className="w-5 h-5 mr-2 text-blue-500" />
                 Find the Right Doctor
               </CardTitle>
             </CardHeader>
@@ -225,7 +226,7 @@ export default function PatientDashboard() {
           <Card className="mb-4 bg-gray-900 border border-gray-800">
             <CardHeader className="bg-blue-600 bg-opacity-30 border-b border-gray-800">
               <CardTitle className="flex items-center text-white">
-                <span className="material-icons mr-2 text-blue-500">calendar_month</span>
+                <CalendarDays className="w-5 h-5 mr-2 text-blue-500" />
                 Schedule an Appointment
               </CardTitle>
             </CardHeader>
