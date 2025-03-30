@@ -1,244 +1,255 @@
-import { useState, useEffect, useRef } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { VideoRoom } from './VideoRoom';
+import { Phone, VideoIcon } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { doc, getFirestore, onSnapshot, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/hooks/useAuth';
 
 interface VideoConsultationProps {
   appointmentId: number;
-  patientName?: string;
-  doctorName?: string;
+  patientName: string;
+  doctorName: string;
   onEndCall: () => void;
 }
 
-export default function VideoConsultation({
-  appointmentId,
-  patientName,
-  doctorName,
-  onEndCall,
+export default function VideoConsultation({ 
+  appointmentId, 
+  patientName, 
+  doctorName, 
+  onEndCall 
 }: VideoConsultationProps) {
-  const [isMuted, setIsMuted] = useState(false);
-  const [isCameraOn, setIsCameraOn] = useState(true);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "error">(
-    "connecting"
-  );
-  
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const { user } = useAuth();
   const { toast } = useToast();
+  const [roomName, setRoomName] = useState<string>('');
+  const [status, setStatus] = useState<'waiting' | 'connecting' | 'connected' | 'ended'>('waiting');
+  const [otherPartyJoined, setOtherPartyJoined] = useState(false);
   
-  // This would be replaced with actual WebRTC implementation using Twilio SDK
+  const isDoctor = user?.role === 'doctor';
+  const displayName = isDoctor ? doctorName : patientName;
+  const otherPartyName = isDoctor ? patientName : doctorName;
+
+  // Create room in Firestore and listen for updates
   useEffect(() => {
-    let localStream: MediaStream | null = null;
+    const roomId = `appointment-${appointmentId}`;
+    setRoomName(roomId);
+
+    // Reference to the appointment document in Firestore
+    const docRef = doc(db, 'video-calls', roomId);
     
-    const initializeMedia = async () => {
+    // Set initial document (if doctor) or just mark that patient is here
+    const initializeRoom = async () => {
       try {
-        // Request access to camera and microphone
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
+        if (isDoctor) {
+          // Doctor creates/updates the room
+          await setDoc(docRef, {
+            appointmentId,
+            roomName: roomId,
+            doctorPresent: true,
+            patientPresent: false,
+            startedAt: new Date().toISOString(),
+            status: 'waiting'
+          }, { merge: true });
+          
+          // Update appointment status in our database
+          await apiRequest(`/api/appointments/${appointmentId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ 
+              status: 'in-progress',
+              callUrl: `/video-call/${appointmentId}`
+            }),
+          } as any);
+        } else {
+          // Patient joins the room
+          await setDoc(docRef, {
+            patientPresent: true,
+          }, { merge: true });
+        }
+      } catch (error) {
+        console.error('Error initializing video room:', error);
+        toast({
+          title: 'Connection Error',
+          description: 'Could not initialize video call room',
+          variant: 'destructive'
         });
-        
-        // Store the stream for cleanup
-        localStream = stream;
-        
-        // Display local video
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
+      }
+    };
+    
+    initializeRoom();
+    
+    // Listen for changes in the room document
+    const unsubscribe = onSnapshot(docRef, (snapshot) => {
+      const data = snapshot.data();
+      
+      if (data) {
+        // Check if other party is present
+        if (isDoctor && data.patientPresent) {
+          setOtherPartyJoined(true);
+          if (status === 'waiting') {
+            setStatus('connecting');
+          }
+        } else if (!isDoctor && data.doctorPresent) {
+          setOtherPartyJoined(true);
+          if (status === 'waiting') {
+            setStatus('connecting');
+          }
         }
         
-        // Simulate connection delay
-        setTimeout(() => {
-          setConnectionStatus("connected");
+        // Check if call was ended by the other party
+        if (data.status === 'ended') {
+          setStatus('ended');
           toast({
-            title: "Connected",
-            description: `Your consultation has started.`,
+            title: 'Call Ended',
+            description: `${isDoctor ? 'Patient' : 'Doctor'} has ended the call`,
           });
-        }, 2000);
-        
-      } catch (error) {
-        console.error("Error accessing media devices:", error);
-        setConnectionStatus("error");
-        toast({
-          title: "Connection Error",
-          description: "Failed to access camera or microphone. Please check your permissions.",
-          variant: "destructive",
-        });
+          
+          // Exit call after a delay
+          setTimeout(() => {
+            onEndCall();
+          }, 3000);
+        }
       }
-    };
+    });
     
-    initializeMedia();
-    
-    // Clean up media streams when component unmounts
+    // Clean up: mark user as not present when leaving
     return () => {
-      if (localStream) {
-        localStream.getTracks().forEach((track) => {
-          track.stop();
-        });
-      }
+      unsubscribe();
+      
+      const updatePresence = async () => {
+        try {
+          if (isDoctor) {
+            await setDoc(docRef, {
+              doctorPresent: false,
+              status: 'ended'
+            }, { merge: true });
+          } else {
+            await setDoc(docRef, {
+              patientPresent: false,
+              status: 'ended'
+            }, { merge: true });
+          }
+        } catch (error) {
+          console.error('Error updating presence on unmount:', error);
+        }
+      };
+      
+      updatePresence();
     };
-  }, [toast]);
-  
-  const toggleMute = () => {
-    const stream = localVideoRef.current?.srcObject as MediaStream;
-    if (stream) {
-      stream.getAudioTracks().forEach((track) => {
-        track.enabled = isMuted;
+  }, [appointmentId, isDoctor, onEndCall, status, toast]);
+
+  // Handle starting the call
+  const startCall = () => {
+    setStatus('connected');
+  };
+
+  // Handle ending the call
+  const endCall = async () => {
+    try {
+      // Update Firestore
+      const docRef = doc(db, 'video-calls', roomName);
+      await setDoc(docRef, {
+        status: 'ended'
+      }, { merge: true });
+      
+      // Update appointment status
+      await apiRequest(`/api/appointments/${appointmentId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'completed' }),
+      } as any);
+      
+      // Notify user
+      toast({
+        title: 'Call Ended',
+        description: 'You have ended the video consultation',
       });
-      setIsMuted(!isMuted);
+      
+      // Return to dashboard
+      onEndCall();
+    } catch (error) {
+      console.error('Error ending call:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to properly end the call',
+        variant: 'destructive'
+      });
     }
   };
-  
-  const toggleCamera = () => {
-    const stream = localVideoRef.current?.srcObject as MediaStream;
-    if (stream) {
-      stream.getVideoTracks().forEach((track) => {
-        track.enabled = !isCameraOn;
-      });
-      setIsCameraOn(!isCameraOn);
-    }
-  };
-  
-  const toggleChat = () => {
-    setIsChatOpen(!isChatOpen);
-  };
-  
-  return (
-    <div className="fixed inset-0 bg-text-primary z-50 flex flex-col">
-      <div className="flex-grow flex flex-col sm:flex-row">
-        {/* Main Video (Doctor) */}
-        <div className="flex-grow bg-text-primary relative flex items-center justify-center overflow-hidden">
-          {connectionStatus === "connecting" ? (
-            <div className="text-center text-neutral-light">
-              <div className="w-16 h-16 border-4 border-secondary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="mt-2">Establishing secure connection...</p>
-            </div>
-          ) : connectionStatus === "error" ? (
-            <div className="text-center text-neutral-light">
-              <span className="material-icons text-6xl">error</span>
-              <p className="mt-2">Failed to connect to the video call.</p>
-              <Button onClick={onEndCall} variant="outline" className="mt-4">
-                Return to Dashboard
+
+  // If the call is ready to connect
+  if (status === 'connected') {
+    return (
+      <div className="fixed inset-0 z-50 bg-background flex flex-col">
+        <header className="p-4 bg-card shadow-sm border-b">
+          <div className="flex justify-between items-center">
+            <h1 className="text-xl font-semibold">Video Consultation</h1>
+            <div>
+              <Button variant="destructive" onClick={endCall}>
+                <Phone className="mr-2 h-4 w-4 rotate-[135deg]" />
+                End Call
               </Button>
             </div>
-          ) : (
-            <>
-              <video
-                ref={remoteVideoRef}
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
-                {doctorName || "Healthcare Provider"}
+          </div>
+        </header>
+        <main className="flex-1 overflow-hidden">
+          <VideoRoom roomName={roomName} onLeave={endCall} />
+        </main>
+      </div>
+    );
+  }
+
+  // Waiting or connecting state
+  return (
+    <div className="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center p-6">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <VideoIcon className="w-12 h-12 text-primary mx-auto mb-4" />
+          <CardTitle className="text-center">Video Consultation</CardTitle>
+          <CardDescription className="text-center">
+            Appointment #{appointmentId} with {otherPartyName}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="py-4 text-center">
+            {status === 'waiting' ? (
+              otherPartyJoined ? (
+                <div>
+                  <p className="text-lg font-medium mb-4">{otherPartyName} has joined</p>
+                  <p>Ready to start the consultation?</p>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-lg font-medium mb-4">Waiting for {otherPartyName}</p>
+                  <p>Please wait for the other party to join...</p>
+                </div>
+              )
+            ) : status === 'connecting' ? (
+              <div>
+                <p className="text-lg font-medium mb-4">Ready to Connect</p>
+                <p>Click the button below to join the video call.</p>
               </div>
-            </>
-          )}
-          
-          {/* Patient Video (Small) */}
-          <div className="absolute bottom-4 right-4 w-32 h-24 bg-neutral-dark rounded-lg overflow-hidden shadow-lg sm:w-48 sm:h-36 border-2 border-white">
-            <video
-              ref={localVideoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover"
-            />
-            {!isCameraOn && (
-              <div className="absolute inset-0 flex items-center justify-center bg-text-primary bg-opacity-80 text-white">
-                <span className="material-icons">videocam_off</span>
+            ) : (
+              <div>
+                <p className="text-lg font-medium mb-4">Call Ended</p>
+                <p>Returning to dashboard...</p>
               </div>
             )}
-            <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white px-2 py-0.5 rounded text-xs">
-              {patientName || "You"}
-            </div>
           </div>
-          
-          {/* Chat panel (if open) */}
-          {isChatOpen && (
-            <div className="absolute top-0 right-0 bottom-0 w-80 bg-white shadow-lg z-10 flex flex-col">
-              <div className="p-3 border-b border-neutral-dark flex justify-between items-center">
-                <h3 className="font-medium">Chat</h3>
-                <button onClick={toggleChat}>
-                  <span className="material-icons text-text-secondary">close</span>
-                </button>
-              </div>
-              <div className="flex-grow p-3 overflow-y-auto">
-                <div className="text-center text-text-secondary text-sm py-4">
-                  Messages will appear here
-                </div>
-              </div>
-              <div className="p-3 border-t border-neutral-dark">
-                <div className="flex">
-                  <input
-                    type="text"
-                    className="flex-grow border border-neutral-dark rounded-l p-2"
-                    placeholder="Type a message..."
-                  />
-                  <button className="bg-primary text-white p-2 rounded-r">
-                    <span className="material-icons">send</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Call Controls */}
-      <div className="bg-text-primary p-4">
-        <div className="flex justify-between items-center max-w-lg mx-auto">
-          <button
-            className="flex flex-col items-center text-white"
-            onClick={toggleMute}
-          >
-            <div
-              className={`w-12 h-12 rounded-full ${
-                isMuted ? "bg-error" : "bg-text-primary bg-opacity-30"
-              } flex items-center justify-center mb-1 hover:bg-opacity-40`}
-            >
-              <span className="material-icons">{isMuted ? "mic_off" : "mic"}</span>
-            </div>
-            <span className="text-xs">{isMuted ? "Unmute" : "Mute"}</span>
-          </button>
-          <button
-            className="flex flex-col items-center text-white"
-            onClick={toggleCamera}
-          >
-            <div
-              className={`w-12 h-12 rounded-full ${
-                !isCameraOn ? "bg-error" : "bg-text-primary bg-opacity-30"
-              } flex items-center justify-center mb-1 hover:bg-opacity-40`}
-            >
-              <span className="material-icons">
-                {isCameraOn ? "videocam" : "videocam_off"}
-              </span>
-            </div>
-            <span className="text-xs">{isCameraOn ? "Camera Off" : "Camera On"}</span>
-          </button>
-          <button
-            className="flex flex-col items-center text-white"
-            onClick={toggleChat}
-          >
-            <div
-              className={`w-12 h-12 rounded-full ${
-                isChatOpen ? "bg-primary" : "bg-text-primary bg-opacity-30"
-              } flex items-center justify-center mb-1 hover:bg-opacity-40`}
-            >
-              <span className="material-icons">chat</span>
-            </div>
-            <span className="text-xs">Chat</span>
-          </button>
-          <button
-            className="flex flex-col items-center text-white"
-            onClick={onEndCall}
-          >
-            <div className="w-12 h-12 rounded-full bg-error flex items-center justify-center mb-1 hover:bg-error-dark">
-              <span className="material-icons">call_end</span>
-            </div>
-            <span className="text-xs">End</span>
-          </button>
-        </div>
-      </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button variant="outline" onClick={onEndCall}>
+            Cancel
+          </Button>
+          {(status === 'waiting' && otherPartyJoined) || status === 'connecting' ? (
+            <Button onClick={startCall}>
+              <VideoIcon className="mr-2 h-4 w-4" />
+              Join Call
+            </Button>
+          ) : null}
+        </CardFooter>
+      </Card>
     </div>
   );
 }

@@ -65,7 +65,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const [enabled, setEnabledState] = useState<boolean>(isWebSocketEnabled());
   const [usingFallback, setUsingFallback] = useState(false);
-  const maxReconnectAttempts = 2; // Reduced max attempts to avoid excessive retries
+  const maxReconnectAttempts = 1; // Reduced max attempts to avoid excessive retries and resource issues
   
   // Update localStorage and state when enabled/disabled
   const setEnabled = useCallback((value: boolean) => {
@@ -151,7 +151,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       
       // Set a connection timeout
       const connectionTimeout = setTimeout(() => {
-        if (!openHandled && newSocket.readyState !== WebSocket.OPEN) {
+        if (!openHandled && newSocket.readyState !== 1) { // OPEN = 1
           console.warn("WebSocket connection timeout");
           newSocket.close();
         }
@@ -247,11 +247,19 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   
   // Connect to WebSocket when user changes or when enabled changes
   useEffect(() => {
-    if (enabled && user && !usingFallback) {
+    // Check if user is guest - don't attempt websocket for guests to reduce resource usage
+    const isGuest = user && user.email === "guest@example.com";
+    
+    if (enabled && user && !usingFallback && !isGuest) {
       connect();
-    } else if (!enabled || !user) {
+    } else if (!enabled || !user || isGuest) {
+      // Use fallback for guest users
+      if (isGuest) {
+        setUsingFallback(true);
+      }
+      
       // Cleanup if disabled or user logs out
-      if (socket && socket.readyState === WebSocket.OPEN) {
+      if (socket && socket.readyState === 1) { // OPEN = 1
         socket.close();
         setSocket(null);
       }
@@ -286,7 +294,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   // Send message function with fallback for when WebSocket is not connected
   const sendMessage = useCallback(
     (message: any) => {
-      if (socket && socket.readyState === WebSocket.OPEN) {
+      if (socket && socket.readyState === 1) { // OPEN = 1
         socket.send(JSON.stringify(message));
       } else if (enabled && !usingFallback) {
         // If WebSocket is meant to be enabled but not connected, try to connect
