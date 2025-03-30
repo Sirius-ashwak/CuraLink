@@ -9,6 +9,7 @@ import { z } from "zod";
 import symptomCheckerRoutes from "./routes/symptomChecker";
 import doctorMatchRoutes from "./routes/doctorMatch";
 import medicinesRoutes from "./routes/medicines";
+import videoRoutes from "./routes/video";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -29,33 +30,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Handle authentication
         if (message.type === 'auth') {
           userId = message.userId;
-          if (!clients.has(userId)) {
-            clients.set(userId, []);
-          }
-          clients.get(userId)!.push(ws);
+          if (userId !== null) {
+            if (!clients.has(userId)) {
+              clients.set(userId, []);
+            }
+            clients.get(userId)!.push(ws);
           
-          // Send initial data
-          if (message.role === 'patient') {
-            const appointments = await storage.getAppointmentsByPatient(userId);
-            ws.send(JSON.stringify({
-              type: 'appointments',
-              data: appointments
-            }));
-          } else if (message.role === 'doctor') {
-            const doctor = await storage.getDoctorByUserId(userId);
-            if (doctor) {
-              const appointments = await storage.getAppointmentsByDoctor(doctor.id);
-              const availability = await storage.getAvailability(doctor.id);
-              const timeOffs = await storage.getTimeOffs(doctor.id);
-              
+            // Send initial data
+            if (message.role === 'patient') {
+              const appointments = await storage.getAppointmentsByPatient(userId);
               ws.send(JSON.stringify({
-                type: 'doctorData',
-                data: {
-                  appointments,
-                  availability,
-                  timeOffs
-                }
+                type: 'appointments',
+                data: appointments
               }));
+            } else if (message.role === 'doctor') {
+              const doctor = await storage.getDoctorByUserId(userId);
+              if (doctor) {
+                const appointments = await storage.getAppointmentsByDoctor(doctor.id);
+                const availability = await storage.getAvailability(doctor.id);
+                const timeOffs = await storage.getTimeOffs(doctor.id);
+                
+                ws.send(JSON.stringify({
+                  type: 'doctorData',
+                  data: {
+                    appointments,
+                    availability,
+                    timeOffs
+                  }
+                }));
+              }
             }
           }
         }
@@ -156,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (clients.has(userId)) {
       const userClients = clients.get(userId)!;
       userClients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
+        if (client.readyState === 1) { // OPEN = 1
           client.send(JSON.stringify(data));
         }
       });
@@ -534,6 +537,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Medicines management API
   app.use('/api/medicines', medicinesRoutes);
+  
+  // Video calling API
+  app.use('/api/video', videoRoutes);
   
   return httpServer;
 }
