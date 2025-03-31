@@ -178,7 +178,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const user = await storage.getUserByEmail(email);
       
-      if (!user || user.password !== password) {
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+      
+      // Use a timing-safe comparison for passwords
+      const crypto = require('crypto');
+      const match = crypto.timingSafeEqual(
+        Buffer.from(user.password),
+        Buffer.from(password)
+      );
+      
+      if (!match) {
         return res.status(401).json({ message: 'Invalid credentials' });
       }
       
