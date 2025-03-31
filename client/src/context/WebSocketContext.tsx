@@ -65,7 +65,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const [enabled, setEnabledState] = useState<boolean>(isWebSocketEnabled());
   const [usingFallback, setUsingFallback] = useState(false);
-  const maxReconnectAttempts = 1; // Reduced max attempts to avoid excessive retries and resource issues
+  const maxReconnectAttempts = 3; // Allow more reconnection attempts before falling back
   
   // Update localStorage and state when enabled/disabled
   const setEnabled = useCallback((value: boolean) => {
@@ -160,7 +160,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       newSocket.onopen = () => {
         openHandled = true;
         clearTimeout(connectionTimeout);
-        console.log("WebSocket connected successfully");
+        console.log("WebSocket connected successfully to", wsUrl);
         setConnected(true);
         setReconnectAttempts(0);
         setUsingFallback(false);
