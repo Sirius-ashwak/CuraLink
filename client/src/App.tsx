@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { queryClient } from "./lib/queryClient";
 import { AuthProvider } from "./context/AuthContext";
 import { WebSocketProvider } from "./context/WebSocketContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 import Welcome from "@/pages/welcome";
 import Login from "@/pages/login";
@@ -31,10 +32,13 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <WebSocketProvider>
-            <Router />
-            <Toaster />
-          </WebSocketProvider>
+          {/* Wrap WebSocketProvider in another ErrorBoundary to prevent connection issues from breaking the app */}
+          <ErrorBoundary>
+            <WebSocketProvider>
+              <Router />
+              <Toaster />
+            </WebSocketProvider>
+          </ErrorBoundary>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>

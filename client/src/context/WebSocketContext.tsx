@@ -141,8 +141,11 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
         socket.close();
       }
       
+      // Get the correct WebSocket URL based on the current environment
+      // In development, we need to use the correct port that the server is running on (5000)
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      const host = import.meta.env.DEV ? `${window.location.hostname}:5000` : window.location.host;
+      const wsUrl = `${protocol}//${host}/ws`;
       
       console.log(`Attempting to connect to WebSocket (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})`);
       
