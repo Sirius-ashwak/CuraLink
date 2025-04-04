@@ -10,6 +10,7 @@ import NotificationToast from "../notifications/NotificationToast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { CalendarDays, Clock } from "lucide-react";
 
 export default function DoctorDashboard() {
   const { user } = useAuth();
@@ -111,72 +112,81 @@ export default function DoctorDashboard() {
     <>
       {/* Welcome & Stats */}
       <div className="mb-6">
-        <h2 className="text-xl font-medium text-text-primary">Welcome, Dr. {user.lastName}</h2>
-        <p className="text-text-secondary">Your schedule for today</p>
+        <h2 className="text-xl font-medium text-white">Welcome, Dr. {user.lastName}</h2>
+        <p className="text-gray-400">Your schedule for today</p>
         
-        <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-3">
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <h3 className="text-sm font-medium text-text-secondary">Upcoming</h3>
-            <p className="text-2xl font-medium">{appointments.length}</p>
-            <p className="text-xs text-text-secondary mt-1">Appointments today</p>
+        <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 md:grid-cols-3">
+          <div className="bg-gray-900 rounded-lg shadow-sm p-4 border border-gray-800">
+            <h3 className="text-sm font-medium text-gray-400">Today's Schedule</h3>
+            <div className="flex items-center space-x-2 mt-1">
+              <CalendarDays className="h-5 w-5 text-blue-500" />
+              <p className="text-2xl font-medium text-white">{appointments.length}</p>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Appointments today</p>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <h3 className="text-sm font-medium text-text-secondary">Next</h3>
+          
+          <div className="bg-gray-900 rounded-lg shadow-sm p-4 border border-gray-800">
+            <h3 className="text-sm font-medium text-gray-400">Next Appointment</h3>
             {nextAppointment ? (
               <>
-                <p className="text-2xl font-medium">{nextAppointment.startTime}</p>
-                <p className="text-xs text-text-secondary mt-1">
+                <div className="flex items-center space-x-2 mt-1">
+                  <Clock className="h-5 w-5 text-blue-500" />
+                  <p className="text-xl font-medium text-white">{nextAppointment.startTime}</p>
+                </div>
+                <p className="text-xs text-gray-400 mt-1 truncate">
                   {nextAppointment.patient.firstName} {nextAppointment.patient.lastName} ({nextAppointment.reason})
                 </p>
               </>
             ) : (
               <>
-                <p className="text-2xl font-medium">-</p>
-                <p className="text-xs text-text-secondary mt-1">No more appointments today</p>
+                <div className="flex items-center space-x-2 mt-1">
+                  <Clock className="h-5 w-5 text-gray-400" />
+                  <p className="text-xl font-medium text-white">-</p>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">No more appointments today</p>
               </>
             )}
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <h3 className="text-sm font-medium text-text-secondary">Available</h3>
-            <div className="flex items-center">
-              <span className={`material-icons ${isOnline ? 'text-secondary' : 'text-text-secondary'} mr-1`}>
-                {isOnline ? 'circle' : 'cancel'}
-              </span>
-              <p className={isOnline ? 'text-secondary font-medium' : 'text-text-secondary'}>
+          
+          <div className="bg-gray-900 rounded-lg shadow-sm p-4 border border-gray-800">
+            <h3 className="text-sm font-medium text-gray-400">Availability Status</h3>
+            <div className="flex items-center space-x-2 mt-1">
+              <div className={`h-3 w-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-500'}`}></div>
+              <p className={`text-lg font-medium ${isOnline ? 'text-green-500' : 'text-gray-400'}`}>
                 {isOnline ? 'Online' : 'Offline'}
               </p>
             </div>
-            <div className="text-xs text-text-secondary mt-1 flex justify-between">
-              <span>Change status</span>
-              <span 
-                className="material-icons text-sm cursor-pointer"
-                onClick={toggleAvailability}
-              >
-                edit
-              </span>
-            </div>
+            <button 
+              onClick={toggleAvailability}
+              className="mt-2 text-xs text-blue-500 hover:text-blue-400 flex items-center"
+            >
+              <span className="mr-1">Change status</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
       
       {/* Doctor Tabs */}
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6 w-full border-b border-neutral-dark rounded-none p-0 h-auto">
+        <TabsList className="mb-6 w-full border-b border-gray-800 rounded-none p-0 h-auto flex overflow-x-auto scrollbar-hide">
           <TabsTrigger 
             value="schedule"
-            className="border-b-2 border-transparent data-[state=active]:border-primary py-2 px-4 text-sm rounded-none"
+            className="border-b-2 border-transparent data-[state=active]:border-blue-500 py-2 px-4 text-sm rounded-none whitespace-nowrap flex-shrink-0 text-white"
           >
             Today's Schedule
           </TabsTrigger>
           <TabsTrigger 
             value="availability" 
-            className="border-b-2 border-transparent data-[state=active]:border-primary py-2 px-4 text-sm rounded-none"
+            className="border-b-2 border-transparent data-[state=active]:border-blue-500 py-2 px-4 text-sm rounded-none whitespace-nowrap flex-shrink-0 text-white"
           >
             Availability
           </TabsTrigger>
           <TabsTrigger 
             value="patients" 
-            className="border-b-2 border-transparent data-[state=active]:border-primary py-2 px-4 text-sm rounded-none"
+            className="border-b-2 border-transparent data-[state=active]:border-blue-500 py-2 px-4 text-sm rounded-none whitespace-nowrap flex-shrink-0 text-white"
           >
             Patient Records
           </TabsTrigger>

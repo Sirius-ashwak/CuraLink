@@ -54,48 +54,51 @@ export default function PatientDashboard() {
       
       {/* Main Tabs Navigation */}
       <Tabs defaultValue="dashboard" className="mb-8" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-5 w-full mb-6 bg-gray-900">
-          <TabsTrigger value="dashboard" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Dashboard</TabsTrigger>
-          <TabsTrigger value="ai-chat" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">AI Companion</TabsTrigger>
-          <TabsTrigger value="medicine-tracker" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Medicine Tracker</TabsTrigger>
-          <TabsTrigger value="doctor-matcher" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Doctor Matcher</TabsTrigger>
-          <TabsTrigger value="appointments" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Appointments</TabsTrigger>
+        <TabsList className="flex w-full mb-6 bg-gray-900 overflow-x-auto scrollbar-hide">
+          <TabsTrigger value="dashboard" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Dashboard</TabsTrigger>
+          <TabsTrigger value="ai-chat" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">AI Companion</TabsTrigger>
+          <TabsTrigger value="medicine-tracker" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Medicine Tracker</TabsTrigger>
+          <TabsTrigger value="doctor-matcher" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Doctor Matcher</TabsTrigger>
+          <TabsTrigger value="appointments" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Appointments</TabsTrigger>
         </TabsList>
         
         {/* Dashboard Tab */}
         <TabsContent value="dashboard">
           {/* Quick Actions */}
-          <div className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-5">
-            <a onClick={() => setActiveTab("appointments")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-              <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center mb-2">
-                <CalendarDays className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-sm font-medium text-center text-white">Book Appointment</span>
-            </a>
-            <a onClick={() => setActiveTab("ai-chat")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-              <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center mb-2">
-                <Bot className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-sm font-medium text-center text-white">AI Health Chat</span>
-            </a>
-            <a onClick={() => setActiveTab("medicine-tracker")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-              <div className="w-12 h-12 rounded-full bg-blue-700 flex items-center justify-center mb-2">
-                <Pill className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-sm font-medium text-center text-white">Medicine Tracker</span>
-            </a>
-            <a onClick={() => setActiveTab("doctor-matcher")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-              <div className="w-12 h-12 rounded-full bg-blue-800 flex items-center justify-center mb-2">
-                <UserSearch className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-sm font-medium text-center text-white">Find Doctor</span>
-            </a>
-            <a onClick={() => setLocation("/video-call")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-              <div className="w-12 h-12 rounded-full bg-blue-900 flex items-center justify-center mb-2">
-                <Video className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-sm font-medium text-center text-white">Video Consult</span>
-            </a>
+          <div className="mb-8">
+            <h3 className="text-white font-medium mb-3">Quick Actions</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+              <a onClick={() => setActiveTab("appointments")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
+                <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center mb-2">
+                  <CalendarDays className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-sm font-medium text-center text-white">Book Appointment</span>
+              </a>
+              <a onClick={() => setActiveTab("ai-chat")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
+                <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center mb-2">
+                  <Bot className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-sm font-medium text-center text-white">AI Health Chat</span>
+              </a>
+              <a onClick={() => setActiveTab("medicine-tracker")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
+                <div className="w-12 h-12 rounded-full bg-blue-700 flex items-center justify-center mb-2">
+                  <Pill className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-sm font-medium text-center text-white">Medicine Tracker</span>
+              </a>
+              <a onClick={() => setActiveTab("doctor-matcher")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
+                <div className="w-12 h-12 rounded-full bg-blue-800 flex items-center justify-center mb-2">
+                  <UserSearch className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-sm font-medium text-center text-white">Find Doctor</span>
+              </a>
+              <a onClick={() => setLocation("/video-call")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
+                <div className="w-12 h-12 rounded-full bg-blue-900 flex items-center justify-center mb-2">
+                  <Video className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-sm font-medium text-center text-white">Video Consult</span>
+              </a>
+            </div>
           </div>
           
           {/* Upcoming Appointments */}
