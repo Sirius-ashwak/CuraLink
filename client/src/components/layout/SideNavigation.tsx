@@ -172,59 +172,9 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
         </div>
       </div>
 
-      {/* Side Navigation - Desktop */}
-      <div className="hidden md:flex flex-col h-screen w-64 bg-gray-900 border-r border-gray-800 fixed left-0 top-16 pt-6 px-4 overflow-y-auto">
-        <nav className="space-y-1 flex-1">
-          {navItems.map(item => (
-            <Button
-              key={item.id}
-              variant={activeTab === item.id ? "default" : "ghost"}
-              className={cn(
-                "w-full justify-start mb-1 px-4 py-2", 
-                activeTab === item.id 
-                  ? "bg-gray-800 text-white font-medium hover:bg-gray-700" 
-                  : "text-gray-400 hover:text-white hover:bg-gray-800"
-              )}
-              onClick={() => handleTabChange(item.id)}
-            >
-              <span className={cn("mr-3", item.colorClass)}>{item.icon}</span>
-              {item.label}
-            </Button>
-          ))}
-        </nav>
-      </div>
+      {/* Removed Side Navigation for Desktop - Now using three dots menu instead */}
 
-      {/* Mobile Side Navigation */}
-      <div className={cn(
-        "md:hidden fixed inset-0 z-20 bg-black bg-opacity-50 transition-opacity",
-        isMobileSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-      )}>
-        <div className={cn(
-          "fixed top-16 left-0 bottom-0 w-64 bg-gray-900 transform transition-transform duration-300 ease-in-out z-30",
-          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}>
-          <div className="pt-4 px-4">
-            <nav className="space-y-1">
-              {navItems.map(item => (
-                <Button
-                  key={item.id}
-                  variant={activeTab === item.id ? "default" : "ghost"}
-                  className={cn(
-                    "w-full justify-start mb-1 px-4 py-2", 
-                    activeTab === item.id 
-                      ? "bg-gray-800 text-white font-medium hover:bg-gray-700" 
-                      : "text-gray-400 hover:text-white hover:bg-gray-800"
-                  )}
-                  onClick={() => handleTabChange(item.id)}
-                >
-                  <span className={cn("mr-3", item.colorClass)}>{item.icon}</span>
-                  {item.label}
-                </Button>
-              ))}
-            </nav>
-          </div>
-        </div>
-      </div>
+      {/* Using the three dots menu for all devices - removed mobile side navigation */}
     </>
   );
 }
