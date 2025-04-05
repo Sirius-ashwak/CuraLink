@@ -4,11 +4,11 @@ export default function DoctorNavigation() {
   const [location] = useLocation();
   
   const isActive = (path: string) => {
-    return location === path ? "text-primary" : "text-text-secondary";
+    return location === path ? "text-blue-500" : "text-gray-500 dark:text-gray-400";
   };
   
   return (
-    <nav className="md:hidden bg-white shadow-md border-t border-neutral-dark fixed bottom-0 left-0 right-0 z-10">
+    <nav className="md:hidden bg-white dark:bg-black shadow-md border-t border-gray-200 dark:border-gray-800 fixed bottom-0 left-0 right-0 z-10">
       <div className="flex justify-around">
         <Link href="/dashboard">
           <a className={`flex flex-col items-center py-2 px-3 ${isActive("/dashboard")}`}>
