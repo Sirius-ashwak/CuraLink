@@ -11,6 +11,7 @@ import { EmergencyTransportWithPatient } from '@shared/schema';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { LoadingScreen } from '@/components/ui/loading-screen';
 
 interface MapViewProps {
   transport: EmergencyTransportWithPatient;
@@ -108,7 +109,16 @@ const MapView: React.FC<MapViewProps> = ({ transport }) => {
     };
   }, [transport]);
 
-  if (isMapLoading) return <div className="flex justify-center p-6">Loading map...</div>;
+  if (isMapLoading) return (
+    <LoadingScreen
+      type="minimal"
+      variant="emergency"
+      message="Loading map"
+      showMascot={false}
+      showSpinner={true}
+      className="p-6"
+    />
+  );
 
   return (
     <div className="space-y-2">
@@ -211,7 +221,15 @@ export default function EmergencyTransportList() {
   };
 
   if (isLoading) {
-    return <div className="p-4 text-center">Loading transport requests...</div>;
+    return (
+      <LoadingScreen
+        type="minimal"
+        variant="emergency"
+        message="Loading transport requests"
+        showMascot={true}
+        className="p-4"
+      />
+    );
   }
 
   if (error) {

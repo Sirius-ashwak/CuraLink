@@ -12,6 +12,7 @@ import DoctorMatcher from "../telehealth/DoctorMatcher";
 import MedicineTracker from "../medicines/MedicineTracker";
 import EmergencyTransportForm from "../emergencyTransport/EmergencyTransportForm";
 import EmergencyTransportList from "../emergencyTransport/EmergencyTransportList";
+import { LoadingScreen } from "@/components/ui/loading-screen";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, Video, Bot, Pill, UserSearch, Clock, Ambulance } from "lucide-react";
@@ -220,11 +221,13 @@ export default function PatientDashboard() {
             </div>
             
             {isLoading ? (
-              <div className="space-y-4">
-                {[1, 2].map((i) => (
-                  <div key={i} className="h-32 bg-gray-800 animate-pulse rounded-lg"></div>
-                ))}
-              </div>
+              <LoadingScreen 
+                type="minimal" 
+                variant="appointment" 
+                message="Loading your appointments" 
+                showMascot={true} 
+                className="py-6"
+              />
             ) : appointments.length > 0 ? (
               <div className="space-y-3">
                 {appointments.map((appointment) => (
