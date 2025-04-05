@@ -249,6 +249,11 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       
       newSocket.onerror = (error) => {
         console.error("WebSocket error:", error);
+        console.error("Connection details:", {
+          url: wsUrl,
+          readyState: newSocket.readyState,
+          protocol: newSocket.protocol
+        });
         // Let the onclose handler deal with reconnection
       };
       
