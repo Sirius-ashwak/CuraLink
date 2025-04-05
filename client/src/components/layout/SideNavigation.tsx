@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   LayoutDashboard, 
   Bot, 
@@ -13,12 +13,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface SideNavigationProps {
   activeTab: string;
@@ -26,15 +20,39 @@ interface SideNavigationProps {
 }
 
 export default function SideNavigation({ activeTab, onTabChange }: SideNavigationProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const dotsRef = useRef<HTMLButtonElement>(null);
+
+  // Handle clicks outside the menu to close it
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (isMenuOpen && 
+          menuRef.current && 
+          dotsRef.current && 
+          !menuRef.current.contains(event.target as Node) && 
+          !dotsRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMenuOpen]);
 
   const toggleMenu = () => {
-    setIsOpen(!isOpen);
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const toggleMobileSidebar = () => {
+    setIsMobileSidebarOpen(!isMobileSidebarOpen);
   };
 
   const handleTabChange = (tabName: string) => {
     onTabChange(tabName);
-    setIsOpen(false);
+    setIsMenuOpen(false);
+    setIsMobileSidebarOpen(false);
   };
 
   const navItems = [
@@ -52,7 +70,8 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
     },
     { 
       id: 'medicine-tracker', 
-      label: 'Medicine Tracker', 
+      label: 'Medicine Tracker',
+
       icon: <Pill className="h-5 w-5" />,
       colorClass: 'text-green-500'
     },
@@ -93,42 +112,58 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
 
         {/* Menu Actions */}
         <div className="flex items-center">
-          {/* Dropdown Menu (Three Dots) */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-gray-400 hover:text-white">
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-gray-900 border border-gray-800 text-gray-300">
-              {navItems.map(item => (
-                <DropdownMenuItem 
-                  key={item.id}
-                  className={cn(
-                    "cursor-pointer hover:bg-gray-800 hover:text-white focus:bg-gray-800",
-                    activeTab === item.id ? "bg-gray-800 text-white" : ""
-                  )}
-                  onClick={() => handleTabChange(item.id)}
-                >
-                  <div className="flex items-center">
-                    <span className={cn("mr-3", item.colorClass)}>{item.icon}</span>
-                    {item.label}
-                  </div>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Three Dots Menu Button */}
+          <Button 
+            ref={dotsRef}
+            variant="ghost" 
+            size="icon" 
+            className="h-9 w-9 rounded-full text-gray-400 hover:text-white"
+            onClick={toggleMenu}
+          >
+            <MoreVertical className="h-5 w-5" />
+          </Button>
 
           {/* Mobile Menu Toggle Button */}
           <div className="md:hidden ml-2">
             <Button 
               variant="ghost"
               size="icon"
-              onClick={toggleMenu}
+              onClick={toggleMobileSidebar}
               className="h-9 w-9 rounded-full text-gray-400 hover:text-white"
             >
-              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {isMobileSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Apple-style Slide-in Menu Panel */}
+      <div 
+        ref={menuRef}
+        className={cn(
+          "fixed right-4 top-16 w-64 bg-gray-900/95 backdrop-blur-lg rounded-lg border border-gray-800 shadow-2xl transform transition-all duration-300 ease-in-out z-40",
+          isMenuOpen 
+            ? "translate-y-0 opacity-100" 
+            : "translate-y-2 opacity-0 pointer-events-none"
+        )}
+      >
+        <div className="p-2">
+          <div className="space-y-1 py-2">
+            {navItems.map(item => (
+              <div
+                key={item.id}
+                className={cn(
+                  "flex items-center px-3 py-2 rounded-md cursor-pointer transition-colors",
+                  activeTab === item.id 
+                    ? "bg-gray-800 text-white" 
+                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                )}
+                onClick={() => handleTabChange(item.id)}
+              >
+                <span className={cn("mr-3", item.colorClass)}>{item.icon}</span>
+                <span className="font-medium">{item.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -158,11 +193,11 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
       {/* Mobile Side Navigation */}
       <div className={cn(
         "md:hidden fixed inset-0 z-20 bg-black bg-opacity-50 transition-opacity",
-        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        isMobileSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )}>
         <div className={cn(
           "fixed top-16 left-0 bottom-0 w-64 bg-gray-900 transform transition-transform duration-300 ease-in-out z-30",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}>
           <div className="pt-4 px-4">
             <nav className="space-y-1">
