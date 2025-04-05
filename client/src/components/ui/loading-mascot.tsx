@@ -170,10 +170,9 @@ export function LoadingMascot({
 
           {/* Mascot Icon in the Middle */}
           <motion.div 
-            className="absolute inset-0 flex items-center justify-center"
+            className="absolute inset-0 flex items-center justify-center vibrant-glow"
             style={{ 
-              color: selectedVariant.colorValues.primary,
-              filter: "drop-shadow(0 0 8px " + selectedVariant.colorValues.glow + ")"
+              color: selectedVariant.colorValues.primary
             }}
             animate={{ 
               scale: [1, 1.15, 1],
@@ -182,11 +181,6 @@ export function LoadingMascot({
                 selectedVariant.colorValues.primary,
                 selectedVariant.colorValues.lighter,
                 selectedVariant.colorValues.primary
-              ],
-              filter: [
-                "drop-shadow(0 0 8px " + selectedVariant.colorValues.glow + ")",
-                "drop-shadow(0 0 15px " + selectedVariant.colorValues.glow + ") brightness(1.3)",
-                "drop-shadow(0 0 8px " + selectedVariant.colorValues.glow + ")"
               ]
             }}
             transition={{ 
@@ -201,10 +195,9 @@ export function LoadingMascot({
 
           {/* Small pulsing dots around the character with glow effect */}
           <motion.div 
-            className="absolute h-3 w-3 rounded-full top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            className="absolute h-3 w-3 rounded-full top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 border-glow"
             style={{ 
-              backgroundColor: selectedVariant.colorValues.lighter,
-              boxShadow: `0 0 8px 2px ${selectedVariant.colorValues.glow}`
+              backgroundColor: selectedVariant.colorValues.lighter
             }}
             animate={{ 
               opacity: [0, 1, 0],
@@ -213,11 +206,6 @@ export function LoadingMascot({
                 selectedVariant.colorValues.lighter,
                 selectedVariant.colorValues.primary,
                 selectedVariant.colorValues.lighter
-              ],
-              boxShadow: [
-                `0 0 8px 2px ${selectedVariant.colorValues.glow}`,
-                `0 0 15px 4px ${selectedVariant.colorValues.glow}`,
-                `0 0 8px 2px ${selectedVariant.colorValues.glow}`
               ]
             }}
             transition={{ 
@@ -228,10 +216,9 @@ export function LoadingMascot({
             }}
           />
           <motion.div 
-            className="absolute h-3 w-3 rounded-full bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2"
+            className="absolute h-3 w-3 rounded-full bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 border-glow"
             style={{ 
-              backgroundColor: selectedVariant.colorValues.lighter,
-              boxShadow: `0 0 8px 2px ${selectedVariant.colorValues.glow}`
+              backgroundColor: selectedVariant.colorValues.lighter
             }}
             animate={{ 
               opacity: [0, 1, 0],
@@ -240,11 +227,6 @@ export function LoadingMascot({
                 selectedVariant.colorValues.lighter,
                 selectedVariant.colorValues.primary,
                 selectedVariant.colorValues.lighter
-              ],
-              boxShadow: [
-                `0 0 8px 2px ${selectedVariant.colorValues.glow}`,
-                `0 0 15px 4px ${selectedVariant.colorValues.glow}`,
-                `0 0 8px 2px ${selectedVariant.colorValues.glow}`
               ]
             }}
             transition={{ 
@@ -254,10 +236,9 @@ export function LoadingMascot({
             }}
           />
           <motion.div 
-            className="absolute h-3 w-3 rounded-full left-0 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            className="absolute h-3 w-3 rounded-full left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 border-glow"
             style={{ 
-              backgroundColor: selectedVariant.colorValues.lighter,
-              boxShadow: `0 0 8px 2px ${selectedVariant.colorValues.glow}`
+              backgroundColor: selectedVariant.colorValues.lighter
             }}
             animate={{ 
               opacity: [0, 1, 0],
@@ -266,11 +247,6 @@ export function LoadingMascot({
                 selectedVariant.colorValues.lighter,
                 selectedVariant.colorValues.primary,
                 selectedVariant.colorValues.lighter
-              ],
-              boxShadow: [
-                `0 0 8px 2px ${selectedVariant.colorValues.glow}`,
-                `0 0 15px 4px ${selectedVariant.colorValues.glow}`,
-                `0 0 8px 2px ${selectedVariant.colorValues.glow}`
               ]
             }}
             transition={{ 
@@ -281,10 +257,9 @@ export function LoadingMascot({
             }}
           />
           <motion.div 
-            className="absolute h-3 w-3 rounded-full right-0 top-1/2 translate-x-1/2 -translate-y-1/2"
+            className="absolute h-3 w-3 rounded-full right-0 top-1/2 translate-x-1/2 -translate-y-1/2 border-glow"
             style={{ 
-              backgroundColor: selectedVariant.colorValues.lighter,
-              boxShadow: `0 0 8px 2px ${selectedVariant.colorValues.glow}`
+              backgroundColor: selectedVariant.colorValues.lighter
             }}
             animate={{ 
               opacity: [0, 1, 0],
@@ -293,11 +268,6 @@ export function LoadingMascot({
                 selectedVariant.colorValues.lighter,
                 selectedVariant.colorValues.primary,
                 selectedVariant.colorValues.lighter
-              ],
-              boxShadow: [
-                `0 0 8px 2px ${selectedVariant.colorValues.glow}`,
-                `0 0 15px 4px ${selectedVariant.colorValues.glow}`,
-                `0 0 8px 2px ${selectedVariant.colorValues.glow}`
               ]
             }}
             transition={{ 
@@ -312,10 +282,9 @@ export function LoadingMascot({
 
       {/* Loading Text with Glow Effect */}
       <motion.p 
-        className={cn("mt-4 text-center font-medium", textSizeMap[size])}
+        className={cn("mt-4 text-center font-medium text-glow", textSizeMap[size])}
         style={{ 
-          color: selectedVariant.colorValues.primary,
-          textShadow: `0 0 5px ${selectedVariant.colorValues.glow}`
+          color: selectedVariant.colorValues.primary
         }}
         animate={{ 
           opacity: [0.7, 1, 0.7],
@@ -325,11 +294,6 @@ export function LoadingMascot({
             selectedVariant.colorValues.primary,
             selectedVariant.colorValues.lighter,
             selectedVariant.colorValues.primary
-          ],
-          textShadow: [
-            `0 0 5px ${selectedVariant.colorValues.glow}`,
-            `0 0 10px ${selectedVariant.colorValues.glow}`,
-            `0 0 5px ${selectedVariant.colorValues.glow}`
           ]
         }}
         transition={{ 
