@@ -20,45 +20,78 @@ const MapView: React.FC<MapViewProps> = ({ transport }) => {
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isMapLoading, setIsMapLoading] = useState(true);
+  const [mapError, setMapError] = useState<string | null>(null);
+
+  // Default location (San Francisco) for fallback
+  const defaultLocation = { lat: 37.7749, lng: -122.4194 };
 
   useEffect(() => {
     // Try to parse pickup coordinates first if available
-    if (transport.pickupCoordinates) {
-      try {
-        const [lat, lng] = transport.pickupCoordinates.split(',').map(coord => parseFloat(coord.trim()));
-        if (!isNaN(lat) && !isNaN(lng)) {
-          setUserLocation({ lat, lng });
-          setIsMapLoading(false);
-          return;
+    const setInitialLocation = async () => {
+      if (transport.pickupCoordinates) {
+        try {
+          const [lat, lng] = transport.pickupCoordinates.split(',').map(coord => parseFloat(coord.trim()));
+          if (!isNaN(lat) && !isNaN(lng)) {
+            setUserLocation({ lat, lng });
+            setIsMapLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Error parsing pickup coordinates:', error);
         }
-      } catch (error) {
-        console.error('Error parsing pickup coordinates:', error);
       }
-    }
-
-    // Fallback to getting current user location if coordinates aren't available
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-          setIsMapLoading(false);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
+      
+      // If coordinates aren't available or invalid, try geolocation
+      if (navigator.geolocation) {
+        try {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              setUserLocation({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              });
+              setIsMapLoading(false);
+            },
+            (error) => {
+              console.error('Error getting location:', error);
+              // Fall back to default location
+              setUserLocation(defaultLocation);
+              setMapError("Could not access your current location. Using default location.");
+              setIsMapLoading(false);
+            },
+            { timeout: 5000, enableHighAccuracy: true }
+          );
+        } catch (error) {
+          console.error('Geolocation error:', error);
+          setUserLocation(defaultLocation);
+          setMapError("Error accessing location. Using default location.");
           setIsMapLoading(false);
         }
-      );
-    } else {
-      setIsMapLoading(false);
-    }
+      } else {
+        // Geolocation not supported
+        setUserLocation(defaultLocation);
+        setMapError("Geolocation not supported by your browser. Using default location.");
+        setIsMapLoading(false);
+      }
+    };
 
-    // Fetch driver location updates
+    setInitialLocation();
+
+    // Fetch driver location updates if transport is assigned or in progress
+    let interval: NodeJS.Timeout | null = null;
     if (transport.status === 'assigned' || transport.status === 'in_progress') {
-      const interval = setInterval(() => {
-        // This should be replaced with actual WebSocket location updates
+      // Initial fetch
+      fetch(`/api/emergency-transport/${transport.id}/location`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.location) {
+            setDriverLocation(data.location);
+          }
+        })
+        .catch(error => console.error('Error fetching driver location:', error));
+
+      // Set up interval for updates
+      interval = setInterval(() => {
         fetch(`/api/emergency-transport/${transport.id}/location`)
           .then(res => res.json())
           .then(data => {
@@ -68,43 +101,51 @@ const MapView: React.FC<MapViewProps> = ({ transport }) => {
           })
           .catch(error => console.error('Error fetching driver location:', error));
       }, 10000);
-
-      return () => clearInterval(interval);
     }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [transport]);
 
   if (isMapLoading) return <div className="flex justify-center p-6">Loading map...</div>;
-  if (!userLocation) return <div className="p-4 text-center">Unable to load map. Location data unavailable.</div>;
 
   return (
-    <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-      <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""}>
-        <GoogleMap
-          center={userLocation}
-          zoom={14}
-          mapContainerStyle={{ width: '100%', height: '300px' }}
-          options={{
-            styles: [
-              { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-              { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-              { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-            ]
-          }}
-        >
-          {userLocation && (
-            <Marker
-              position={userLocation}
-              title="Your Location"
-            />
-          )}
-          {driverLocation && (
-            <Marker
-              position={driverLocation}
-              title="Ambulance Location"
-            />
-          )}
-        </GoogleMap>
-      </LoadScript>
+    <div className="space-y-2">
+      {mapError && (
+        <div className="text-sm text-orange-500 dark:text-orange-400 p-2 bg-orange-50 dark:bg-orange-950 rounded-md mb-2">
+          {mapError}
+        </div>
+      )}
+      <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+        <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""}>
+          <GoogleMap
+            center={userLocation || defaultLocation}
+            zoom={14}
+            mapContainerStyle={{ width: '100%', height: '300px' }}
+            options={{
+              styles: [
+                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+              ]
+            }}
+          >
+            {userLocation && (
+              <Marker
+                position={userLocation}
+                title="Your Location"
+              />
+            )}
+            {driverLocation && (
+              <Marker
+                position={driverLocation}
+                title="Ambulance Location"
+              />
+            )}
+          </GoogleMap>
+        </LoadScript>
+      </div>
     </div>
   );
 };

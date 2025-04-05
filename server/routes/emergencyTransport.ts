@@ -239,11 +239,27 @@ router.get("/:id/location", async (req: Request, res: Response) => {
 
     // This should be replaced with actual driver location tracking logic
     // For now, returning simulated location near the pickup coordinates
-    const [lat, lng] = transport.pickupCoordinates.split(',').map(Number);
+    if (transport.pickupCoordinates) {
+      try {
+        const [lat, lng] = transport.pickupCoordinates.split(',').map(coord => parseFloat(coord.trim()));
+        if (!isNaN(lat) && !isNaN(lng)) {
+          return res.json({
+            location: {
+              lat: lat + (Math.random() - 0.5) * 0.01,
+              lng: lng + (Math.random() - 0.5) * 0.01
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing pickup coordinates:", error);
+      }
+    }
+    
+    // Fallback to default location if coordinates are invalid or missing
     res.json({
       location: {
-        lat: lat + (Math.random() - 0.5) * 0.01,
-        lng: lng + (Math.random() - 0.5) * 0.01
+        lat: 37.7749,
+        lng: -122.4194
       }
     });
   } catch (error) {
