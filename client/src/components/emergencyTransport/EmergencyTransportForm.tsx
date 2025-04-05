@@ -10,13 +10,21 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { queryClient } from '@/lib/queryClient';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2, Ambulance, Car, Plane, PersonStanding } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const emergencyTransportSchema = z.object({
   reason: z.string().min(5, { message: "Please provide a reason for transport" }),
   pickupLocation: z.string().min(5, { message: "Please provide your pickup location" }),
   destination: z.string().min(5, { message: "Please provide your destination" }),
   notes: z.string().optional(),
+  urgency: z.enum(["low", "medium", "high", "critical"], {
+    required_error: "Please select urgency level"
+  }),
+  vehicleType: z.enum(["ambulance", "wheelchair_van", "medical_car", "helicopter"], {
+    required_error: "Please select vehicle type"
+  }),
 });
 
 type EmergencyTransportFormData = z.infer<typeof emergencyTransportSchema>;
@@ -35,6 +43,8 @@ export default function EmergencyTransportForm() {
       pickupLocation: '',
       destination: '',
       notes: '',
+      urgency: 'high',
+      vehicleType: 'ambulance',
     },
   });
 
@@ -104,14 +114,16 @@ export default function EmergencyTransportForm() {
           pickupLocation: data.pickupLocation,
           destination: data.destination,
           notes: data.notes || null,
-          requestDate: new Date().toISOString(),
           pickupCoordinates: userCoordinates ? `${userCoordinates.lat},${userCoordinates.lng}` : null,
-          urgency: 'high', // Default urgency
+          urgency: data.urgency,
+          vehicleType: data.vehicleType
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit emergency transport request');
+        const errorData = await response.json();
+        console.error('Transport request error:', errorData);
+        throw new Error(errorData.message || 'Failed to submit emergency transport request');
       }
 
       // Reset form
@@ -128,7 +140,7 @@ export default function EmergencyTransportForm() {
       console.error('Emergency transport request error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to submit emergency transport request. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to submit emergency transport request. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -225,6 +237,82 @@ export default function EmergencyTransportForm() {
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="urgency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Urgency Level</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select urgency level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="vehicleType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Vehicle Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select vehicle type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ambulance">
+                          <div className="flex items-center">
+                            <Ambulance className="h-4 w-4 mr-2" />
+                            <span>Ambulance</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="wheelchair_van">
+                          <div className="flex items-center">
+                            <PersonStanding className="h-4 w-4 mr-2" />
+                            <span>Wheelchair Van</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="medical_car">
+                          <div className="flex items-center">
+                            <Car className="h-4 w-4 mr-2" />
+                            <span>Medical Car</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="helicopter">
+                          <div className="flex items-center">
+                            <Plane className="h-4 w-4 mr-2" />
+                            <span>Helicopter</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <Button 
               type="submit" 
