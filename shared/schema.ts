@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -59,6 +59,24 @@ export const appointments = pgTable("appointments", {
   callUrl: text("call_url"),
 });
 
+export const emergencyTransport = pgTable("emergency_transport", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull().references(() => users.id),
+  requestDate: timestamp("request_date").notNull().defaultNow(),
+  pickupLocation: text("pickup_location").notNull(),
+  pickupCoordinates: text("pickup_coordinates"),
+  destination: text("destination").notNull(),
+  reason: text("reason").notNull(),
+  urgency: text("urgency", { enum: ["low", "medium", "high", "critical"] }).notNull(),
+  status: text("status", { enum: ["requested", "assigned", "in_progress", "completed", "canceled"] }).notNull().default("requested"),
+  estimatedArrival: timestamp("estimated_arrival"),
+  vehicleType: text("vehicle_type", { enum: ["ambulance", "wheelchair_van", "medical_car", "helicopter"] }).notNull(),
+  driverName: text("driver_name"),
+  driverPhone: varchar("driver_phone", { length: 20 }),
+  notes: text("notes"),
+  assignedHospital: text("assigned_hospital"),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
@@ -86,6 +104,15 @@ export const insertAppointmentSchema = createInsertSchema(appointments).omit({
   id: true,
 });
 
+export const insertEmergencyTransportSchema = createInsertSchema(emergencyTransport).omit({
+  id: true,
+  requestDate: true,
+  driverName: true,
+  driverPhone: true,
+  estimatedArrival: true,
+  status: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -102,6 +129,9 @@ export type TimeOff = typeof timeOff.$inferSelect;
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type Appointment = typeof appointments.$inferSelect;
 
+export type InsertEmergencyTransport = z.infer<typeof insertEmergencyTransportSchema>;
+export type EmergencyTransport = typeof emergencyTransport.$inferSelect;
+
 // User with doctor information for convenience
 export type DoctorWithUserInfo = Doctor & {
   user: User;
@@ -111,4 +141,9 @@ export type DoctorWithUserInfo = Doctor & {
 export type AppointmentWithUsers = Appointment & {
   patient: User;
   doctor: DoctorWithUserInfo;
+};
+
+// Emergency transport with patient information
+export type EmergencyTransportWithPatient = EmergencyTransport & {
+  patient: User;
 };

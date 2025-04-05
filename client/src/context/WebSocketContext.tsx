@@ -2,9 +2,16 @@ import { createContext, ReactNode, useState, useEffect, useCallback, useContext 
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
-interface WebSocketContextType {
+export interface WebSocketMessage {
+  data: string;
+  type: string;
+  timestamp: number;
+}
+
+export interface WebSocketContextType {
   connected: boolean;
   messages: any[];
+  lastMessage: WebSocketMessage | null;
   sendMessage: (message: any) => void;
   enabled: boolean;
   setEnabled: (enabled: boolean) => void;
@@ -13,6 +20,7 @@ interface WebSocketContextType {
 export const WebSocketContext = createContext<WebSocketContextType>({
   connected: false,
   messages: [],
+  lastMessage: null,
   sendMessage: () => {},
   enabled: true,
   setEnabled: () => {},
@@ -62,6 +70,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
+  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const [enabled, setEnabledState] = useState<boolean>(isWebSocketEnabled());
   const [usingFallback, setUsingFallback] = useState(false);
@@ -185,6 +194,13 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
           const data = JSON.parse(event.data);
           setMessages((prev) => [...prev, data]);
           
+          // Update lastMessage state for components to access
+          setLastMessage({
+            data: event.data,
+            type: data.type || "unknown",
+            timestamp: Date.now(),
+          });
+          
           // Handle specific message types
           if (data.type === "doctorUpdate") {
             // A doctor's availability has changed
@@ -197,6 +213,13 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
             toast({
               title: "Appointment Updated",
               description: `An appointment has been ${data.data.status}.`,
+            });
+          } else if (data.type === "newEmergencyTransport") {
+            // New emergency transport request
+            toast({
+              title: "Emergency Transport Request",
+              description: `A patient needs urgent medical transport from ${data.location}`,
+              variant: "destructive",
             });
           }
         } catch (error) {
@@ -316,7 +339,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   );
   
   return (
-    <WebSocketContext.Provider value={{ connected, messages, sendMessage, enabled, setEnabled }}>
+    <WebSocketContext.Provider value={{ connected, messages, lastMessage, sendMessage, enabled, setEnabled }}>
       {children}
       {/* Connection indicator for debugging */}
       {import.meta.env.DEV && (

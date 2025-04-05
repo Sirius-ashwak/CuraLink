@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useLocation } from "wouter";
+import { useWebSocket } from "@/context/WebSocketContext";
 import AppointmentCard from "./AppointmentCard";
 import AppointmentBooking from "./AppointmentBooking";
 import OfflineIndicator from "../notifications/OfflineIndicator";
@@ -9,13 +10,16 @@ import NotificationToast from "../notifications/NotificationToast";
 import SymptomChecker from "../chatbot/SymptomChecker";
 import DoctorMatcher from "../telehealth/DoctorMatcher";
 import MedicineTracker from "../medicines/MedicineTracker";
+import EmergencyTransportForm from "../emergencyTransport/EmergencyTransportForm";
+import EmergencyTransportList from "../emergencyTransport/EmergencyTransportList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Video, Bot, Pill, UserSearch, Clock } from "lucide-react";
+import { CalendarDays, Video, Bot, Pill, UserSearch, Clock, Ambulance } from "lucide-react";
 
 export default function PatientDashboard() {
   const { user } = useAuth();
   const { appointments, isLoading } = useAppointments();
+  const { lastMessage } = useWebSocket();
   const [, setLocation] = useLocation();
   const [showNotification, setShowNotification] = useState(false);
   const [notification, setNotification] = useState({ title: "", message: "" });
@@ -41,6 +45,76 @@ export default function PatientDashboard() {
       setShowNotification(true);
     }
   }, [appointments, showNotification]);
+  
+  // Handle WebSocket messages for real-time notifications
+  useEffect(() => {
+    if (lastMessage?.data) {
+      try {
+        const data = JSON.parse(lastMessage.data);
+        
+        // Handle different types of WebSocket messages
+        if (data.type === "emergencyTransportsUpdate" || data.type === "emergencyTransports") {
+          // Show notification for emergency transport status updates if needed
+          if (data.data && data.data.length > 0) {
+            const latestTransport = data.data[data.data.length - 1];
+            
+            // Set notification based on transport status
+            if (latestTransport.status === "assigned") {
+              setNotification({
+                title: "Emergency Transport Update",
+                message: `A driver has been assigned to your emergency transport request and will arrive at ${new Date(latestTransport.estimatedArrival).toLocaleTimeString()}.`,
+              });
+              setShowNotification(true);
+              // Automatically navigate to the emergency transport tab
+              setActiveTab("emergency-transport");
+            } else if (latestTransport.status === "in_progress") {
+              setNotification({
+                title: "Emergency Transport In Progress",
+                message: "Your driver is on the way to the hospital with you.",
+              });
+              setShowNotification(true);
+            } else if (latestTransport.status === "completed") {
+              setNotification({
+                title: "Emergency Transport Completed",
+                message: "Your emergency transport has been completed. We hope you're feeling better!",
+              });
+              setShowNotification(true);
+            }
+          }
+        } else if (data.type === "appointments") {
+          // Handle appointment updates
+          if (data.data && data.data.length > 0) {
+            const todayAppointments = data.data.filter(appointment => {
+              const appointmentDate = new Date(appointment.date);
+              const today = new Date();
+              return (
+                appointmentDate.getDate() === today.getDate() &&
+                appointmentDate.getMonth() === today.getMonth() &&
+                appointmentDate.getFullYear() === today.getFullYear()
+              );
+            });
+            
+            if (todayAppointments.length > 0 && !showNotification) {
+              setNotification({
+                title: "Upcoming Appointment Today",
+                message: "You have an appointment scheduled for today. Please be available at the scheduled time.",
+              });
+              setShowNotification(true);
+            }
+          }
+        } else if (data.type === "doctorUpdate") {
+          // A doctor's status has been updated (online/offline)
+          setNotification({
+            title: "Doctor Status Updated",
+            message: `A doctor's availability has changed. They are now ${data.data.isAvailable ? 'online' : 'offline'}.`,
+          });
+          setShowNotification(true);
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    }
+  }, [lastMessage, showNotification]);
   
   // Listen for tab change events from the bottom navigation
   useEffect(() => {
@@ -90,6 +164,7 @@ export default function PatientDashboard() {
           <TabsTrigger value="medicine-tracker" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Medicine Tracker</TabsTrigger>
           <TabsTrigger value="doctor-matcher" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Doctor Matcher</TabsTrigger>
           <TabsTrigger value="appointments" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Appointments</TabsTrigger>
+          <TabsTrigger value="emergency-transport" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Emergency Transport</TabsTrigger>
         </TabsList>
         
         {/* Dashboard Tab */}
@@ -97,7 +172,7 @@ export default function PatientDashboard() {
           {/* Quick Actions */}
           <div className="mb-8">
             <h3 className="text-white font-medium mb-3">Quick Actions</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
               <a onClick={() => setActiveTab("appointments")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
                 <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center mb-2">
                   <CalendarDays className="h-6 w-6 text-white" />
@@ -127,6 +202,12 @@ export default function PatientDashboard() {
                   <Video className="h-6 w-6 text-white" />
                 </div>
                 <span className="text-sm font-medium text-center text-white">Video Consult</span>
+              </a>
+              <a onClick={() => setActiveTab("emergency-transport")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
+                <div className="w-12 h-12 rounded-full bg-red-700 flex items-center justify-center mb-2">
+                  <Ambulance className="h-6 w-6 text-white" />
+                </div>
+                <span className="text-sm font-medium text-center text-white">Emergency Transport</span>
               </a>
             </div>
           </div>
@@ -161,7 +242,7 @@ export default function PatientDashboard() {
           </section>
           
           {/* Health Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <Card className="bg-gray-900 border border-gray-800">
               <CardHeader className="bg-blue-900 bg-opacity-30 pb-2 border-b border-gray-800">
                 <CardTitle className="text-base flex items-center text-white">
@@ -198,6 +279,19 @@ export default function PatientDashboard() {
               <CardContent className="pt-4">
                 <p className="text-sm text-gray-400 mb-3">Keep track of your medications, get reminders, and learn more about your prescriptions.</p>
                 <a onClick={() => setActiveTab("medicine-tracker")} className="text-blue-500 text-sm font-medium cursor-pointer hover:text-blue-400">Manage Medicines →</a>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gray-900 border border-gray-800">
+              <CardHeader className="bg-red-900 bg-opacity-30 pb-2 border-b border-gray-800">
+                <CardTitle className="text-base flex items-center text-white">
+                  <Ambulance className="h-4 w-4 mr-2 text-red-500" />
+                  Emergency Transport
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <p className="text-sm text-gray-400 mb-3">Request emergency medical transport if you're in a rural area and need immediate assistance.</p>
+                <a onClick={() => setActiveTab("emergency-transport")} className="text-red-500 text-sm font-medium cursor-pointer hover:text-red-400">Request Transport →</a>
               </CardContent>
             </Card>
           </div>
@@ -270,6 +364,30 @@ export default function PatientDashboard() {
             </CardContent>
           </Card>
         </TabsContent>
+        
+        {/* Emergency Transport Tab */}
+        <TabsContent value="emergency-transport">
+          <Card className="mb-4 bg-gray-900 border border-gray-800">
+            <CardHeader className="bg-red-900 bg-opacity-30 border-b border-gray-800">
+              <CardTitle className="flex items-center text-white">
+                <Ambulance className="w-5 h-5 mr-2 text-red-500" />
+                Emergency Transport
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="h-[600px] overflow-auto p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <EmergencyTransportForm />
+                  </div>
+                  <div>
+                    <EmergencyTransportList />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
       
       {/* Notifications */}
@@ -279,6 +397,7 @@ export default function PatientDashboard() {
           title={notification.title}
           message={notification.message}
           onClose={() => setShowNotification(false)}
+          type={notification.title.includes("Emergency") ? "destructive" : "default"}
         />
       )}
     </>

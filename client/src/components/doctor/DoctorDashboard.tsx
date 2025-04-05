@@ -5,17 +5,18 @@ import { useWebSocket } from "@/context/WebSocketContext";
 import AppointmentSchedule from "./AppointmentSchedule";
 import AvailabilityManager from "./AvailabilityManager";
 import PatientRecords from "./PatientRecords";
+import EmergencyTransportDashboard from "../emergencyTransport/EmergencyTransportDashboard";
 import OfflineIndicator from "../notifications/OfflineIndicator";
 import NotificationToast from "../notifications/NotificationToast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { CalendarDays, Clock } from "lucide-react";
+import { CalendarDays, Clock, Ambulance } from "lucide-react";
 
 export default function DoctorDashboard() {
   const { user } = useAuth();
   const [location] = useLocation();
-  const { sendMessage } = useWebSocket();
+  const { sendMessage, lastMessage } = useWebSocket();
   const [activeTab, setActiveTab] = useState("schedule");
   const [isOnline, setIsOnline] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
@@ -27,6 +28,7 @@ export default function DoctorDashboard() {
     const tab = params.get("tab");
     if (tab === "availability") setActiveTab("availability");
     if (tab === "patients") setActiveTab("patients");
+    if (tab === "emergency-transport") setActiveTab("emergency-transport");
   }, [location]);
   
   // Get doctor info
@@ -71,6 +73,19 @@ export default function DoctorDashboard() {
         return timeA.localeCompare(timeB);
       })[0] 
     : null;
+    
+  // Get active emergency transports
+  const { data: emergencyTransports = [] } = useQuery({
+    queryKey: ["/api/emergency-transport"],
+    select: (data) => {
+      if (Array.isArray(data)) {
+        return data.filter((transport) => 
+          transport.status === "requested" || transport.status === "assigned"
+        );
+      }
+      return [];
+    },
+  });
   
   const toggleAvailability = async () => {
     if (!doctorInfo) return;
@@ -106,6 +121,26 @@ export default function DoctorDashboard() {
     }
   }, [doctorInfo]);
   
+  // Handle WebSocket messages
+  useEffect(() => {
+    if (lastMessage?.data) {
+      try {
+        const data = JSON.parse(lastMessage.data);
+        
+        if (data.type === "newEmergencyTransport") {
+          // Show notification for new emergency transport request
+          setNotification({
+            title: "New Emergency Transport Request",
+            message: `A patient needs urgent medical transport from ${data.location}`,
+          });
+          setShowNotification(true);
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    }
+  }, [lastMessage]);
+  
   if (!user || user.role !== "doctor") return null;
   
   return (
@@ -115,7 +150,7 @@ export default function DoctorDashboard() {
         <h2 className="text-xl font-medium text-white">Welcome, Dr. {user.lastName}</h2>
         <p className="text-gray-400">Your schedule for today</p>
         
-        <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 md:grid-cols-4">
           <div className="bg-gray-900 rounded-lg shadow-sm p-4 border border-gray-800">
             <h3 className="text-sm font-medium text-gray-400">Today's Schedule</h3>
             <div className="flex items-center space-x-2 mt-1">
@@ -166,6 +201,22 @@ export default function DoctorDashboard() {
               </svg>
             </button>
           </div>
+          
+          <div 
+            className="bg-gray-900 rounded-lg shadow-sm p-4 border border-gray-800 cursor-pointer hover:bg-gray-800 transition-colors"
+            onClick={() => setActiveTab("emergency-transport")}
+          >
+            <h3 className="text-sm font-medium text-gray-400">Emergency Requests</h3>
+            <div className="flex items-center space-x-2 mt-1">
+              <Ambulance className="h-5 w-5 text-red-500" />
+              <p className="text-2xl font-medium text-white">{emergencyTransports.length}</p>
+            </div>
+            {emergencyTransports.length > 0 ? (
+              <p className="text-xs text-red-400 mt-1">Active transport requests</p>
+            ) : (
+              <p className="text-xs text-gray-400 mt-1">No active transport requests</p>
+            )}
+          </div>
         </div>
       </div>
       
@@ -190,6 +241,15 @@ export default function DoctorDashboard() {
           >
             Patient Records
           </TabsTrigger>
+          <TabsTrigger 
+            value="emergency-transport" 
+            className="border-b-2 border-transparent data-[state=active]:border-red-500 py-2 px-4 text-sm rounded-none whitespace-nowrap flex-shrink-0 text-white"
+          >
+            <div className="flex items-center">
+              <Ambulance className="h-4 w-4 mr-1 text-red-500" />
+              Emergency Transport
+            </div>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="schedule">
@@ -202,6 +262,10 @@ export default function DoctorDashboard() {
         
         <TabsContent value="patients">
           <PatientRecords />
+        </TabsContent>
+        
+        <TabsContent value="emergency-transport">
+          <EmergencyTransportDashboard />
         </TabsContent>
       </Tabs>
       

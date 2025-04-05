@@ -5,17 +5,22 @@ import { storage } from "./storage";
 import { insertUserSchema, insertAppointmentSchema } from "@shared/schema";
 import { z } from "zod";
 
+// Initialize WebSocket server for early export
+let wss: WebSocketServer;
+export { wss };
+
 // Import our new route handlers
 import symptomCheckerRoutes from "./routes/symptomChecker";
 import doctorMatchRoutes from "./routes/doctorMatch";
 import medicinesRoutes from "./routes/medicines";
 import videoRoutes from "./routes/video";
+import emergencyTransportRoutes from "./routes/emergencyTransport";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
   // WebSocket server setup
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
   // Store active connections
   const clients = new Map<number, WebSocket[]>();
@@ -90,6 +95,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
             notifyAppointmentUpdate(appointment.patientId, appointment.doctorId);
           }
         }
+        
+        // Handle emergency transport request updates
+        if (message.type === 'updateEmergencyTransport' && userId) {
+          const transport = await storage.getEmergencyTransport(message.transportId);
+          if (transport) {
+            if (message.status === 'canceled') {
+              await storage.cancelEmergencyTransport(message.transportId);
+            } else if (message.status === 'completed') {
+              await storage.completeEmergencyTransport(message.transportId);
+            } else if (message.driverInfo) {
+              // If driver info is provided, assign the driver
+              const { driverName, driverPhone, estimatedArrival } = message.driverInfo;
+              await storage.assignDriverToEmergencyTransport(
+                message.transportId,
+                driverName,
+                driverPhone,
+                new Date(estimatedArrival)
+              );
+            } else {
+              // General update
+              await storage.updateEmergencyTransport(message.transportId, {
+                status: message.status
+              });
+            }
+            
+            // Notify the patient
+            notifyEmergencyTransportUpdate(transport.patientId);
+          }
+        }
       } catch (err) {
         console.error('WebSocket message error:', err);
       }
@@ -152,6 +186,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       type: 'appointments',
       data: doctorAppointments
     });
+  };
+  
+  // Helper function to notify about emergency transport updates
+  const notifyEmergencyTransportUpdate = async (patientId: number) => {
+    const transports = await storage.getEmergencyTransportsByPatient(patientId);
+    notifyUser(patientId, {
+      type: 'emergencyTransports',
+      data: transports
+    });
+    
+    // Notify all doctors about new emergency transport requests
+    const doctors = await storage.getDoctors();
+    for (const doctor of doctors) {
+      notifyUser(doctor.userId, {
+        type: 'emergencyTransportsUpdate',
+        data: await storage.getActiveEmergencyTransports()
+      });
+    }
   };
   
   // Helper function to send message to a specific user
@@ -551,6 +603,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Video calling API
   app.use('/api/video', videoRoutes);
+  
+  // Emergency Transport API for rural patients
+  app.use('/api/emergency-transport', emergencyTransportRoutes);
   
   return httpServer;
 }

@@ -10,7 +10,10 @@ import {
   Appointment, 
   InsertAppointment,
   DoctorWithUserInfo,
-  AppointmentWithUsers
+  AppointmentWithUsers,
+  EmergencyTransport,
+  InsertEmergencyTransport,
+  EmergencyTransportWithPatient
 } from "@shared/schema";
 
 export interface IStorage {
@@ -46,6 +49,16 @@ export interface IStorage {
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
   updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment>;
   cancelAppointment(id: number): Promise<Appointment>;
+  
+  // Emergency Transport operations
+  getEmergencyTransport(id: number): Promise<EmergencyTransportWithPatient | undefined>;
+  getEmergencyTransportsByPatient(patientId: number): Promise<EmergencyTransportWithPatient[]>;
+  getActiveEmergencyTransports(): Promise<EmergencyTransportWithPatient[]>;
+  createEmergencyTransport(transport: InsertEmergencyTransport): Promise<EmergencyTransport>;
+  updateEmergencyTransport(id: number, transport: Partial<EmergencyTransport>): Promise<EmergencyTransport>;
+  cancelEmergencyTransport(id: number): Promise<EmergencyTransport>;
+  assignDriverToEmergencyTransport(id: number, driverName: string, driverPhone: string, estimatedArrival: Date): Promise<EmergencyTransport>;
+  completeEmergencyTransport(id: number): Promise<EmergencyTransport>;
 }
 
 export class MemStorage implements IStorage {
@@ -54,12 +67,14 @@ export class MemStorage implements IStorage {
   private availabilities: Map<number, Availability>;
   private timeOffs: Map<number, TimeOff>;
   private appointments: Map<number, Appointment>;
+  private emergencyTransports: Map<number, EmergencyTransport>;
   
   private userIdCounter: number;
   private doctorIdCounter: number;
   private availabilityIdCounter: number;
   private timeOffIdCounter: number;
   private appointmentIdCounter: number;
+  private emergencyTransportIdCounter: number;
   
   constructor() {
     this.users = new Map();
@@ -67,12 +82,14 @@ export class MemStorage implements IStorage {
     this.availabilities = new Map();
     this.timeOffs = new Map();
     this.appointments = new Map();
+    this.emergencyTransports = new Map();
     
     this.userIdCounter = 1;
     this.doctorIdCounter = 1;
     this.availabilityIdCounter = 1;
     this.timeOffIdCounter = 1;
     this.appointmentIdCounter = 1;
+    this.emergencyTransportIdCounter = 1;
     
     this.seedData();
   }
@@ -257,6 +274,109 @@ export class MemStorage implements IStorage {
     return updatedAppointment;
   }
   
+  // Emergency Transport operations
+  async getEmergencyTransport(id: number): Promise<EmergencyTransportWithPatient | undefined> {
+    const transport = this.emergencyTransports.get(id);
+    if (!transport) return undefined;
+    
+    const patient = this.users.get(transport.patientId)!;
+    
+    return {
+      ...transport,
+      patient
+    };
+  }
+  
+  async getEmergencyTransportsByPatient(patientId: number): Promise<EmergencyTransportWithPatient[]> {
+    return Array.from(this.emergencyTransports.values())
+      .filter(transport => transport.patientId === patientId)
+      .map(transport => {
+        const patient = this.users.get(transport.patientId)!;
+        
+        return {
+          ...transport,
+          patient
+        };
+      });
+  }
+  
+  async getActiveEmergencyTransports(): Promise<EmergencyTransportWithPatient[]> {
+    const activeStatuses = ["requested", "assigned", "in_progress"];
+    
+    return Array.from(this.emergencyTransports.values())
+      .filter(transport => activeStatuses.includes(transport.status))
+      .map(transport => {
+        const patient = this.users.get(transport.patientId)!;
+        
+        return {
+          ...transport,
+          patient
+        };
+      });
+  }
+  
+  async createEmergencyTransport(transportData: InsertEmergencyTransport): Promise<EmergencyTransport> {
+    const id = this.emergencyTransportIdCounter++;
+    const transport: EmergencyTransport = { 
+      ...transportData, 
+      id, 
+      requestDate: new Date(),
+      status: "requested",
+      driverName: null,
+      driverPhone: null,
+      estimatedArrival: null
+    };
+    this.emergencyTransports.set(id, transport);
+    return transport;
+  }
+  
+  async updateEmergencyTransport(id: number, partialTransport: Partial<EmergencyTransport>): Promise<EmergencyTransport> {
+    const transport = this.emergencyTransports.get(id);
+    if (!transport) throw new Error("Emergency transport not found");
+    
+    const updatedTransport = { ...transport, ...partialTransport };
+    this.emergencyTransports.set(id, updatedTransport);
+    return updatedTransport;
+  }
+  
+  async cancelEmergencyTransport(id: number): Promise<EmergencyTransport> {
+    const transport = this.emergencyTransports.get(id);
+    if (!transport) throw new Error("Emergency transport not found");
+    
+    const updatedTransport = { ...transport, status: "canceled" };
+    this.emergencyTransports.set(id, updatedTransport);
+    return updatedTransport;
+  }
+  
+  async assignDriverToEmergencyTransport(
+    id: number, 
+    driverName: string, 
+    driverPhone: string, 
+    estimatedArrival: Date
+  ): Promise<EmergencyTransport> {
+    const transport = this.emergencyTransports.get(id);
+    if (!transport) throw new Error("Emergency transport not found");
+    
+    const updatedTransport = { 
+      ...transport, 
+      status: "assigned", 
+      driverName, 
+      driverPhone,
+      estimatedArrival
+    };
+    this.emergencyTransports.set(id, updatedTransport);
+    return updatedTransport;
+  }
+  
+  async completeEmergencyTransport(id: number): Promise<EmergencyTransport> {
+    const transport = this.emergencyTransports.get(id);
+    if (!transport) throw new Error("Emergency transport not found");
+    
+    const updatedTransport = { ...transport, status: "completed" };
+    this.emergencyTransports.set(id, updatedTransport);
+    return updatedTransport;
+  }
+  
   // Seed data for demo purposes
   private seedData() {
     // Create sample users
@@ -380,6 +500,25 @@ export class MemStorage implements IStorage {
       reason: "Follow-up Consultation",
       notes: "",
       callUrl: ""
+    });
+    
+    // Create a sample emergency transport request
+    this.emergencyTransports.set(this.emergencyTransportIdCounter++, {
+      id: this.emergencyTransportIdCounter,
+      patientId: patientUser.id,
+      requestDate: new Date(),
+      pickupLocation: "123 Rural Road, Remote Village, 98765",
+      pickupCoordinates: "37.7749,-122.4194",
+      destination: "County General Hospital",
+      reason: "Severe chest pain and difficulty breathing",
+      urgency: "high",
+      status: "requested",
+      vehicleType: "ambulance",
+      driverName: null,
+      driverPhone: null,
+      estimatedArrival: null,
+      notes: "Patient has history of heart problems",
+      assignedHospital: "County General Hospital"
     });
   }
 }
