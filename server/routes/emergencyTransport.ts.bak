@@ -81,7 +81,7 @@ router.post("/", async (req: Request, res: Response) => {
     // Send WebSocket notification to doctors about the new emergency transport request
     const patient = await storage.getUser(transport.patientId);
     wss.clients.forEach((client: any) => {
-      if (client.readyState === 1 && client.role === "doctor") { // OPEN = 1
+      if (client.readyState === 1 && client.role === 'doctor') { // OPEN = 1
         client.send(JSON.stringify({
           type: "newEmergencyTransport",
           transportId: transport.id,
@@ -186,7 +186,7 @@ router.patch("/:id/cancel", async (req: Request, res: Response) => {
           const transport = await storage.getEmergencyTransport(id);
           
           if (transport) {
-            // If transport exists but could not be canceled, force cancel it
+            // If transport exists but couldn't be canceled, force cancel it
             const canceledTransport = {
               ...transport,
               status: "canceled" as "canceled" | "completed" | "assigned" | "in_progress" | "requested"
@@ -272,7 +272,7 @@ router.get("/:id/location", async (req: Request, res: Response) => {
     // For now, returning simulated location near the pickup coordinates
     if (transport.pickupCoordinates) {
       try {
-        const [lat, lng] = transport.pickupCoordinates.split(",").map(coord => parseFloat(coord.trim()));
+        const [lat, lng] = transport.pickupCoordinates.split(',').map(coord => parseFloat(coord.trim()));
         if (!isNaN(lat) && !isNaN(lng)) {
           return res.json({
             location: {
@@ -298,5 +298,3 @@ router.get("/:id/location", async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to fetch transport location" });
   }
 });
-
-export default router;
