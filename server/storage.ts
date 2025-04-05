@@ -343,7 +343,11 @@ export class MemStorage implements IStorage {
     const transport = this.emergencyTransports.get(id);
     if (!transport) throw new Error("Emergency transport not found");
     
-    const updatedTransport = { ...transport, status: "canceled" };
+    // Ensure we're using the correct status type
+    const updatedTransport = { 
+      ...transport, 
+      status: "canceled" as "requested" | "assigned" | "in_progress" | "completed" | "canceled"
+    };
     this.emergencyTransports.set(id, updatedTransport);
     return updatedTransport;
   }
@@ -359,7 +363,7 @@ export class MemStorage implements IStorage {
     
     const updatedTransport = { 
       ...transport, 
-      status: "assigned", 
+      status: "assigned" as "requested" | "assigned" | "in_progress" | "completed" | "canceled", 
       driverName, 
       driverPhone,
       estimatedArrival
@@ -372,7 +376,10 @@ export class MemStorage implements IStorage {
     const transport = this.emergencyTransports.get(id);
     if (!transport) throw new Error("Emergency transport not found");
     
-    const updatedTransport = { ...transport, status: "completed" };
+    const updatedTransport = { 
+      ...transport, 
+      status: "completed" as "requested" | "assigned" | "in_progress" | "completed" | "canceled"
+    };
     this.emergencyTransports.set(id, updatedTransport);
     return updatedTransport;
   }
