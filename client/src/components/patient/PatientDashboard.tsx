@@ -397,7 +397,10 @@ export default function PatientDashboard() {
           title={notification.title}
           message={notification.message}
           onClose={() => setShowNotification(false)}
-          type={notification.title.includes("Emergency") ? "destructive" : "default"}
+          type={notification.title.includes("Emergency") ? "destructive" : 
+                notification.title.includes("Appointment") ? "success" :
+                notification.title.includes("Medicine") ? "warning" :
+                "default"}
         />
       )}
     </>
