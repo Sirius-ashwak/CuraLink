@@ -15,6 +15,7 @@ import doctorMatchRoutes from "./routes/doctorMatch";
 import medicinesRoutes from "./routes/medicines";
 import videoRoutes from "./routes/video";
 import emergencyTransportRoutes from "./routes/emergencyTransport";
+import aiChatRoutes from "./routes/aiChat";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -610,6 +611,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Emergency Transport API for rural patients
   app.use('/api/emergency-transport', emergencyTransportRoutes);
+  
+  // AI Chat API
+  app.use('/api/ai-chat', aiChatRoutes);
   
   return httpServer;
 }

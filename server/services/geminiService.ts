@@ -51,18 +51,31 @@ export class GeminiService {
    */
   async getMedicalResponse(query: string, chatHistory: Array<{role: string, content: string}> = []): Promise<string> {
     try {
-      // Start a chat session
-      const chat = this.model.startChat({
-        history: chatHistory.map(msg => ({
-          role: msg.role === 'user' ? 'user' : 'model',
-          parts: [{ text: msg.content }],
-        })),
-        systemInstruction: MEDICAL_SYSTEM_PROMPT,
-      });
-
-      // Generate a response
-      const result = await chat.sendMessage(query);
-      const response = result.response.text();
+      // Instead of using systemInstruction which is causing issues, 
+      // we'll include our medical prompting in the message itself
+      const adjustedQuery = `${MEDICAL_SYSTEM_PROMPT}\n\nUser question: ${query}`;
+      
+      // For the chat history, we'll use the standard history approach
+      // We will convert history to the format Gemini API expects
+      const formattedHistory = chatHistory.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }],
+      }));
+      
+      // If we have chat history, use it, otherwise make a direct request
+      let response;
+      if (formattedHistory.length > 0) {
+        const chat = this.model.startChat({
+          history: formattedHistory
+        });
+        
+        const result = await chat.sendMessage(adjustedQuery);
+        response = result.response.text();
+      } else {
+        // For the first message, we can use generateContent directly
+        const result = await this.model.generateContent(adjustedQuery);
+        response = result.response.text();
+      }
       
       return response;
     } catch (error: any) {
