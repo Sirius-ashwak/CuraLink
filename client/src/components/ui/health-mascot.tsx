@@ -21,12 +21,21 @@ export function HealthMascot({
     lg: 'h-48 w-48',
   };
 
+  // Enhanced color maps with glow effects
   const colorMap = {
     primary: 'text-primary',
     blue: 'text-blue-500 dark:text-blue-400',
     green: 'text-green-500 dark:text-green-400',
     red: 'text-red-500 dark:text-red-400',
     orange: 'text-orange-500 dark:text-orange-400',
+  };
+
+  const glowColorMap = {
+    primary: 'rgba(124, 58, 237, 0.6)', // purple glow
+    blue: 'rgba(14, 165, 233, 0.6)',    // blue glow
+    green: 'rgba(16, 185, 129, 0.6)',   // green glow
+    red: 'rgba(239, 68, 68, 0.6)',      // red glow 
+    orange: 'rgba(249, 115, 22, 0.6)',  // orange glow
   };
 
   return (
@@ -36,15 +45,29 @@ export function HealthMascot({
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full"
       >
-        {/* Head shape */}
+        {/* SVG Filters for Glow Effects */}
+        <defs>
+          <filter id="glow-effect">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+        
+        {/* Head shape with glow */}
         <motion.circle
           cx="100"
           cy="70"
           r="50"
           fill="currentColor"
+          filter="url(#glow-effect)"
           animate={animate ? { 
             scale: [1, 1.05, 1],
-            y: [0, -3, 0]
+            y: [0, -3, 0],
+            filter: [
+              "url(#glow-effect) brightness(1)",
+              "url(#glow-effect) brightness(1.2)",
+              "url(#glow-effect) brightness(1)"
+            ]
           } : undefined}
           transition={{ 
             duration: 2,
@@ -137,9 +160,18 @@ export function HealthMascot({
           }}
         />
         
-        {/* Red Cross on Cap */}
+        {/* Red Cross on Cap with Glow Effect */}
         <motion.g
-          animate={animate ? { scale: [1, 1.1, 1], opacity: [0.8, 1, 0.8] } : undefined}
+          filter="url(#glow-effect)"
+          animate={animate ? { 
+            scale: [1, 1.1, 1], 
+            opacity: [0.8, 1, 0.8],
+            filter: [
+              "url(#glow-effect) brightness(1)",
+              "url(#glow-effect) brightness(1.5)",
+              "url(#glow-effect) brightness(1)"
+            ]
+          } : undefined}
           transition={{ 
             duration: 2,
             repeat: Infinity,
@@ -147,8 +179,26 @@ export function HealthMascot({
             ease: 'easeInOut'
           }}
         >
-          <rect x="95" y="38" width="10" height="20" rx="2" fill="#FF5555" />
-          <rect x="90" y="43" width="20" height="10" rx="2" fill="#FF5555" />
+          <motion.rect 
+            x="95" y="38" width="10" height="20" rx="2" 
+            fill="#FF5555"
+            animate={animate ? { fill: ["#FF5555", "#FF7777", "#FF5555"] } : undefined}
+            transition={{ 
+              duration: 1.5,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
+          />
+          <motion.rect 
+            x="90" y="43" width="20" height="10" rx="2" 
+            fill="#FF5555"
+            animate={animate ? { fill: ["#FF5555", "#FF7777", "#FF5555"] } : undefined}
+            transition={{ 
+              duration: 1.5,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
+          />
         </motion.g>
 
         {/* Body/Lab Coat */}
@@ -201,22 +251,29 @@ export function HealthMascot({
           />
         </motion.g>
 
-        {/* Heartbeat Line */}
+        {/* Heartbeat Line with Glow */}
         <motion.path
           d="M75,160 L85,160 L90,145 L95,175 L100,155 L105,165 L110,160 L125,160"
           fill="none"
           stroke="#FF5555"
           strokeWidth="3"
           strokeLinecap="round"
+          filter="url(#glow-effect)"
           animate={animate ? { 
             pathLength: [0, 1], 
             opacity: [0, 1],
-            strokeWidth: [2, 3, 2]
+            strokeWidth: [2, 3, 2],
+            stroke: ["#FF5555", "#FF7777", "#FF5555"],
+            filter: [
+              "url(#glow-effect) brightness(1)",
+              "url(#glow-effect) brightness(1.5)",
+              "url(#glow-effect) brightness(1)"
+            ]
           } : undefined}
           transition={{ 
             duration: 1.2,
             repeat: Infinity,
-            ease: 'easeInOut'
+            ease: "easeInOut"
           }}
         />
 
