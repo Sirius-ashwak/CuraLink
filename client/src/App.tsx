@@ -12,6 +12,7 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import Dashboard from "@/pages/dashboard";
 import VideoCall from "@/pages/video-call";
+import LoadingDemo from "@/pages/loading-demo";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/video-call" component={VideoCall} />
       <Route path="/video-call/:id" component={VideoCall} />
+      <Route path="/loading-demo" component={LoadingDemo} />
       <Route component={NotFound} />
     </Switch>
   );
