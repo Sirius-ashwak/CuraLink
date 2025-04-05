@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,67 @@ export default function EmergencyTransportList() {
         description: 'Your emergency transport request has been canceled.',
       });
     } catch (error) {
+
+const MapView = ({ transport }) => {
+  const [driverLocation, setDriverLocation] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+
+  useEffect(() => {
+    // Get user's current location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => console.error('Error getting location:', error)
+      );
+    }
+
+    // Simulate driver location updates (replace with actual WebSocket updates)
+    if (transport.status === 'assigned' || transport.status === 'in_progress') {
+      const interval = setInterval(() => {
+        // This should be replaced with actual WebSocket location updates
+        fetch(`/api/emergency-transport/${transport.id}/location`)
+          .then(res => res.json())
+          .then(data => setDriverLocation(data.location))
+          .catch(console.error);
+      }, 10000);
+
+      return () => clearInterval(interval);
+    }
+  }, [transport]);
+
+  if (!userLocation) return <div>Loading map...</div>;
+
+  return (
+    <LoadScript googleMapsApiKey={process.env.GOOGLE_MAPS_API_KEY}>
+      <GoogleMap
+        center={userLocation}
+        zoom={14}
+        mapContainerStyle={{ width: '100%', height: '300px' }}
+      >
+        {userLocation && (
+          <Marker
+            position={userLocation}
+            icon="/patient-marker.png"
+            title="Your Location"
+          />
+        )}
+        {driverLocation && (
+          <Marker
+            position={driverLocation}
+            icon="/ambulance-marker.png"
+            title="Ambulance Location"
+          />
+        )}
+      </GoogleMap>
+    </LoadScript>
+  );
+};
+
       console.error('Cancel transport error:', error);
       toast({
         title: 'Error',
@@ -135,6 +197,12 @@ export default function EmergencyTransportList() {
                         </div>
                       )}
 
+                      {(transport.status === 'assigned' || transport.status === 'in_progress') && (
+                        <div className="col-span-1 md:col-span-2 mb-4">
+                          <h4 className="text-sm font-semibold mb-2">Live Location Tracking</h4>
+                          <MapView transport={transport} />
+                        </div>
+                      )}
                       {transport.driverName && (
                         <div className="col-span-1 md:col-span-2">
                           <h4 className="text-sm font-semibold">Driver Information</h4>

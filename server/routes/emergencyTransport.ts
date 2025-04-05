@@ -221,3 +221,33 @@ router.patch("/:id", async (req: Request, res: Response) => {
 });
 
 export default router;
+/**
+ * GET /api/emergency-transport/:id/location
+ * Get current location of emergency transport vehicle
+ */
+router.get("/:id/location", async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid transport ID" });
+    }
+    
+    const transport = await storage.getEmergencyTransport(id);
+    if (!transport) {
+      return res.status(404).json({ message: "Emergency transport not found" });
+    }
+
+    // This should be replaced with actual driver location tracking logic
+    // For now, returning simulated location near the pickup coordinates
+    const [lat, lng] = transport.pickupCoordinates.split(',').map(Number);
+    res.json({
+      location: {
+        lat: lat + (Math.random() - 0.5) * 0.01,
+        lng: lng + (Math.random() - 0.5) * 0.01
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching transport location:", error);
+    res.status(500).json({ message: "Failed to fetch transport location" });
+  }
+});
