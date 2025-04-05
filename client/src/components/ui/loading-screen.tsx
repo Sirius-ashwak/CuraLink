@@ -70,20 +70,49 @@ export function LoadingScreen({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
       >
         <div className="flex flex-col items-center justify-center text-center">
           {showMascot ? (
-            <HealthMascot size="lg" color={variantColorMap[variant]} />
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ 
+                type: "spring",
+                stiffness: 260,
+                damping: 20,
+                duration: 0.6
+              }}
+            >
+              <HealthMascot 
+                size="lg" 
+                color={variantColorMap[variant]} 
+                animate={true}
+              />
+            </motion.div>
           ) : null}
           
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ 
+              delay: 0.2, 
+              duration: 0.5,
+              type: "spring",
+              stiffness: 200,
+              damping: 20
+            }}
           >
             <h3 className="mt-6 text-2xl font-bold">{message}</h3>
             {submessage && (
-              <p className="mt-2 text-muted-foreground">{submessage}</p>
+              <motion.p 
+                className="mt-2 text-muted-foreground"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+              >
+                {submessage}
+              </motion.p>
             )}
           </motion.div>
 
@@ -92,7 +121,13 @@ export function LoadingScreen({
               className="mt-6"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
+              transition={{ 
+                delay: 0.3,
+                duration: 0.5,
+                type: "spring",
+                stiffness: 200,
+                damping: 15
+              }}
             >
               <LoadingMascot 
                 message="" 
@@ -115,22 +150,44 @@ export function LoadingScreen({
       <div className="flex flex-col items-center justify-center text-center">
         {showMascot && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ 
+              duration: 0.6,
+              type: "spring",
+              stiffness: 220,
+              damping: 20
+            }}
           >
-            <HealthMascot size="lg" color={variantColorMap[variant]} />
+            <HealthMascot 
+              size="lg" 
+              color={variantColorMap[variant]} 
+              animate={true}
+            />
           </motion.div>
         )}
         
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
+          transition={{ 
+            delay: 0.2, 
+            duration: 0.5,
+            type: "spring",
+            stiffness: 200,
+            damping: 20
+          }}
         >
           <h2 className="mt-6 text-3xl font-bold tracking-tight">{message}</h2>
           {submessage && (
-            <p className="mt-2 text-xl text-muted-foreground">{submessage}</p>
+            <motion.p 
+              className="mt-2 text-xl text-muted-foreground"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+            >
+              {submessage}
+            </motion.p>
           )}
         </motion.div>
 
@@ -139,7 +196,13 @@ export function LoadingScreen({
             className="mt-8"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
+            transition={{ 
+              delay: 0.3, 
+              duration: 0.5,
+              type: "spring",
+              stiffness: 200,
+              damping: 15
+            }}
           >
             <LoadingMascot 
               message="" 

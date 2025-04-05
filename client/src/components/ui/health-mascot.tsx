@@ -42,7 +42,10 @@ export function HealthMascot({
           cy="70"
           r="50"
           fill="currentColor"
-          animate={animate ? { scale: [1, 1.03, 1] } : undefined}
+          animate={animate ? { 
+            scale: [1, 1.05, 1],
+            y: [0, -3, 0]
+          } : undefined}
           transition={{ 
             duration: 2,
             repeat: Infinity,
@@ -167,9 +170,13 @@ export function HealthMascot({
           fill="none"
           stroke="#555"
           strokeWidth="3"
-          animate={animate ? { rotate: [0, 2, 0, -2, 0], x: [0, 1, 0, -1, 0] } : undefined}
+          animate={animate ? { 
+            rotate: [0, 3, 0, -3, 0], 
+            x: [0, 2, 0, -2, 0],
+            y: [0, 1, 0, 1, 0]
+          } : undefined}
           transition={{ 
-            duration: 3,
+            duration: 2,
             repeat: Infinity,
             ease: 'easeInOut'
           }}
@@ -179,7 +186,19 @@ export function HealthMascot({
             d="M85,130 C85,150 115,150 115,130"
             strokeLinecap="round"
           />
-          <circle cx="85" cy="125" r="5" stroke="#555" fill="#888" />
+          <motion.circle 
+            cx="85" 
+            cy="125" 
+            r="5" 
+            stroke="#555" 
+            fill="#888"
+            animate={animate ? { scale: [1, 1.2, 1] } : undefined}
+            transition={{ 
+              duration: 1,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
+          />
         </motion.g>
 
         {/* Heartbeat Line */}
@@ -187,13 +206,15 @@ export function HealthMascot({
           d="M75,160 L85,160 L90,145 L95,175 L100,155 L105,165 L110,160 L125,160"
           fill="none"
           stroke="#FF5555"
-          strokeWidth="2"
+          strokeWidth="3"
           strokeLinecap="round"
-          animate={animate ? 
-            { pathLength: [0, 1], opacity: [0, 1] } : undefined
-          }
+          animate={animate ? { 
+            pathLength: [0, 1], 
+            opacity: [0, 1],
+            strokeWidth: [2, 3, 2]
+          } : undefined}
           transition={{ 
-            duration: 1.5,
+            duration: 1.2,
             repeat: Infinity,
             ease: 'easeInOut'
           }}
