@@ -42,21 +42,24 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="flex flex-col min-h-screen bg-white text-black dark:bg-black dark:text-white">
       {/* Header */}
-      <header className="bg-white border-gray-200 dark:bg-black dark:border-gray-800 shadow-sm border-b fixed top-0 left-0 right-0 z-30">
+      <header className="bg-white border-gray-200 dark:bg-black dark:border-gray-800 shadow-lg border-b fixed top-0 left-0 right-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <span className="material-icons text-blue-500 mr-2">health_and_safety</span>
+              <div className="flex items-center justify-center h-8 w-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg mr-3 shadow-md">
+                <span className="text-white font-bold text-lg">+</span>
+              </div>
               <h1 className="text-lg font-medium text-black dark:text-white">AI Health Bridge</h1>
               {isDoctor && (
-                <span className="ml-2 text-xs font-medium py-1 px-2 bg-blue-900 text-blue-300 rounded-full">
+                <span className="ml-3 text-xs font-medium py-1 px-3 bg-blue-900/50 text-blue-400 rounded-full border border-blue-800/50">
                   Doctor
                 </span>
               )}
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <ThemeSwitch />
               <ConnectionStatus />
+              <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
               <ProfileMenu />
               <SideNavigation activeTab={activeTab} onTabChange={handleTabChange} />
             </div>
@@ -65,8 +68,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </header>
       
       {/* Main Content */}
-      <main className="flex-grow bg-white dark:bg-black pt-16">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <main className="flex-grow bg-white dark:bg-black pt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {children}
         </div>
       </main>

@@ -6,14 +6,11 @@ import {
   UserSearch, 
   CalendarDays, 
   Ambulance, 
-  Menu, 
-  X,
-  Home,
-  MoreVertical
+  MoreVertical, 
+  ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import ProfileMenu from './ProfileMenu';
 
 interface SideNavigationProps {
   activeTab: string;
@@ -21,7 +18,6 @@ interface SideNavigationProps {
 }
 
 export default function SideNavigation({ activeTab, onTabChange }: SideNavigationProps) {
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const dotsRef = useRef<HTMLButtonElement>(null);
@@ -46,126 +42,106 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const toggleMobileSidebar = () => {
-    setIsMobileSidebarOpen(!isMobileSidebarOpen);
-  };
-
   const handleTabChange = (tabName: string) => {
     onTabChange(tabName);
     setIsMenuOpen(false);
-    setIsMobileSidebarOpen(false);
   };
 
   const navItems = [
     { 
       id: 'dashboard', 
       label: 'Dashboard', 
-      icon: <LayoutDashboard className="h-5 w-5" />,
+      icon: <LayoutDashboard className="h-4 w-4" />,
       colorClass: 'text-blue-500'
     },
     { 
       id: 'ai-chat', 
       label: 'AI Companion', 
-      icon: <Bot className="h-5 w-5" />,
+      icon: <Bot className="h-4 w-4" />,
       colorClass: 'text-purple-500'
     },
     { 
       id: 'medicine-tracker', 
       label: 'Medicine Tracker',
-
-      icon: <Pill className="h-5 w-5" />,
+      icon: <Pill className="h-4 w-4" />,
       colorClass: 'text-green-500'
     },
     { 
       id: 'doctor-matcher', 
       label: 'Doctor Matcher', 
-      icon: <UserSearch className="h-5 w-5" />,
+      icon: <UserSearch className="h-4 w-4" />,
       colorClass: 'text-sky-500'
     },
     { 
       id: 'appointments', 
       label: 'Appointments', 
-      icon: <CalendarDays className="h-5 w-5" />,
+      icon: <CalendarDays className="h-4 w-4" />,
       colorClass: 'text-indigo-500'
     },
     { 
       id: 'emergency-transport', 
       label: 'Emergency Transport', 
-      icon: <Ambulance className="h-5 w-5" />,
+      icon: <Ambulance className="h-4 w-4" />,
       colorClass: 'text-red-500'
     }
   ];
 
   return (
     <>
-      {/* Top Navigation Bar (Mobile & Desktop) */}
-      <div className="fixed top-0 left-0 right-0 h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 z-30">
-        {/* Logo / Home button */}
-        <div 
-          className="flex items-center cursor-pointer" 
-          onClick={() => handleTabChange('dashboard')}
+      {/* Navigation Menu Button */}
+      <div>
+        <Button 
+          ref={dotsRef}
+          variant="outline" 
+          size="icon" 
+          className="h-9 w-9 rounded-full border-blue-700/30 text-blue-400 hover:text-white hover:bg-blue-800/50 hover:border-blue-600/50 transition-colors"
+          onClick={toggleMenu}
         >
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mr-3">
-            <Home className="h-4 w-4 text-white" />
-          </div>
-          <h2 className="text-lg font-semibold text-white">AI Health Bridge</h2>
-        </div>
-
-        {/* Menu Actions */}
-        <div className="flex items-center">
-          {/* Profile Menu */}
-          <ProfileMenu />
-          
-          {/* Three Dots Menu Button */}
-          <Button 
-            ref={dotsRef}
-            variant="ghost" 
-            size="icon" 
-            className="h-9 w-9 rounded-full text-gray-400 hover:text-white ml-2"
-            onClick={toggleMenu}
-          >
-            <MoreVertical className="h-5 w-5" />
-          </Button>
-
-          {/* Mobile Menu Toggle Button */}
-          <div className="md:hidden ml-2">
-            <Button 
-              variant="ghost"
-              size="icon"
-              onClick={toggleMobileSidebar}
-              className="h-9 w-9 rounded-full text-gray-400 hover:text-white"
-            >
-              {isMobileSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </div>
-        </div>
+          <MoreVertical className="h-5 w-5" />
+        </Button>
       </div>
 
       {/* Apple-style Slide-in Menu Panel */}
       <div 
         ref={menuRef}
         className={cn(
-          "fixed right-4 top-16 w-64 bg-gray-900/95 backdrop-blur-lg rounded-lg border border-gray-800 shadow-2xl transform transition-all duration-300 ease-in-out z-40",
+          "fixed right-4 top-20 w-64 bg-gray-900/95 backdrop-blur-lg rounded-xl border border-blue-800/20 shadow-lg shadow-blue-900/10 transform transition-all duration-300 ease-in-out z-40 overflow-hidden",
           isMenuOpen 
             ? "translate-y-0 opacity-100" 
-            : "translate-y-2 opacity-0 pointer-events-none"
+            : "translate-y-4 opacity-0 pointer-events-none"
         )}
       >
+        {/* Menu Header */}
+        <div className="py-3 px-4 border-b border-gray-800/50">
+          <h3 className="text-sm font-medium text-gray-200">Navigation</h3>
+        </div>
+        
+        {/* Menu Items */}
         <div className="p-2">
-          <div className="space-y-1 py-2">
+          <div className="space-y-1 py-1">
             {navItems.map(item => (
               <div
                 key={item.id}
                 className={cn(
-                  "flex items-center px-3 py-2 rounded-md cursor-pointer transition-colors",
+                  "flex items-center px-3 py-2.5 rounded-md cursor-pointer transition-all",
                   activeTab === item.id 
-                    ? "bg-gray-800 text-white" 
+                    ? "bg-blue-600/20 text-white" 
                     : "text-gray-300 hover:bg-gray-800 hover:text-white"
                 )}
                 onClick={() => handleTabChange(item.id)}
               >
-                <span className={cn("mr-3", item.colorClass)}>{item.icon}</span>
-                <span className="font-medium">{item.label}</span>
+                <div className={cn(
+                  "flex items-center justify-center w-7 h-7 rounded-md mr-3", 
+                  activeTab === item.id 
+                    ? `${item.colorClass} bg-gray-800/80` 
+                    : "bg-gray-800/50"
+                )}>
+                  {item.icon}
+                </div>
+                <span className="font-medium text-sm">{item.label}</span>
+                {activeTab === item.id && (
+                  <ArrowRight className="h-3 w-3 ml-auto text-blue-400" />
+                )}
               </div>
             ))}
           </div>
