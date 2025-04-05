@@ -50,12 +50,13 @@ export default function LoginForm() {
       const demoUser = {
         id: role === 'patient' ? 1 : 2,
         email: data.email,
+        password: data.password, // Include password from form input
         firstName: role === 'patient' ? 'John' : 'Dr. Sarah',
         lastName: role === 'patient' ? 'Doe' : 'Smith',
         role: role,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
         // Add other required fields
-        specialty: role === 'doctor' ? 'General Physician' : undefined,
+        specialty: role === 'doctor' ? 'General Physician' : null,
         profile: { 
           age: role === 'patient' ? 35 : 42,
           gender: role === 'patient' ? 'Male' : 'Female',
