@@ -42,6 +42,36 @@ export default function PatientDashboard() {
     }
   }, [appointments, showNotification]);
   
+  // Listen for tab change events from the bottom navigation
+  useEffect(() => {
+    const handleTabChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail && customEvent.detail.tabName) {
+        setActiveTab(customEvent.detail.tabName);
+      }
+    };
+    
+    window.addEventListener('tabChange', handleTabChange as EventListener);
+    
+    // Check if we have a hash in the URL to activate specific tab on direct load
+    const hash = window.location.hash;
+    if (hash === '#book-appointment') {
+      setActiveTab('appointments');
+    } else if (hash.includes('upcoming-appointments')) {
+      // Just scroll to the section but keep the dashboard tab
+      setTimeout(() => {
+        const element = document.getElementById("upcoming-appointments");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    }
+    
+    return () => {
+      window.removeEventListener('tabChange', handleTabChange as EventListener);
+    };
+  }, []);
+  
   if (!user) return null;
   
   return (
@@ -53,7 +83,7 @@ export default function PatientDashboard() {
       </div>
       
       {/* Main Tabs Navigation */}
-      <Tabs defaultValue="dashboard" className="mb-8" onValueChange={setActiveTab}>
+      <Tabs value={activeTab} className="mb-8" onValueChange={setActiveTab}>
         <TabsList className="flex w-full mb-6 bg-gray-900 overflow-x-auto scrollbar-hide">
           <TabsTrigger value="dashboard" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Dashboard</TabsTrigger>
           <TabsTrigger value="ai-chat" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">AI Companion</TabsTrigger>
