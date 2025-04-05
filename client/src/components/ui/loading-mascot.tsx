@@ -72,12 +72,15 @@ export function LoadingMascot({
         <div className={cn('relative', sizeMap[size])}>
           <motion.div 
             className={cn(
-              'absolute inset-0 rounded-full bg-muted opacity-20',
+              'absolute inset-0 rounded-full bg-muted opacity-30',
               selectedVariant.colors.accent
             )}
-            animate={{ scale: [1, 1.2, 1] }}
+            animate={{ 
+              scale: [1, 1.3, 1],
+              opacity: [0.2, 0.3, 0.2]
+            }}
             transition={{ 
-              duration: 2, 
+              duration: 1.8, 
               repeat: Infinity,
               ease: "easeInOut" 
             }}
@@ -87,7 +90,7 @@ export function LoadingMascot({
             className="absolute inset-0 flex items-center justify-center"
             animate={{ rotate: [0, 360] }}
             transition={{ 
-              duration: 4,
+              duration: 3.5,
               repeat: Infinity,
               ease: "linear"
             }}
@@ -103,10 +106,11 @@ export function LoadingMascot({
                 r="45" 
                 fill="none" 
                 stroke="currentColor" 
-                strokeWidth="2"
+                strokeWidth="3"
                 strokeDasharray="283"
                 animate={{ 
-                  strokeDashoffset: [283, 0, 283]
+                  strokeDashoffset: [283, 0, 283],
+                  strokeWidth: [2, 3, 2]
                 }}
                 transition={{ 
                   duration: 3, 
@@ -123,9 +127,13 @@ export function LoadingMascot({
               "absolute inset-0 flex items-center justify-center",
               selectedVariant.colors.primary
             )}
-            animate={{ scale: [1, 1.1, 1] }}
+            animate={{ 
+              scale: [1, 1.15, 1],
+              y: [0, -2, 0],
+              filter: ["brightness(1)", "brightness(1.2)", "brightness(1)"]
+            }}
             transition={{ 
-              duration: 2, 
+              duration: 1.5, 
               repeat: Infinity,
               repeatType: "reverse",
               ease: "easeInOut" 
@@ -204,9 +212,13 @@ export function LoadingMascot({
       {/* Loading Text */}
       <motion.p 
         className={cn("mt-4 text-center font-medium", textSizeMap[size])}
-        animate={{ opacity: [0.5, 1, 0.5] }}
+        animate={{ 
+          opacity: [0.5, 1, 0.5],
+          y: [0, -1, 0],
+          scale: [1, 1.02, 1]
+        }}
         transition={{ 
-          duration: 1.5, 
+          duration: 1.8, 
           repeat: Infinity,
           ease: "easeInOut" 
         }}
