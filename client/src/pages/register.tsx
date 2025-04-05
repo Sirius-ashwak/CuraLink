@@ -87,21 +87,21 @@ export default function Register() {
   };
   
   return (
-    <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center px-6">
+    <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-blue-800 mb-4">
             <span className="material-icons text-white text-2xl">health_and_safety</span>
           </div>
-          <h1 className="text-2xl font-bold text-text-primary">AI Health Bridge</h1>
-          <p className="text-muted-foreground mt-2">Create your account</p>
+          <h1 className="text-2xl font-bold text-white">AI Health Bridge</h1>
+          <p className="text-gray-400 mt-2">Create your account</p>
         </div>
         
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-gray-900 rounded-lg shadow-md p-6 border border-gray-800">
           <Tabs defaultValue="patient" onValueChange={(value) => setRole(value as "patient" | "doctor")}>
-            <TabsList className="grid grid-cols-2 mb-6">
-              <TabsTrigger value="patient">Patient</TabsTrigger>
-              <TabsTrigger value="doctor">Healthcare Provider</TabsTrigger>
+            <TabsList className="grid grid-cols-2 mb-6 p-1 bg-gray-800 rounded-lg">
+              <TabsTrigger value="patient" className="rounded-md text-sm font-medium transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white">Patient</TabsTrigger>
+              <TabsTrigger value="doctor" className="rounded-md text-sm font-medium transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white">Healthcare Provider</TabsTrigger>
             </TabsList>
             
             <Form {...form}>
@@ -112,9 +112,9 @@ export default function Register() {
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>First Name</FormLabel>
+                        <FormLabel className="text-sm font-medium text-gray-300">First Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="John" {...field} />
+                          <Input placeholder="John" {...field} className="rounded-md h-11 bg-gray-800 text-white border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -126,9 +126,9 @@ export default function Register() {
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Last Name</FormLabel>
+                        <FormLabel className="text-sm font-medium text-gray-300">Last Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Doe" {...field} />
+                          <Input placeholder="Doe" {...field} className="rounded-md h-11 bg-gray-800 text-white border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -141,9 +141,9 @@ export default function Register() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-300">Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="your@email.com" {...field} />
+                        <Input placeholder="your@email.com" {...field} className="rounded-md h-11 bg-gray-800 text-white border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -155,9 +155,9 @@ export default function Register() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-300">Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input type="password" placeholder="••••••••" {...field} className="rounded-md h-11 bg-gray-800 text-white border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -171,13 +171,14 @@ export default function Register() {
                       name="profile.age"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Age (Optional)</FormLabel>
+                          <FormLabel className="text-sm font-medium text-gray-300">Age (Optional)</FormLabel>
                           <FormControl>
                             <Input 
                               type="number" 
                               placeholder="35" 
                               {...field}
                               onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              className="rounded-md h-11 bg-gray-800 text-white border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                             />
                           </FormControl>
                           <FormMessage />
@@ -190,21 +191,21 @@ export default function Register() {
                       name="profile.gender"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Gender (Optional)</FormLabel>
+                          <FormLabel className="text-sm font-medium text-gray-300">Gender (Optional)</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
                           >
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="h-11 bg-gray-800 text-white border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
                                 <SelectValue placeholder="Select" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="male">Male</SelectItem>
-                              <SelectItem value="female">Female</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                              <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                            <SelectContent className="bg-gray-800 border-gray-700">
+                              <SelectItem value="male" className="text-white hover:bg-gray-700">Male</SelectItem>
+                              <SelectItem value="female" className="text-white hover:bg-gray-700">Female</SelectItem>
+                              <SelectItem value="other" className="text-white hover:bg-gray-700">Other</SelectItem>
+                              <SelectItem value="prefer_not_to_say" className="text-white hover:bg-gray-700">Prefer not to say</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -220,22 +221,22 @@ export default function Register() {
                     name="specialty"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Specialty</FormLabel>
+                        <FormLabel className="text-sm font-medium text-gray-300">Specialty</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-11 bg-gray-800 text-white border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
                               <SelectValue placeholder="Select your specialty" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="General Physician">General Physician</SelectItem>
-                            <SelectItem value="Pediatrician">Pediatrician</SelectItem>
-                            <SelectItem value="Cardiologist">Cardiologist</SelectItem>
-                            <SelectItem value="Dermatologist">Dermatologist</SelectItem>
-                            <SelectItem value="Mental Health Specialist">Mental Health Specialist</SelectItem>
+                          <SelectContent className="bg-gray-800 border-gray-700">
+                            <SelectItem value="General Physician" className="text-white hover:bg-gray-700">General Physician</SelectItem>
+                            <SelectItem value="Pediatrician" className="text-white hover:bg-gray-700">Pediatrician</SelectItem>
+                            <SelectItem value="Cardiologist" className="text-white hover:bg-gray-700">Cardiologist</SelectItem>
+                            <SelectItem value="Dermatologist" className="text-white hover:bg-gray-700">Dermatologist</SelectItem>
+                            <SelectItem value="Mental Health Specialist" className="text-white hover:bg-gray-700">Mental Health Specialist</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -248,11 +249,12 @@ export default function Register() {
                     name="profile.bio"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Professional Bio (Optional)</FormLabel>
+                        <FormLabel className="text-sm font-medium text-gray-300">Professional Bio (Optional)</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="Brief description of your qualifications and experience"
                             {...field}
+                            className="rounded-md h-11 bg-gray-800 text-white border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                           />
                         </FormControl>
                         <FormMessage />
@@ -261,16 +263,20 @@ export default function Register() {
                   />
                 </TabsContent>
                 
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button 
+                  type="submit" 
+                  className="w-full h-11 text-base font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all shadow-md"
+                  disabled={isLoading}
+                >
                   {isLoading ? "Creating Account..." : "Create Account"}
                 </Button>
               </form>
             </Form>
           </Tabs>
           
-          <div className="mt-6 pt-4 border-t border-neutral-dark text-center">
-            <p className="text-sm text-muted-foreground">
-              Already have an account? <a href="/" className="text-primary hover:text-primary-dark font-medium">Sign in</a>
+          <div className="mt-6 pt-4 border-t border-gray-800 text-center">
+            <p className="text-sm text-gray-400">
+              Already have an account? <a href="/" className="text-blue-500 hover:text-blue-400 font-medium transition-colors">Sign in</a>
             </p>
           </div>
         </div>
