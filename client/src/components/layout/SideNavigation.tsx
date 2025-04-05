@@ -7,10 +7,18 @@ import {
   CalendarDays, 
   Ambulance, 
   Menu, 
-  X
+  X,
+  MoreVertical,
+  Home
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface SideNavigationProps {
   activeTab: string;
@@ -70,19 +78,63 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
 
   return (
     <>
-      {/* Mobile Menu Toggle Button */}
-      <div className="md:hidden fixed top-4 right-4 z-40">
-        <button 
-          onClick={toggleMenu}
-          className="p-2 rounded-full bg-gray-800 text-white shadow-lg border border-gray-700"
+      {/* Top Navigation Bar (Mobile & Desktop) */}
+      <div className="fixed top-0 left-0 right-0 h-16 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-4 z-30">
+        {/* Logo / Home button */}
+        <div 
+          className="flex items-center cursor-pointer" 
+          onClick={() => handleTabChange('dashboard')}
         >
-          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mr-3">
+            <Home className="h-4 w-4 text-white" />
+          </div>
+          <h2 className="text-lg font-semibold text-white">AI Health Bridge</h2>
+        </div>
+
+        {/* Menu Actions */}
+        <div className="flex items-center">
+          {/* Dropdown Menu (Three Dots) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-gray-400 hover:text-white">
+                <MoreVertical className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-gray-900 border border-gray-800 text-gray-300">
+              {navItems.map(item => (
+                <DropdownMenuItem 
+                  key={item.id}
+                  className={cn(
+                    "cursor-pointer hover:bg-gray-800 hover:text-white focus:bg-gray-800",
+                    activeTab === item.id ? "bg-gray-800 text-white" : ""
+                  )}
+                  onClick={() => handleTabChange(item.id)}
+                >
+                  <div className="flex items-center">
+                    <span className={cn("mr-3", item.colorClass)}>{item.icon}</span>
+                    {item.label}
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Mobile Menu Toggle Button */}
+          <div className="md:hidden ml-2">
+            <Button 
+              variant="ghost"
+              size="icon"
+              onClick={toggleMenu}
+              className="h-9 w-9 rounded-full text-gray-400 hover:text-white"
+            >
+              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Side Navigation - Desktop */}
-      <div className="hidden md:flex flex-col h-screen w-64 bg-gray-900 border-r border-gray-800 fixed left-0 top-0 pt-8 px-4 overflow-y-auto">
-        <h2 className="text-lg font-semibold text-white mb-8 px-4">AI Health Bridge</h2>
+      <div className="hidden md:flex flex-col h-screen w-64 bg-gray-900 border-r border-gray-800 fixed left-0 top-16 pt-6 px-4 overflow-y-auto">
         <nav className="space-y-1 flex-1">
           {navItems.map(item => (
             <Button
@@ -105,14 +157,14 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
 
       {/* Mobile Side Navigation */}
       <div className={cn(
-        "md:hidden fixed inset-0 z-30 bg-black bg-opacity-50 transition-opacity",
+        "md:hidden fixed inset-0 z-20 bg-black bg-opacity-50 transition-opacity",
         isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
       )}>
         <div className={cn(
-          "fixed top-0 left-0 bottom-0 w-64 bg-gray-900 transform transition-transform duration-300 ease-in-out z-40",
+          "fixed top-16 left-0 bottom-0 w-64 bg-gray-900 transform transition-transform duration-300 ease-in-out z-30",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}>
-          <div className="pt-12 px-4">
+          <div className="pt-4 px-4">
             <nav className="space-y-1">
               {navItems.map(item => (
                 <Button
