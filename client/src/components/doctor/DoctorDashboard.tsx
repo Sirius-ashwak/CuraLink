@@ -276,7 +276,9 @@ export default function DoctorDashboard() {
           title={notification.title}
           message={notification.message}
           onClose={() => setShowNotification(false)}
-          type={isOnline ? "success" : "info"}
+          type={notification.title.includes("Emergency") ? "destructive" : 
+                notification.title.includes("Appointment") ? "success" : 
+                isOnline ? "default" : "warning"}
         />
       )}
     </>
