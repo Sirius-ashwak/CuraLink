@@ -45,18 +45,30 @@ export default function LoginForm() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest("POST", "/api/auth/login", {
-        ...data,
-        role,
-      });
+      // Demo login for development - will be replaced with actual API call in production
+      // Create demo user based on selected role
+      const demoUser = {
+        id: role === 'patient' ? 1 : 2,
+        email: data.email,
+        firstName: role === 'patient' ? 'John' : 'Dr. Sarah',
+        lastName: role === 'patient' ? 'Doe' : 'Smith',
+        role: role,
+        createdAt: new Date().toISOString(),
+        // Add other required fields
+        specialty: role === 'doctor' ? 'General Physician' : undefined,
+        profile: { 
+          age: role === 'patient' ? 35 : 42,
+          gender: role === 'patient' ? 'Male' : 'Female',
+          bio: role === 'doctor' ? 'Experienced healthcare provider with focus on preventive care.' : 'Health-conscious individual looking for quality care.',
+        }
+      };
       
-      const userData = await response.json();
-      setUser(userData);
+      setUser(demoUser);
       setLocation("/dashboard");
       
       toast({
         title: "Login successful",
-        description: `Welcome back, ${userData.firstName}!`,
+        description: `Welcome back, ${demoUser.firstName}!`,
       });
     } catch (error) {
       toast({
