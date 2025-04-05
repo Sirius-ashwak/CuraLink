@@ -5,15 +5,114 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Ambulance, Clock, MapPin, Info, Check, X } from 'lucide-react';
+import { Ambulance, Clock, MapPin, Info, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { EmergencyTransportWithPatient } from '@shared/schema';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
+
+interface MapViewProps {
+  transport: EmergencyTransportWithPatient;
+}
+
+const MapView: React.FC<MapViewProps> = ({ transport }) => {
+  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isMapLoading, setIsMapLoading] = useState(true);
+
+  useEffect(() => {
+    // Try to parse pickup coordinates first if available
+    if (transport.pickupCoordinates) {
+      try {
+        const [lat, lng] = transport.pickupCoordinates.split(',').map(coord => parseFloat(coord.trim()));
+        if (!isNaN(lat) && !isNaN(lng)) {
+          setUserLocation({ lat, lng });
+          setIsMapLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error('Error parsing pickup coordinates:', error);
+      }
+    }
+
+    // Fallback to getting current user location if coordinates aren't available
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          setIsMapLoading(false);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setIsMapLoading(false);
+        }
+      );
+    } else {
+      setIsMapLoading(false);
+    }
+
+    // Fetch driver location updates
+    if (transport.status === 'assigned' || transport.status === 'in_progress') {
+      const interval = setInterval(() => {
+        // This should be replaced with actual WebSocket location updates
+        fetch(`/api/emergency-transport/${transport.id}/location`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.location) {
+              setDriverLocation(data.location);
+            }
+          })
+          .catch(error => console.error('Error fetching driver location:', error));
+      }, 10000);
+
+      return () => clearInterval(interval);
+    }
+  }, [transport]);
+
+  if (isMapLoading) return <div className="flex justify-center p-6">Loading map...</div>;
+  if (!userLocation) return <div className="p-4 text-center">Unable to load map. Location data unavailable.</div>;
+
+  return (
+    <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+      <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""}>
+        <GoogleMap
+          center={userLocation}
+          zoom={14}
+          mapContainerStyle={{ width: '100%', height: '300px' }}
+          options={{
+            styles: [
+              { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+              { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+              { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+            ]
+          }}
+        >
+          {userLocation && (
+            <Marker
+              position={userLocation}
+              title="Your Location"
+            />
+          )}
+          {driverLocation && (
+            <Marker
+              position={driverLocation}
+              title="Ambulance Location"
+            />
+          )}
+        </GoogleMap>
+      </LoadScript>
+    </div>
+  );
+};
 
 export default function EmergencyTransportList() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const { data: transportRequests, isLoading, error } = useQuery<EmergencyTransportWithPatient[]>({
@@ -39,67 +138,6 @@ export default function EmergencyTransportList() {
         description: 'Your emergency transport request has been canceled.',
       });
     } catch (error) {
-
-const MapView = ({ transport }) => {
-  const [driverLocation, setDriverLocation] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);
-
-  useEffect(() => {
-    // Get user's current location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => console.error('Error getting location:', error)
-      );
-    }
-
-    // Simulate driver location updates (replace with actual WebSocket updates)
-    if (transport.status === 'assigned' || transport.status === 'in_progress') {
-      const interval = setInterval(() => {
-        // This should be replaced with actual WebSocket location updates
-        fetch(`/api/emergency-transport/${transport.id}/location`)
-          .then(res => res.json())
-          .then(data => setDriverLocation(data.location))
-          .catch(console.error);
-      }, 10000);
-
-      return () => clearInterval(interval);
-    }
-  }, [transport]);
-
-  if (!userLocation) return <div>Loading map...</div>;
-
-  return (
-    <LoadScript googleMapsApiKey={process.env.GOOGLE_MAPS_API_KEY}>
-      <GoogleMap
-        center={userLocation}
-        zoom={14}
-        mapContainerStyle={{ width: '100%', height: '300px' }}
-      >
-        {userLocation && (
-          <Marker
-            position={userLocation}
-            icon="/patient-marker.png"
-            title="Your Location"
-          />
-        )}
-        {driverLocation && (
-          <Marker
-            position={driverLocation}
-            icon="/ambulance-marker.png"
-            title="Ambulance Location"
-          />
-        )}
-      </GoogleMap>
-    </LoadScript>
-  );
-};
-
       console.error('Cancel transport error:', error);
       toast({
         title: 'Error',
@@ -159,16 +197,26 @@ const MapView = ({ transport }) => {
             {transportRequests.map((transport) => (
               <Card key={transport.id} className="overflow-hidden">
                 <div 
-                  className="p-4 cursor-pointer flex justify-between items-center"
+                  className="p-4 cursor-pointer"
                   onClick={() => setExpandedId(expandedId === transport.id ? null : transport.id)}
                 >
-                  <div className="flex items-center">
-                    {getStatusBadge(transport.status)}
-                    <span className="ml-3 font-medium">{transport.reason}</span>
-                  </div>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Clock size={16} className="mr-1" />
-                    {format(new Date(transport.requestDate), 'MMM d, yyyy h:mm a')}
+                  <div className={`flex ${isMobile ? 'flex-col gap-2' : 'justify-between items-center'}`}>
+                    <div className="flex items-center">
+                      {getStatusBadge(transport.status)}
+                      <span className="ml-3 font-medium truncate max-w-[200px]">{transport.reason}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Clock size={16} className="mr-1" />
+                        {format(new Date(transport.requestDate), isMobile ? 'MMM d, h:mm a' : 'MMM d, yyyy h:mm a')}
+                      </div>
+                      <div className="ml-2">
+                        {expandedId === transport.id ? 
+                          <ChevronUp size={16} className="text-muted-foreground" /> : 
+                          <ChevronDown size={16} className="text-muted-foreground" />
+                        }
+                      </div>
+                    </div>
                   </div>
                 </div>
                 
@@ -223,15 +271,15 @@ const MapView = ({ transport }) => {
                     </div>
                     
                     {transport.status === 'requested' && (
-                      <div className="mt-4 flex justify-end">
+                      <div className="mt-4 flex justify-center md:justify-end">
                         <Button 
                           variant="destructive" 
-                          size="sm"
+                          size={isMobile ? "default" : "sm"}
                           onClick={(e) => {
                             e.stopPropagation();
                             cancelTransport(transport.id);
                           }}
-                          className="flex items-center"
+                          className="flex items-center w-full md:w-auto"
                         >
                           <X size={16} className="mr-1" /> Cancel Request
                         </Button>

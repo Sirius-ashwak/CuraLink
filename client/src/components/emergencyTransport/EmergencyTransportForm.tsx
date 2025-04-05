@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { queryClient } from '@/lib/queryClient';
+import { MapPin, Loader2 } from 'lucide-react';
 
 const emergencyTransportSchema = z.object({
   reason: z.string().min(5, { message: "Please provide a reason for transport" }),
@@ -24,6 +25,8 @@ export default function EmergencyTransportForm() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userCoordinates, setUserCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   const form = useForm<EmergencyTransportFormData>({
     resolver: zodResolver(emergencyTransportSchema),
@@ -34,6 +37,48 @@ export default function EmergencyTransportForm() {
       notes: '',
     },
   });
+
+  // Function to get user's current location
+  const getUserLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: 'Geolocation not supported',
+        description: 'Your browser does not support geolocation.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsLoadingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserCoordinates({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+        // Try to get address from coordinates using reverse geocoding
+        fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.coords.latitude},${position.coords.longitude}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.results && data.results.length > 0) {
+              const address = data.results[0].formatted_address;
+              form.setValue('pickupLocation', address);
+            }
+          })
+          .catch(() => {})
+          .finally(() => setIsLoadingLocation(false));
+      },
+      (error) => {
+        setIsLoadingLocation(false);
+        console.error("Error getting location", error);
+        toast({
+          title: 'Location Error',
+          description: 'Unable to get your current location. Please enter it manually.',
+          variant: 'destructive',
+        });
+      }
+    );
+  };
 
   const onSubmit = async (data: EmergencyTransportFormData) => {
     if (!user) {
@@ -60,6 +105,8 @@ export default function EmergencyTransportForm() {
           destination: data.destination,
           notes: data.notes || null,
           requestDate: new Date().toISOString(),
+          pickupCoordinates: userCoordinates ? `${userCoordinates.lat},${userCoordinates.lng}` : null,
+          urgency: 'high', // Default urgency
         }),
       });
 
@@ -120,9 +167,29 @@ export default function EmergencyTransportForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Pickup Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Your current address" {...field} />
-                  </FormControl>
+                  <div className="flex items-center space-x-2">
+                    <FormControl className="flex-grow">
+                      <Input placeholder="Your current address" {...field} />
+                    </FormControl>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="flex items-center"
+                      onClick={getUserLocation}
+                      disabled={isLoadingLocation}
+                    >
+                      {isLoadingLocation ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <MapPin className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  {userCoordinates && (
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      Location detected
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
