@@ -28,6 +28,30 @@ export function LoadingMascot({
     lg: 'text-xl'
   };
 
+  // Color values for dynamic animation
+  const colorValues = {
+    default: {
+      primary: '#7c3aed', // purple-600 fallback
+      lighter: '#a78bfa', // purple-400 fallback
+      lightest: '#c4b5fd' // purple-300 fallback
+    },
+    appointment: {
+      primary: '#3b82f6', // blue-500
+      lighter: '#60a5fa', // blue-400
+      lightest: '#93c5fd' // blue-300
+    },
+    emergency: {
+      primary: '#ef4444', // red-500
+      lighter: '#f87171', // red-400
+      lightest: '#fca5a5' // red-300
+    },
+    consultation: {
+      primary: '#22c55e', // green-500
+      lighter: '#4ade80', // green-400
+      lightest: '#86efac' // green-300
+    }
+  };
+
   const variants = {
     default: {
       colors: {
@@ -35,7 +59,8 @@ export function LoadingMascot({
         secondary: 'text-primary/70',
         accent: 'text-primary/40'
       },
-      icon: <Loader2 className="h-full w-full" />
+      icon: <Loader2 className="h-full w-full" />,
+      colorValues: colorValues.default
     },
     appointment: {
       colors: {
@@ -43,7 +68,8 @@ export function LoadingMascot({
         secondary: 'text-blue-400 dark:text-blue-300',
         accent: 'text-blue-300 dark:text-blue-200'
       },
-      icon: <Shield className="h-full w-full" />
+      icon: <Shield className="h-full w-full" />,
+      colorValues: colorValues.appointment
     },
     emergency: {
       colors: {
@@ -51,7 +77,8 @@ export function LoadingMascot({
         secondary: 'text-red-400 dark:text-red-300',
         accent: 'text-red-300 dark:text-red-200'
       },
-      icon: <Activity className="h-full w-full" />
+      icon: <Activity className="h-full w-full" />,
+      colorValues: colorValues.emergency
     },
     consultation: {
       colors: {
@@ -59,7 +86,8 @@ export function LoadingMascot({
         secondary: 'text-green-400 dark:text-green-300',
         accent: 'text-green-300 dark:text-green-200'
       },
-      icon: <Heart className="h-full w-full" />
+      icon: <Heart className="h-full w-full" />,
+      colorValues: colorValues.consultation
     }
   };
 
@@ -97,7 +125,7 @@ export function LoadingMascot({
           >
             <svg 
               viewBox="0 0 100 100" 
-              className="h-full w-full text-primary"
+              className="h-full w-full"
               xmlns="http://www.w3.org/2000/svg"
             >
               <motion.circle 
@@ -105,12 +133,17 @@ export function LoadingMascot({
                 cy="50" 
                 r="45" 
                 fill="none" 
-                stroke="currentColor" 
+                stroke={selectedVariant.colorValues.primary}
                 strokeWidth="3"
                 strokeDasharray="283"
                 animate={{ 
                   strokeDashoffset: [283, 0, 283],
-                  strokeWidth: [2, 3, 2]
+                  strokeWidth: [2, 3, 2],
+                  stroke: [
+                    selectedVariant.colorValues.primary,
+                    selectedVariant.colorValues.lighter,
+                    selectedVariant.colorValues.primary,
+                  ]
                 }}
                 transition={{ 
                   duration: 3, 
@@ -123,13 +156,16 @@ export function LoadingMascot({
 
           {/* Mascot Icon in the Middle */}
           <motion.div 
-            className={cn(
-              "absolute inset-0 flex items-center justify-center",
-              selectedVariant.colors.primary
-            )}
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ color: selectedVariant.colorValues.primary }}
             animate={{ 
               scale: [1, 1.15, 1],
               y: [0, -2, 0],
+              color: [
+                selectedVariant.colorValues.primary,
+                selectedVariant.colorValues.lighter,
+                selectedVariant.colorValues.primary
+              ],
               filter: ["brightness(1)", "brightness(1.2)", "brightness(1)"]
             }}
             transition={{ 
@@ -144,13 +180,16 @@ export function LoadingMascot({
 
           {/* Small pulsing dots around the character */}
           <motion.div 
-            className={cn(
-              "absolute h-3 w-3 rounded-full top-0 left-1/2 -translate-x-1/2 -translate-y-1/2",
-              selectedVariant.colors.secondary
-            )}
+            className="absolute h-3 w-3 rounded-full top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
+            style={{ backgroundColor: selectedVariant.colorValues.lighter }}
             animate={{ 
               opacity: [0, 1, 0],
-              scale: [0.8, 1.2, 0.8]
+              scale: [0.8, 1.2, 0.8],
+              backgroundColor: [
+                selectedVariant.colorValues.lighter,
+                selectedVariant.colorValues.primary,
+                selectedVariant.colorValues.lighter
+              ]
             }}
             transition={{ 
               duration: 2, 
@@ -160,13 +199,16 @@ export function LoadingMascot({
             }}
           />
           <motion.div 
-            className={cn(
-              "absolute h-3 w-3 rounded-full bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2",
-              selectedVariant.colors.secondary
-            )}
+            className="absolute h-3 w-3 rounded-full bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2"
+            style={{ backgroundColor: selectedVariant.colorValues.lighter }}
             animate={{ 
               opacity: [0, 1, 0],
-              scale: [0.8, 1.2, 0.8]
+              scale: [0.8, 1.2, 0.8],
+              backgroundColor: [
+                selectedVariant.colorValues.lighter,
+                selectedVariant.colorValues.primary,
+                selectedVariant.colorValues.lighter
+              ]
             }}
             transition={{ 
               duration: 2, 
@@ -175,13 +217,16 @@ export function LoadingMascot({
             }}
           />
           <motion.div 
-            className={cn(
-              "absolute h-3 w-3 rounded-full left-0 top-1/2 -translate-x-1/2 -translate-y-1/2",
-              selectedVariant.colors.secondary
-            )}
+            className="absolute h-3 w-3 rounded-full left-0 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            style={{ backgroundColor: selectedVariant.colorValues.lighter }}
             animate={{ 
               opacity: [0, 1, 0],
-              scale: [0.8, 1.2, 0.8]
+              scale: [0.8, 1.2, 0.8],
+              backgroundColor: [
+                selectedVariant.colorValues.lighter,
+                selectedVariant.colorValues.primary,
+                selectedVariant.colorValues.lighter
+              ]
             }}
             transition={{ 
               duration: 2, 
@@ -191,13 +236,16 @@ export function LoadingMascot({
             }}
           />
           <motion.div 
-            className={cn(
-              "absolute h-3 w-3 rounded-full right-0 top-1/2 translate-x-1/2 -translate-y-1/2",
-              selectedVariant.colors.secondary
-            )}
+            className="absolute h-3 w-3 rounded-full right-0 top-1/2 translate-x-1/2 -translate-y-1/2"
+            style={{ backgroundColor: selectedVariant.colorValues.lighter }}
             animate={{ 
               opacity: [0, 1, 0],
-              scale: [0.8, 1.2, 0.8]
+              scale: [0.8, 1.2, 0.8],
+              backgroundColor: [
+                selectedVariant.colorValues.lighter,
+                selectedVariant.colorValues.primary,
+                selectedVariant.colorValues.lighter
+              ]
             }}
             transition={{ 
               duration: 2, 
@@ -212,10 +260,16 @@ export function LoadingMascot({
       {/* Loading Text */}
       <motion.p 
         className={cn("mt-4 text-center font-medium", textSizeMap[size])}
+        style={{ color: selectedVariant.colorValues.primary }}
         animate={{ 
           opacity: [0.5, 1, 0.5],
           y: [0, -1, 0],
-          scale: [1, 1.02, 1]
+          scale: [1, 1.02, 1],
+          color: [
+            selectedVariant.colorValues.primary,
+            selectedVariant.colorValues.lighter,
+            selectedVariant.colorValues.primary
+          ]
         }}
         transition={{ 
           duration: 1.8, 
