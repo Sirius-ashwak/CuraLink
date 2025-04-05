@@ -98,23 +98,24 @@ export default function DoctorMatcher() {
       
       const urgencyLevel = urgencyMapping[urgency as keyof typeof urgencyMapping] || 3;
       
-      const response = await fetch("/api/doctor-match", {
+      // Use the better approach with proper error handling
+      const response = await apiRequest("/api/doctor-match", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
+        data: { 
           symptoms: selectedSymptoms,
           description,
           urgencyLevel
-        }),
-      }).then(res => res.json());
+        }
+      });
       
-      if (response && response.matches) {
+      console.log("Doctor match response:", response);
+      
+      if (response && response.matches && Array.isArray(response.matches)) {
         setMatchResults(response.matches);
         setStep(3);
       } else {
-        throw new Error("Invalid response format");
+        console.error("Invalid response format", response);
+        throw new Error("Invalid response format from doctor matching service");
       }
     } catch (error) {
       console.error("Failed to match doctors:", error);

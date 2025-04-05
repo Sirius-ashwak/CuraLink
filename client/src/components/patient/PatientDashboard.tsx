@@ -12,10 +12,12 @@ import DoctorMatcher from "../telehealth/DoctorMatcher";
 import MedicineTracker from "../medicines/MedicineTracker";
 import EmergencyTransportForm from "../emergencyTransport/EmergencyTransportForm";
 import EmergencyTransportList from "../emergencyTransport/EmergencyTransportList";
+import SideNavigation from "../layout/SideNavigation";
 import { LoadingScreen } from "@/components/ui/loading-screen";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Video, Bot, Pill, UserSearch, Clock, Ambulance } from "lucide-react";
+import { CalendarDays, Video, Bot, Pill, UserSearch, Ambulance } from "lucide-react";
+import { AppointmentWithUsers } from "@shared/schema";
 
 export default function PatientDashboard() {
   const { user } = useAuth();
@@ -85,7 +87,7 @@ export default function PatientDashboard() {
         } else if (data.type === "appointments") {
           // Handle appointment updates
           if (data.data && data.data.length > 0) {
-            const todayAppointments = data.data.filter(appointment => {
+            const todayAppointments = data.data.filter((appointment: AppointmentWithUsers) => {
               const appointmentDate = new Date(appointment.date);
               const today = new Date();
               return (
@@ -150,23 +152,20 @@ export default function PatientDashboard() {
   if (!user) return null;
   
   return (
-    <>
-      {/* Welcome Section */}
-      <div className="mb-6">
-        <h2 className="text-xl font-medium text-white">Welcome back, {user.firstName}</h2>
-        <p className="text-gray-400">How can we help you today?</p>
-      </div>
+    <div className="flex min-h-screen bg-gray-950">
+      {/* Side Navigation */}
+      <SideNavigation activeTab={activeTab} onTabChange={setActiveTab} />
       
-      {/* Main Tabs Navigation */}
-      <Tabs value={activeTab} className="mb-8" onValueChange={setActiveTab}>
-        <TabsList className="flex w-full mb-6 bg-gray-900 overflow-x-auto scrollbar-hide">
-          <TabsTrigger value="dashboard" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Dashboard</TabsTrigger>
-          <TabsTrigger value="ai-chat" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">AI Companion</TabsTrigger>
-          <TabsTrigger value="medicine-tracker" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Medicine Tracker</TabsTrigger>
-          <TabsTrigger value="doctor-matcher" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Doctor Matcher</TabsTrigger>
-          <TabsTrigger value="appointments" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Appointments</TabsTrigger>
-          <TabsTrigger value="emergency-transport" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap flex-shrink-0">Emergency Transport</TabsTrigger>
-        </TabsList>
+      {/* Main Content Area with proper padding for the side nav */}
+      <div className="flex-1 p-6 ml-0 md:ml-64">
+        {/* Welcome Section */}
+        <div className="mb-6">
+          <h2 className="text-xl font-medium text-white">Welcome back, {user.firstName}</h2>
+          <p className="text-gray-400">How can we help you today?</p>
+        </div>
+        
+        {/* Main Content Using Tabs but without the visible TabsList */}
+        <Tabs value={activeTab} className="mb-8" onValueChange={setActiveTab}>
         
         {/* Dashboard Tab */}
         <TabsContent value="dashboard">
@@ -406,6 +405,7 @@ export default function PatientDashboard() {
                 "default"}
         />
       )}
-    </>
+      </div>
+    </div>
   );
 }
