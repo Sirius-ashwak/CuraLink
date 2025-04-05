@@ -165,10 +165,15 @@ export default function EmergencyTransportList() {
     try {
       const response = await fetch(`/api/emergency-transport/${id}/cancel`, {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (!response.ok) {
-        throw new Error('Failed to cancel transport request');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Cancel transport error:', errorData);
+        throw new Error(errorData.message || 'Failed to cancel transport request');
       }
 
       // Update the data
@@ -182,7 +187,7 @@ export default function EmergencyTransportList() {
       console.error('Cancel transport error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to cancel transport request. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to cancel transport request. Please try again.',
         variant: 'destructive',
       });
     }
