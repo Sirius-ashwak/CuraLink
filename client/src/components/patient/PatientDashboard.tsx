@@ -175,38 +175,38 @@ export default function PatientDashboard() {
             <h3 className="text-white font-medium mb-3">Quick Actions</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
               <a onClick={() => setActiveTab("appointments")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-                <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center mb-2">
-                  <CalendarDays className="h-6 w-6 text-white" />
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                  <CalendarDays className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
                 <span className="text-sm font-medium text-center text-white">Book Appointment</span>
               </a>
               <a onClick={() => setActiveTab("ai-chat")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-                <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center mb-2">
-                  <Bot className="h-6 w-6 text-white" />
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(124,58,237,0.5)]">
+                  <Bot className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
                 <span className="text-sm font-medium text-center text-white">AI Health Chat</span>
               </a>
               <a onClick={() => setActiveTab("medicine-tracker")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-                <div className="w-12 h-12 rounded-full bg-blue-700 flex items-center justify-center mb-2">
-                  <Pill className="h-6 w-6 text-white" />
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+                  <Pill className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
                 <span className="text-sm font-medium text-center text-white">Medicine Tracker</span>
               </a>
               <a onClick={() => setActiveTab("doctor-matcher")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-                <div className="w-12 h-12 rounded-full bg-blue-800 flex items-center justify-center mb-2">
-                  <UserSearch className="h-6 w-6 text-white" />
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(14,165,233,0.5)]">
+                  <UserSearch className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
                 <span className="text-sm font-medium text-center text-white">Find Doctor</span>
               </a>
               <a onClick={() => setLocation("/video-call")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-                <div className="w-12 h-12 rounded-full bg-blue-900 flex items-center justify-center mb-2">
-                  <Video className="h-6 w-6 text-white" />
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(79,70,229,0.5)]">
+                  <Video className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
                 <span className="text-sm font-medium text-center text-white">Video Consult</span>
               </a>
               <a onClick={() => setActiveTab("emergency-transport")} className="flex flex-col items-center p-4 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-                <div className="w-12 h-12 rounded-full bg-red-700 flex items-center justify-center mb-2">
-                  <Ambulance className="h-6 w-6 text-white" />
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(244,63,94,0.5)]">
+                  <Ambulance className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
                 <span className="text-sm font-medium text-center text-white">Emergency Transport</span>
               </a>
