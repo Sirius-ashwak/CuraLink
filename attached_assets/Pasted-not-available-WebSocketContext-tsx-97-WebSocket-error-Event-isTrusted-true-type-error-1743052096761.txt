@@ -1,0 +1,98 @@
+not available
+﻿
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:50 
+ WebSocket connection to 'wss://5c733804-105e-4053-afbe-9758894c92b7-00-2gziqhf1khfh.kirk.replit.dev/ws' failed: Insufficient resources
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+WebSocketContext.tsx:97 
+ WebSocket error: 
+Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
