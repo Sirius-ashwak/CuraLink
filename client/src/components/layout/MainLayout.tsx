@@ -56,10 +56,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 </span>
               )}
             </div>
-            <div className="flex items-center space-x-3">
-              <ThemeSwitch />
-              <ConnectionStatus />
-              <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
+            <div className="flex items-center space-x-1">
+              <div className="hidden sm:flex items-center space-x-2 mr-2">
+                <ThemeSwitch />
+                <ConnectionStatus />
+              </div>
               <ProfileMenu />
               <SideNavigation activeTab={activeTab} onTabChange={handleTabChange} />
             </div>
