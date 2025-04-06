@@ -5,6 +5,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { formatAppointmentDate, formatAppointmentTime } from "@/lib/dateUtils";
 import { AppointmentWithUsers } from "@shared/schema";
+import { CalendarDays, Clock, Video, AlertCircle, RefreshCw } from "lucide-react";
 
 interface AppointmentCardProps {
   appointment: AppointmentWithUsers;
@@ -72,45 +73,75 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
     return minutesDiff >= -5 && minutesDiff <= 30;
   };
   
+  // Get status color
+  const getStatusColor = () => {
+    switch (status) {
+      case "confirmed":
+        return "from-green-600 to-green-700";
+      case "pending":
+        return "from-amber-600 to-amber-700";
+      case "canceled":
+        return "from-red-600 to-red-700";
+      default:
+        return "from-blue-600 to-blue-700";
+    }
+  };
+  
   return (
-    <div className="rounded-lg shadow-sm p-4 border border-gray-200">
-      <div className="flex items-start">
-        <div className="bg-blue-500 w-2 h-full rounded-full mr-4 self-stretch"></div>
+    <div className={`rounded-xl shadow-lg p-5 border border-gray-800/50 bg-gradient-to-b from-gray-800 to-gray-900 backdrop-blur-sm group hover:shadow-blue-900/20 transition-all duration-300`}>
+      <div className="flex items-start space-x-4">
+        <div className={`w-1.5 self-stretch rounded-full bg-gradient-to-b ${getStatusColor()}`}></div>
         <div className="flex-grow">
-          <div className="flex justify-between">
-            <h4 className="font-medium">Dr. {doctor.user.firstName} {doctor.user.lastName}</h4>
-            <span className="text-sm text-blue-600 font-medium">{status}</span>
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="font-medium text-base text-white">Dr. {doctor.user.firstName} {doctor.user.lastName}</h4>
+            <span className={`text-xs px-2.5 py-1 rounded-full bg-opacity-20 font-medium
+              ${status === 'confirmed' ? 'bg-green-900/30 text-green-400 border border-green-700/30' : 
+                status === 'pending' ? 'bg-amber-900/30 text-amber-400 border border-amber-700/30' : 
+                'bg-red-900/30 text-red-400 border border-red-700/30'}`}>
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </span>
           </div>
-          <p className="text-gray-600 text-sm">{reason}</p>
-          <div className="mt-2 flex items-center">
-            <span className="material-icons text-gray-500 text-sm mr-1">calendar_today</span>
-            <span className="text-sm">{formattedDate}, {formattedTime}</span>
+          <p className="text-gray-300 text-sm mb-3">{reason}</p>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center text-gray-400 text-xs">
+              <CalendarDays className="w-3.5 h-3.5 mr-1.5 text-blue-400" />
+              <span>{formattedDate}</span>
+            </div>
+            <div className="flex items-center text-gray-400 text-xs">
+              <Clock className="w-3.5 h-3.5 mr-1.5 text-blue-400" />
+              <span>{formattedTime}</span>
+            </div>
           </div>
         </div>
       </div>
-      <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between">
+      <div className="mt-4 pt-4 border-t border-gray-800/50 flex justify-between items-center">
         <button 
-          className="text-red-600 text-sm font-medium flex items-center"
+          className={`text-xs font-medium flex items-center px-3 py-1.5 rounded-full 
+            ${isLoading || status === "canceled" 
+              ? 'bg-red-900/20 text-red-400/50 cursor-not-allowed' 
+              : 'bg-red-900/20 text-red-400 hover:bg-red-900/30 transition-colors duration-300'}`}
           onClick={handleCancel}
           disabled={isLoading || status === "canceled"}
         >
-          <span className="material-icons text-sm mr-1">cancel</span>
-          Cancel
+          <AlertCircle className="w-3.5 h-3.5 mr-1.5" />
+          Cancel Appointment
         </button>
         {canJoinCall() ? (
           <button 
-            className="text-blue-600 text-sm font-medium flex items-center"
+            className="text-xs font-medium flex items-center px-3 py-1.5 rounded-full
+              bg-blue-900/20 text-blue-400 hover:bg-blue-900/30 transition-colors duration-300"
             onClick={handleJoinCall}
           >
-            <span className="material-icons text-sm mr-1">videocam</span>
-            Join Call
+            <Video className="w-3.5 h-3.5 mr-1.5" />
+            Join Video Call
           </button>
         ) : (
           <button 
-            className="text-blue-600 text-sm font-medium flex items-center"
+            className="text-xs font-medium flex items-center px-3 py-1.5 rounded-full
+              bg-blue-900/20 text-blue-400 hover:bg-blue-900/30 transition-colors duration-300"
             onClick={() => alert("You can reschedule this appointment by canceling and booking a new one.")}
           >
-            <span className="material-icons text-sm mr-1">schedule</span>
+            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
             Reschedule
           </button>
         )}
