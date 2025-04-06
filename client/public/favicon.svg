@@ -1,10 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="60" cy="60" r="60" fill="url(#gradient-default)" />
+  
+  <!-- Glow effect filter -->
+  <filter id="glow-favicon" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="4" result="blur" />
+    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+  </filter>
+  
+  <!-- Subtle outer glow -->
   <path
     d="M60 30C60 30 48 20 34 20C20 20 12 32 12 44C12 68 60 90 60 90C60 90 108 68 108 44C108 32 100 20 86 20C72 20 60 30 60 30Z"
-    fill="white"
+    fill="#ff6b9d"
+    opacity="0.4"
+    filter="url(#glow-favicon)"
+    transform="scale(1.08)"
+    transform-origin="center"
   />
+  
+  <!-- Main heart -->
+  <path
+    d="M60 30C60 30 48 20 34 20C20 20 12 32 12 44C12 68 60 90 60 90C60 90 108 68 108 44C108 32 100 20 86 20C72 20 60 30 60 30Z"
+    fill="url(#heart-gradient-favicon)"
+  />
+  
   <defs>
     <linearGradient
       id="gradient-default"
@@ -16,6 +35,19 @@
     >
       <stop offset="0%" stopColor="#6366F1" />
       <stop offset="100%" stopColor="#3B82F6" />
+    </linearGradient>
+    
+    <linearGradient
+      id="heart-gradient-favicon"
+      x1="20"
+      y1="20"
+      x2="100"
+      y2="90"
+      gradientUnits="userSpaceOnUse"
+    >
+      <stop offset="0%" stopColor="#ff6b9d" />
+      <stop offset="70%" stopColor="#ff2d70" />
+      <stop offset="100%" stopColor="#ff0055" />
     </linearGradient>
   </defs>
 </svg>
