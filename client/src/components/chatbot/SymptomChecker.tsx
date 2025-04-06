@@ -507,25 +507,25 @@ export default function SymptomChecker() {
   // Determine if we should add gradient animation based on message type
   const getMessageClasses = (message: ChatMessage) => {
     if (message.type === "bot") {
-      return "from-blue-900/20 via-blue-800/10 to-blue-900/20 bg-gradient-to-r";
+      return "from-indigo-950/40 via-blue-950/30 to-indigo-950/40 bg-gradient-to-r border-indigo-900/50";
     }
     if (message.type === "system") {
-      return "from-gray-800/30 via-gray-800/20 to-gray-800/30 bg-gradient-to-r";
+      return "from-gray-900/40 via-gray-900/30 to-gray-900/40 bg-gradient-to-r border-gray-800/50";
     }
     return "";
   };
   
   return (
-    <div className="flex flex-col h-full bg-gray-950">
+    <div className="flex flex-col h-full bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950">
       {/* Header */}
-      <div className="bg-blue-900 bg-opacity-30 backdrop-blur-sm border-b border-blue-900/50 px-4 py-3 flex items-center justify-between">
+      <div className="bg-gradient-to-r from-indigo-900/40 via-blue-900/30 to-indigo-900/40 backdrop-blur-sm border-b border-indigo-900/50 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center">
-          <div className="mr-3 bg-blue-600 p-2 rounded-full">
-            <Heart className="h-5 w-5 text-white" />
+          <div className="mr-3 bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+            <Heart className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
           </div>
           <div>
-            <h2 className="font-semibold text-white">AI Health Assistant</h2>
-            <p className="text-xs text-blue-200">Get answers to your health questions</p>
+            <h2 className="font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-100 to-indigo-200">AI Health Assistant</h2>
+            <p className="text-xs text-blue-200/80">Get answers to your health questions</p>
           </div>
         </div>
         <DropdownMenu>
@@ -615,7 +615,9 @@ export default function SymptomChecker() {
       )}
       
       {/* Chat messages with enhanced styling */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-gradient-to-b from-gray-950 to-gray-900">
+      <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-gradient-to-b from-gray-950 to-gray-900 relative">
+        {/* Background animation effect */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/10 via-transparent to-transparent pointer-events-none"></div>
         {messages.map((message) => (
           <div key={message.id} className={`${getMessageClasses(message)}`}>
             {message.type === "system" ? (
@@ -631,8 +633,8 @@ export default function SymptomChecker() {
               <div className={`w-full flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
                 {message.type === "bot" && (
                   <div className="flex-shrink-0 mr-3 self-end">
-                    <Avatar className="w-9 h-9 border-2 border-blue-500 p-0.5">
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-700 text-white text-xs">
+                    <Avatar className="w-9 h-9 border-2 border-indigo-500/60 p-0.5 shadow-[0_0_10px_rgba(99,102,241,0.5)]">
+                      <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-700 text-white text-xs">
                         AI
                       </AvatarFallback>
                     </Avatar>
@@ -641,8 +643,8 @@ export default function SymptomChecker() {
                 
                 <div className={`py-3 px-4 rounded-2xl ${
                   message.type === "user"
-                    ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-tr-none max-w-md"
-                    : "bg-gray-900 text-gray-100 border border-blue-900/50 shadow-lg shadow-blue-900/10 rounded-tl-none max-w-lg"
+                    ? "bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-tr-none max-w-md shadow-lg shadow-blue-900/20"
+                    : "bg-gradient-to-br from-gray-900 to-gray-950 text-gray-100 border border-indigo-900/30 shadow-lg shadow-indigo-900/10 rounded-tl-none max-w-lg"
                 }`}
                 >
                   {message.imageData && (
@@ -667,9 +669,9 @@ export default function SymptomChecker() {
                 
                 {message.type === "user" && (
                   <div className="flex-shrink-0 ml-3 self-end">
-                    <Avatar className="w-9 h-9 border-2 border-blue-600 p-0.5">
-                      <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-800 text-white">
-                        {user?.firstName?.charAt(0) || "U"}
+                    <Avatar className="w-9 h-9 border-2 border-blue-600/60 p-0.5 shadow-[0_0_10px_rgba(37,99,235,0.5)]">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
+                        {user?.firstName?.charAt(0) || "G"}
                       </AvatarFallback>
                     </Avatar>
                   </div>
@@ -682,27 +684,27 @@ export default function SymptomChecker() {
       </div>
       
       {/* Enhanced input area */}
-      <div className="border-t border-blue-900/30 p-4 bg-gray-900 bg-opacity-90 backdrop-blur-sm">
+      <div className="border-t border-indigo-900/30 p-4 bg-gradient-to-t from-gray-950 via-gray-900 to-gray-900 bg-opacity-90 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto">
           {/* Additional input options */}
-          <div className="flex justify-center space-x-3 mb-3">
+          <div className="flex justify-center space-x-4 mb-4">
             <Button
               size="sm"
               variant={isListening ? "default" : "outline"}
-              className={`${isListening 
-                ? 'bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600' 
-                : 'border-blue-900/50 text-blue-400 hover:bg-blue-950/50'}`}
+              className={`rounded-full px-4 py-2 ${isListening 
+                ? 'bg-gradient-to-br from-indigo-600 to-blue-700 hover:from-indigo-500 hover:to-blue-600 text-white border-0 shadow-[0_0_10px_rgba(79,70,229,0.5)]' 
+                : 'border-indigo-900/50 text-indigo-300 hover:bg-indigo-950/30 hover:text-indigo-200 hover:border-indigo-700/50'}`}
               onClick={toggleListening}
               disabled={!browserSupportsSpeechRecognition || isLoading}
               title={browserSupportsSpeechRecognition ? "Use voice to describe symptoms" : "Voice recognition not supported in your browser"}
             >
               {isListening ? (
                 <>
-                  <Mic className="w-4 h-4 mr-1 animate-pulse" /> Stop Listening
+                  <Mic className="w-4 h-4 mr-2 animate-pulse drop-shadow-[0_0_3px_rgba(255,255,255,0.5)]" /> Stop Recording
                 </>
               ) : (
                 <>
-                  <Mic className="w-4 h-4 mr-1" /> Voice Input
+                  <Mic className="w-4 h-4 mr-2" /> Voice Input
                 </>
               )}
             </Button>
@@ -710,24 +712,27 @@ export default function SymptomChecker() {
             <Button
               size="sm"
               variant="outline"
-              className="border-blue-900/50 text-blue-400 hover:bg-blue-950/50"
+              className="rounded-full px-4 py-2 border-indigo-900/50 text-indigo-300 hover:bg-indigo-950/30 hover:text-indigo-200 hover:border-indigo-700/50"
               onClick={toggleCamera}
               disabled={isLoading}
               title="Upload image for analysis"
             >
-              <Camera className="w-4 h-4 mr-1" /> Image Analysis
+              <Camera className="w-4 h-4 mr-2" /> Image Analysis
             </Button>
           </div>
           
           {/* Main input field */}
-          <div className="flex bg-gray-800 rounded-xl border border-blue-900/30 overflow-hidden shadow-lg">
+          <div className="flex bg-gradient-to-r from-gray-900 to-gray-950 rounded-xl border border-indigo-900/40 overflow-hidden shadow-xl relative">
+            {/* Background glow effect */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-indigo-900/10 via-transparent to-transparent pointer-events-none"></div>
+            
             {/* Voice indicator */}
             {isListening && (
-              <div className="pl-3 flex items-center">
+              <div className="pl-3 flex items-center z-10">
                 <div className="flex space-x-1">
-                  <div className="w-1.5 h-5 bg-blue-500 rounded-full animate-pulse"></div>
-                  <div className="w-1.5 h-7 bg-blue-500 rounded-full animate-pulse"></div>
-                  <div className="w-1.5 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                  <div className="w-1.5 h-5 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(99,102,241,0.7)]"></div>
+                  <div className="w-1.5 h-7 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(99,102,241,0.7)]"></div>
+                  <div className="w-1.5 h-3 bg-indigo-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(99,102,241,0.7)]"></div>
                 </div>
               </div>
             )}
@@ -739,14 +744,14 @@ export default function SymptomChecker() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
               disabled={isLoading}
-              className="flex-1 border-0 bg-transparent text-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 py-6 px-4"
+              className="flex-1 border-0 bg-transparent text-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 py-6 px-4 z-10"
             />
             <Button 
               onClick={handleSendMessage} 
               disabled={isLoading || !input.trim()}
-              className={`rounded-none px-4 ${isLoading 
-                ? 'bg-blue-800/50 text-blue-200' 
-                : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white'}`}
+              className={`rounded-none px-5 z-10 ${isLoading 
+                ? 'bg-indigo-800/50 text-indigo-200' 
+                : 'bg-gradient-to-br from-blue-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white shadow-[0_0_10px_rgba(79,70,229,0.5)]'}`}
             >
               {isLoading ? (
                 <ActivityIcon className="h-5 w-5 animate-pulse" />
