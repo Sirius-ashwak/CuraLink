@@ -76,72 +76,117 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
   // Get status color
   const getStatusColor = () => {
     switch (status) {
-      case "confirmed":
-        return "from-green-600 to-green-700";
-      case "pending":
-        return "from-amber-600 to-amber-700";
-      case "canceled":
-        return "from-red-600 to-red-700";
+      case "confirmed": 
+        return {
+          gradient: "from-emerald-500 to-green-600",
+          glow: "shadow-[0_0_15px_rgba(16,185,129,0.3)]",
+          bg: "bg-green-900/30", 
+          text: "text-emerald-400", 
+          border: "border-emerald-700/30"
+        };
+      case "scheduled": 
+        return {
+          gradient: "from-indigo-500 to-blue-600",
+          glow: "shadow-[0_0_15px_rgba(99,102,241,0.3)]",
+          bg: "bg-indigo-900/30", 
+          text: "text-indigo-400", 
+          border: "border-indigo-700/30"
+        };
+      case "canceled": 
+        return {
+          gradient: "from-rose-500 to-red-600",
+          glow: "shadow-[0_0_15px_rgba(244,63,94,0.3)]",
+          bg: "bg-red-900/30", 
+          text: "text-rose-400", 
+          border: "border-rose-700/30"
+        };
+      case "completed": 
+        return {
+          gradient: "from-blue-500 to-cyan-600",
+          glow: "shadow-[0_0_15px_rgba(14,165,233,0.3)]",
+          bg: "bg-cyan-900/30", 
+          text: "text-cyan-400", 
+          border: "border-cyan-700/30"
+        };
       default:
-        return "from-blue-600 to-blue-700";
+        return {
+          gradient: "from-violet-500 to-purple-600",
+          glow: "shadow-[0_0_15px_rgba(124,58,237,0.3)]",
+          bg: "bg-violet-900/30", 
+          text: "text-violet-400", 
+          border: "border-violet-700/30"
+        };
     }
   };
   
+  const statusColors = getStatusColor();
+  
   return (
-    <div className={`rounded-xl shadow-lg p-5 border border-gray-800/50 bg-gradient-to-b from-gray-800 to-gray-900 backdrop-blur-sm group hover:shadow-blue-900/20 transition-all duration-300`}>
-      <div className="flex items-start space-x-4">
-        <div className={`w-1.5 self-stretch rounded-full bg-gradient-to-b ${getStatusColor()}`}></div>
+    <div className="rounded-xl shadow-lg p-5 border border-indigo-900/30 bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 backdrop-blur-sm group hover:shadow-indigo-900/20 transition-all duration-300 relative overflow-hidden">
+      {/* Subtle background glow effect */}
+      <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-20 pointer-events-none bg-gradient-to-br ${statusColors.gradient}`}></div>
+      
+      <div className="flex items-start space-x-4 relative z-10">
+        <div className={`w-1.5 self-stretch rounded-full bg-gradient-to-b ${statusColors.gradient} ${statusColors.glow}`}></div>
         <div className="flex-grow">
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="font-medium text-base text-white">Dr. {doctor.user.firstName} {doctor.user.lastName}</h4>
-            <span className={`text-xs px-2.5 py-1 rounded-full bg-opacity-20 font-medium
-              ${status === 'confirmed' ? 'bg-green-900/30 text-green-400 border border-green-700/30' : 
-                status === 'pending' ? 'bg-amber-900/30 text-amber-400 border border-amber-700/30' : 
-                'bg-red-900/30 text-red-400 border border-red-700/30'}`}>
+          <div className="flex justify-between items-center mb-3">
+            <h4 className="font-medium text-base bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 to-blue-200">
+              Dr. {doctor.user.firstName} {doctor.user.lastName}
+            </h4>
+            <span className={`text-xs px-3 py-1.5 rounded-full font-medium ${statusColors.bg} ${statusColors.text} border ${statusColors.border} shadow-sm`}>
               {status.charAt(0).toUpperCase() + status.slice(1)}
             </span>
           </div>
-          <p className="text-gray-300 text-sm mb-3">{reason}</p>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center text-gray-400 text-xs">
-              <CalendarDays className="w-3.5 h-3.5 mr-1.5 text-blue-400" />
+          
+          <p className="text-indigo-300/80 text-sm mb-4">{reason}</p>
+          
+          <div className="flex items-center space-x-5">
+            <div className="flex items-center text-indigo-400/80 text-xs">
+              <CalendarDays className={`w-3.5 h-3.5 mr-2 ${statusColors.text}`} />
               <span>{formattedDate}</span>
             </div>
-            <div className="flex items-center text-gray-400 text-xs">
-              <Clock className="w-3.5 h-3.5 mr-1.5 text-blue-400" />
+            <div className="flex items-center text-indigo-400/80 text-xs">
+              <Clock className={`w-3.5 h-3.5 mr-2 ${statusColors.text}`} />
               <span>{formattedTime}</span>
             </div>
           </div>
         </div>
       </div>
-      <div className="mt-4 pt-4 border-t border-gray-800/50 flex justify-between items-center">
+      
+      <div className="mt-5 pt-4 border-t border-indigo-900/30 flex justify-between items-center relative z-10">
         <button 
-          className={`text-xs font-medium flex items-center px-3 py-1.5 rounded-full 
+          className={`text-xs font-medium flex items-center px-4 py-2 rounded-full 
+            transition-all duration-300
             ${isLoading || status === "canceled" 
-              ? 'bg-red-900/20 text-red-400/50 cursor-not-allowed' 
-              : 'bg-red-900/20 text-red-400 hover:bg-red-900/30 transition-colors duration-300'}`}
+              ? 'bg-rose-900/20 text-rose-400/50 cursor-not-allowed' 
+              : 'bg-rose-900/20 text-rose-400 hover:bg-rose-900/30 hover:shadow-[0_0_10px_rgba(244,63,94,0.2)]'}`}
           onClick={handleCancel}
           disabled={isLoading || status === "canceled"}
         >
-          <AlertCircle className="w-3.5 h-3.5 mr-1.5" />
+          <AlertCircle className="w-3.5 h-3.5 mr-2" />
           Cancel Appointment
         </button>
+        
         {canJoinCall() ? (
           <button 
-            className="text-xs font-medium flex items-center px-3 py-1.5 rounded-full
-              bg-blue-900/20 text-blue-400 hover:bg-blue-900/30 transition-colors duration-300"
+            className="text-xs font-medium flex items-center px-4 py-2 rounded-full
+              bg-gradient-to-br from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600
+              text-white shadow-[0_0_10px_rgba(79,70,229,0.3)] hover:shadow-[0_0_15px_rgba(79,70,229,0.4)]
+              transition-all duration-300"
             onClick={handleJoinCall}
           >
-            <Video className="w-3.5 h-3.5 mr-1.5" />
+            <Video className="w-3.5 h-3.5 mr-2" />
             Join Video Call
           </button>
         ) : (
           <button 
-            className="text-xs font-medium flex items-center px-3 py-1.5 rounded-full
-              bg-blue-900/20 text-blue-400 hover:bg-blue-900/30 transition-colors duration-300"
+            className="text-xs font-medium flex items-center px-4 py-2 rounded-full
+              bg-indigo-900/20 text-indigo-400 hover:bg-indigo-900/30 hover:text-indigo-300
+              border border-indigo-900/40 hover:border-indigo-700/40
+              transition-all duration-300"
             onClick={() => alert("You can reschedule this appointment by canceling and booking a new one.")}
           >
-            <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+            <RefreshCw className="w-3.5 h-3.5 mr-2" />
             Reschedule
           </button>
         )}

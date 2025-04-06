@@ -52,38 +52,38 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
     { 
       id: 'dashboard', 
       label: 'Dashboard', 
-      icon: <LayoutDashboard className="h-4 w-4" />,
-      colorClass: 'text-blue-500'
+      icon: <LayoutDashboard className="h-4.5 w-4.5" />,
+      colorClass: 'text-indigo-400'
     },
     { 
       id: 'ai-chat', 
       label: 'AI Companion', 
-      icon: <Bot className="h-4 w-4" />,
-      colorClass: 'text-purple-500'
+      icon: <Bot className="h-4.5 w-4.5" />,
+      colorClass: 'text-blue-400'
     },
     { 
       id: 'medicine-tracker', 
       label: 'Medicine Tracker',
-      icon: <Pill className="h-4 w-4" />,
-      colorClass: 'text-green-500'
+      icon: <Pill className="h-4.5 w-4.5" />,
+      colorClass: 'text-purple-400'
     },
     { 
       id: 'doctor-matcher', 
       label: 'Doctor Matcher', 
-      icon: <UserSearch className="h-4 w-4" />,
-      colorClass: 'text-sky-500'
+      icon: <UserSearch className="h-4.5 w-4.5" />,
+      colorClass: 'text-cyan-400'
     },
     { 
       id: 'appointments', 
       label: 'Appointments', 
-      icon: <CalendarDays className="h-4 w-4" />,
-      colorClass: 'text-indigo-500'
+      icon: <CalendarDays className="h-4.5 w-4.5" />,
+      colorClass: 'text-violet-400'
     },
     { 
       id: 'emergency-transport', 
       label: 'Emergency Transport', 
-      icon: <Ambulance className="h-4 w-4" />,
-      colorClass: 'text-red-500'
+      icon: <Ambulance className="h-4.5 w-4.5" />,
+      colorClass: 'text-rose-400'
     }
   ];
 
@@ -95,7 +95,7 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
           ref={dotsRef}
           variant="outline" 
           size="icon" 
-          className="h-9 w-9 rounded-full border-blue-700/30 text-blue-400 hover:text-white hover:bg-blue-800/50 hover:border-blue-600/50 transition-colors shadow-md"
+          className="h-9 w-9 rounded-full border-indigo-700/30 text-indigo-300 hover:text-white hover:bg-indigo-800/50 hover:border-indigo-600/50 transition-colors shadow-[0_0_10px_rgba(79,70,229,0.3)]"
           onClick={toggleMenu}
         >
           <MoreVertical className="h-5 w-5" />
@@ -105,7 +105,7 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
       {/* Semi-transparent overlay behind the menu */}
       <div 
         className={cn(
-          "fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 z-30",
+          "fixed inset-0 bg-black/60 backdrop-blur-md transition-all duration-300 ease-in-out z-30",
           isMenuOpen 
             ? "opacity-100" 
             : "opacity-0 pointer-events-none"
@@ -117,64 +117,69 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
       <div 
         ref={menuRef}
         className={cn(
-          "fixed inset-y-0 right-0 w-72 bg-gray-900/95 backdrop-blur-lg border-l border-blue-800/20 shadow-lg shadow-blue-900/10 transform transition-all duration-300 ease-in-out z-40 overflow-hidden",
+          "fixed inset-y-0 right-0 w-72 bg-gradient-to-b from-gray-900/95 via-gray-900/95 to-gray-950/95 backdrop-blur-lg border-l border-indigo-900/30 shadow-2xl shadow-indigo-900/20 transform transition-all duration-300 ease-in-out z-40 overflow-hidden",
           isMenuOpen 
             ? "translate-x-0" 
             : "translate-x-full"
         )}
       >
         {/* Menu Header with close button */}
-        <div className="py-4 px-5 border-b border-gray-800/50 flex items-center justify-between">
-          <h3 className="text-sm font-medium text-blue-100">Navigation Menu</h3>
+        <div className="py-4 px-5 border-b border-indigo-900/30 bg-gradient-to-r from-indigo-900/20 via-gray-900/40 to-gray-900/20 flex items-center justify-between">
+          <h3 className="text-sm font-medium bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 to-blue-200">Navigation Menu</h3>
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-8 w-8 rounded-full hover:bg-gray-800"
+            className="h-8 w-8 rounded-full hover:bg-indigo-900/20 transition-colors"
             onClick={toggleMenu}
           >
-            <X className="h-4 w-4 text-gray-400" />
+            <X className="h-4 w-4 text-indigo-300" />
           </Button>
         </div>
         
         {/* Menu Items */}
-        <div className="p-4 pt-6">
+        <div className="p-5 pt-7">
           <div className="space-y-2.5">
             {navItems.map(item => (
               <div
                 key={item.id}
                 className={cn(
-                  "flex items-center px-4 py-3 rounded-lg cursor-pointer transition-all",
+                  "flex items-center px-4 py-3 rounded-xl cursor-pointer transition-all duration-200",
                   activeTab === item.id 
-                    ? "bg-blue-600/20 text-white" 
-                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    ? "bg-gradient-to-r from-indigo-900/30 to-indigo-950/40 text-white border border-indigo-700/20 shadow-[0_2px_10px_rgba(79,70,229,0.15)]" 
+                    : "text-gray-300 hover:bg-gray-800/50 hover:text-white"
                 )}
                 onClick={() => handleTabChange(item.id)}
               >
                 <div className={cn(
-                  "flex items-center justify-center w-8 h-8 rounded-md mr-3", 
+                  "flex items-center justify-center w-9 h-9 rounded-lg mr-3 transition-all duration-200", 
                   activeTab === item.id 
-                    ? `${item.colorClass} bg-gray-800/80 border border-blue-500/30` 
+                    ? `${item.colorClass} bg-gray-900 border border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.2)]` 
                     : "bg-gray-800/50"
                 )}>
                   {item.icon}
                 </div>
-                <span className="font-medium text-sm">{item.label}</span>
+                <span className={cn(
+                  "font-medium text-sm",
+                  activeTab === item.id && "bg-clip-text text-transparent bg-gradient-to-r from-indigo-100 to-blue-200"
+                )}>
+                  {item.label}
+                </span>
                 {activeTab === item.id && (
-                  <ArrowRight className="h-3 w-3 ml-auto text-blue-400" />
+                  <ArrowRight className="h-3.5 w-3.5 ml-auto text-indigo-300" />
                 )}
               </div>
             ))}
           </div>
           
           {/* Decorative Element */}
-          <div className="mt-8 p-4 bg-blue-800/10 border border-blue-800/20 rounded-lg">
-            <div className="flex items-center text-blue-300 text-sm">
-              <div className="mr-2 p-1.5 bg-blue-800/30 rounded-md">
+          <div className="mt-10 p-5 bg-gradient-to-br from-indigo-900/20 via-indigo-950/20 to-gray-900/20 border border-indigo-800/30 rounded-xl shadow-inner">
+            <div className="flex items-center text-indigo-200 text-sm">
+              <div className="mr-3 p-2 bg-indigo-900/40 rounded-lg border border-indigo-700/30 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
                 <Bot className="h-4 w-4" />
               </div>
-              <span className="font-medium">AI Health Bridge</span>
+              <span className="font-medium bg-clip-text text-transparent bg-gradient-to-r from-indigo-100 to-blue-200">AI Health Bridge</span>
             </div>
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs text-indigo-300/70 mt-3 leading-relaxed">
               Your health assistant is always ready to help with any questions or concerns.
             </p>
           </div>
