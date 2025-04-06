@@ -89,8 +89,8 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
 
   return (
     <>
-      {/* Navigation Menu Button - Now positioned in top right */}
-      <div className="fixed top-3 right-4 z-50">
+      {/* Navigation Menu Button - Now positioned in top right with adjusted position */}
+      <div className="fixed top-3 right-16 z-50">
         <Button 
           ref={dotsRef}
           variant="outline" 
