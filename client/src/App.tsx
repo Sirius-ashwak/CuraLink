@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { WebSocketProvider } from "./context/WebSocketContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import ErrorBoundary from "./components/ErrorBoundary";
+import useSettingsInit from "./hooks/useSettingsInit";
 
 import Welcome from "@/pages/welcome";
 import Login from "@/pages/login";
@@ -39,6 +40,9 @@ function Router() {
 }
 
 function App() {
+  // Initialize user settings from localStorage
+  useSettingsInit();
+  
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>

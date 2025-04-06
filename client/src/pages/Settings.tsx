@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from 'wouter';
 import { 
@@ -24,44 +24,53 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Sun, Moon, Laptop, Globe, Volume2, ArrowLeft, SaveIcon, Languages, Shield, Eye, Clock, Fingerprint, Siren, Headphones } from 'lucide-react';
 
+// Default settings
+const defaultSettings = {
+  appearance: {
+    theme: 'dark',
+    fontSize: 16,
+    animation: true,
+    language: 'english'
+  },
+  privacy: {
+    shareHealthData: false,
+    shareLocation: false,
+    anonymizeData: true,
+    twoFactorAuth: false,
+    biometricLogin: true
+  },
+  notifications: {
+    sound: true,
+    volume: 70,
+    enableNotifications: true,
+    doNotDisturb: false,
+    emergencyAlerts: true
+  },
+  accessibility: {
+    reducedMotion: false,
+    highContrast: false,
+    screenReader: false,
+    captioning: false,
+    textToSpeech: false
+  }
+};
+
 export default function Settings() {
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   
-  // Example settings data
-  const [settings, setSettings] = useState({
-    appearance: {
-      theme: 'dark',
-      fontSize: 16,
-      animation: true,
-      language: 'english'
-    },
-    privacy: {
-      shareHealthData: false,
-      shareLocation: false,
-      anonymizeData: true,
-      twoFactorAuth: false,
-      biometricLogin: true
-    },
-    notifications: {
-      sound: true,
-      volume: 70,
-      enableNotifications: true,
-      doNotDisturb: false,
-      emergencyAlerts: true
-    },
-    accessibility: {
-      reducedMotion: false,
-      highContrast: false,
-      screenReader: false,
-      captioning: false,
-      textToSpeech: false
-    }
+  // Load settings from localStorage or use defaults
+  const [settings, setSettings] = useState(() => {
+    const savedSettings = localStorage.getItem('healthConnectSettings');
+    return savedSettings ? JSON.parse(savedSettings) : defaultSettings;
   });
   
+  // Type definition for settings
+  type AppSettings = typeof defaultSettings;
+  
   const handleAppearanceChange = (key: string, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev: AppSettings) => ({
       ...prev,
       appearance: {
         ...prev.appearance,
@@ -71,7 +80,7 @@ export default function Settings() {
   };
   
   const handlePrivacyChange = (key: string, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev: AppSettings) => ({
       ...prev,
       privacy: {
         ...prev.privacy,
@@ -81,7 +90,7 @@ export default function Settings() {
   };
   
   const handleNotificationChange = (key: string, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev: AppSettings) => ({
       ...prev,
       notifications: {
         ...prev.notifications,
@@ -91,7 +100,7 @@ export default function Settings() {
   };
   
   const handleAccessibilityChange = (key: string, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev: AppSettings) => ({
       ...prev,
       accessibility: {
         ...prev.accessibility,
@@ -100,8 +109,54 @@ export default function Settings() {
     }));
   };
   
+  // Apply settings effects
+  useEffect(() => {
+    // Apply font size to document root
+    document.documentElement.style.fontSize = `${settings.appearance.fontSize}px`;
+    
+    // Apply theme
+    if (settings.appearance.theme === 'light') {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    } else if (settings.appearance.theme === 'dark') {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+    } else if (settings.appearance.theme === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.remove(prefersDark ? 'light' : 'dark');
+      document.documentElement.classList.add(prefersDark ? 'dark' : 'light');
+    }
+    
+    // Apply animation settings
+    if (settings.appearance.animation) {
+      document.documentElement.classList.remove('no-animations');
+    } else {
+      document.documentElement.classList.add('no-animations');
+    }
+    
+    // Apply accessibility settings
+    if (settings.accessibility.reducedMotion) {
+      document.documentElement.classList.add('reduce-motion');
+    } else {
+      document.documentElement.classList.remove('reduce-motion');
+    }
+    
+    if (settings.accessibility.highContrast) {
+      document.documentElement.classList.add('high-contrast');
+    } else {
+      document.documentElement.classList.remove('high-contrast');
+    }
+    
+    // Auto-save settings to localStorage whenever they change
+    // This ensures settings apply immediately and persist between sessions
+    localStorage.setItem('healthConnectSettings', JSON.stringify(settings));
+    
+  }, [settings]);
+  
   const saveSettings = () => {
-    // In a real app, you would make an API call to save the settings
+    // Save settings to localStorage
+    localStorage.setItem('healthConnectSettings', JSON.stringify(settings));
+    
     toast({
       title: "Settings saved",
       description: "Your preferences have been updated successfully.",

@@ -73,3 +73,32 @@
 .calendar-day.selected {
   @apply bg-blue-600 text-white;
 }
+
+/* Accessibility Settings */
+.reduce-motion * {
+  transition: none !important;
+  animation: none !important;
+  scroll-behavior: auto !important;
+}
+
+.high-contrast {
+  filter: contrast(1.5);
+}
+
+.high-contrast .text-gray-500 {
+  @apply text-gray-300;
+}
+
+.high-contrast .text-muted-foreground {
+  @apply text-white;
+}
+
+.no-animations * {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Font size adjustments */
+html {
+  font-size: 16px; /* Default - will be overridden by JS */
+}
