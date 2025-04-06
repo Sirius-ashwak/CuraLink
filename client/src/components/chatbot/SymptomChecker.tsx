@@ -153,12 +153,46 @@ export default function SymptomChecker() {
   };
   
   const renderMessageContent = (content: string) => {
-    // Simple markdown-like rendering
-    return content.split("\n").map((line, i) => (
-      <p key={i} className={line.startsWith("*") ? "font-semibold" : ""}>
-        {line.startsWith("*") ? line.substring(1) : line}
-      </p>
-    ));
+    // Enhanced markdown-like rendering with proper spacing and formatting
+    return content.split("\n").map((line, i) => {
+      // Skip empty lines but preserve space
+      if (line.trim() === '') {
+        return <div key={i} className="h-2"></div>;
+      }
+      
+      // Handle bullet points
+      if (line.trim().startsWith('•') || line.trim().startsWith('-') || line.trim().startsWith('*')) {
+        return (
+          <p key={i} className="pl-4 mb-1">
+            <span className="inline-block w-4 text-blue-400">•</span>
+            <span>{line.trim().substring(1).trim()}</span>
+          </p>
+        );
+      }
+      
+      // Handle numbered lists
+      const numberedMatch = line.trim().match(/^(\d+\.|\d+\))\s+(.+)$/);
+      if (numberedMatch) {
+        return (
+          <p key={i} className="pl-4 mb-1">
+            <span className="inline-block min-w-6 text-blue-400">{numberedMatch[1]}</span>
+            <span>{numberedMatch[2]}</span>
+          </p>
+        );
+      }
+      
+      // Handle headers or important text
+      if (line.startsWith("#") || line.startsWith("**")) {
+        return (
+          <p key={i} className="font-semibold mt-2 mb-1 text-blue-300">
+            {line.startsWith("#") ? line.substring(1).trim() : line.replace(/\*\*/g, '')}
+          </p>
+        );
+      }
+      
+      // Regular text with proper margin
+      return <p key={i} className="mb-1">{line}</p>;
+    });
   };
   
   return (
@@ -177,11 +211,11 @@ export default function SymptomChecker() {
             )}
             
             <div
-              className={`px-4 py-2 rounded-lg max-w-[80%] ${
+              className={`px-4 py-3 rounded-lg max-w-[80%] ${
                 message.type === "user"
                   ? "bg-blue-600 text-white rounded-tr-none"
                   : message.type === "bot"
-                  ? "bg-gray-800 text-gray-100 rounded-tl-none border border-gray-700"
+                  ? "bg-gray-800 text-gray-100 rounded-tl-none border border-gray-700 leading-relaxed"
                   : "bg-gray-900 text-gray-400 text-sm italic border border-gray-800"
               }`}
             >
