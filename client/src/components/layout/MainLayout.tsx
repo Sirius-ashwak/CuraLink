@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import SideNavigation from "./SideNavigation";
 import ConnectionStatus from "../notifications/ConnectionStatus";
 import { ThemeSwitch } from "../ui/theme-switch";
 import { useLocation } from "wouter";
@@ -61,7 +60,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
               <ConnectionStatus />
               <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
               <ProfileMenu />
-              <SideNavigation activeTab={activeTab} onTabChange={handleTabChange} />
             </div>
           </div>
         </div>
