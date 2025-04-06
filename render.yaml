@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: curalink
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: node build/server/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_API_KEY
+        sync: false
+      - key: TWILIO_API_SECRET
+        sync: false
