@@ -4,13 +4,18 @@ interface CuralinkLogoProps {
   className?: string;
   size?: number;
   variant?: "default" | "simple" | "square" | "text";
+  animate?: boolean;
 }
 
 export function CuralinkLogo({
   className,
   size = 40,
-  variant = "default"
+  variant = "default",
+  animate = true
 }: CuralinkLogoProps) {
+  const animationClass = animate ? "animate-spin-slow" : "";
+  const combinedClassName = `${className || ""} ${animationClass}`.trim();
+  
   if (variant === "simple") {
     return (
       <svg
@@ -19,24 +24,12 @@ export function CuralinkLogo({
         viewBox="0 0 120 120"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className={className}
+        className={combinedClassName}
       >
         <circle cx="60" cy="60" r="60" fill="url(#gradient-circle)" />
         <path
-          d="M35 60C35 46.2 46.2 35 60 35C73.8 35 85 46.2 85 60C85 73.8 73.8 85 60 85C46.2 85 35 73.8 35 60Z"
-          fill="url(#gradient-heart)"
-          opacity="0.2"
-        />
-        <path
-          d="M60 42.5C60 42.5 53.75 33.75 43.75 33.75C33.75 33.75 25 43.75 25 53.75C25 71.25 60 86.25 60 86.25C60 86.25 95 71.25 95 53.75C95 43.75 86.25 33.75 76.25 33.75C66.25 33.75 60 42.5 60 42.5Z"
+          d="M60 30C60 30 48 20 34 20C20 20 12 32 12 44C12 68 60 90 60 90C60 90 108 68 108 44C108 32 100 20 86 20C72 20 60 30 60 30Z"
           fill="white"
-        />
-        <path
-          d="M40 60H50L55 50L60 70L65 55L70 60H80"
-          stroke="#ff2d55"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
         />
         <defs>
           <linearGradient
@@ -49,17 +42,6 @@ export function CuralinkLogo({
           >
             <stop offset="0%" stopColor="#6366F1" />
             <stop offset="100%" stopColor="#3B82F6" />
-          </linearGradient>
-          <linearGradient
-            id="gradient-heart"
-            x1="35"
-            y1="35"
-            x2="85"
-            y2="85"
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop offset="0%" stopColor="#ff4d6d" />
-            <stop offset="100%" stopColor="#f72585" />
           </linearGradient>
         </defs>
       </svg>
@@ -74,19 +56,12 @@ export function CuralinkLogo({
         viewBox="0 0 120 120"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className={className}
+        className={combinedClassName}
       >
         <rect width="120" height="120" rx="24" fill="url(#gradient-square)" />
         <path
-          d="M60 30C60 30 52.5 20 40.5 20C28.5 20 18 32 18 44C18 65 60 83 60 83C60 83 102 65 102 44C102 32 91.5 20 79.5 20C67.5 20 60 30 60 30Z"
+          d="M60 30C60 30 48 20 34 20C20 20 12 32 12 44C12 68 60 90 60 90C60 90 108 68 108 44C108 32 100 20 86 20C72 20 60 30 60 30Z"
           fill="white"
-        />
-        <path
-          d="M35 60H45L50 50L60 80L70 45L75 60H85"
-          stroke="#ff2d55"
-          strokeWidth="4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
         />
         <defs>
           <linearGradient
@@ -115,17 +90,10 @@ export function CuralinkLogo({
         xmlns="http://www.w3.org/2000/svg"
         className={className}
       >
-        <circle cx="40" cy="40" r="40" fill="url(#gradient-text-circle)" />
+        <circle cx="40" cy="40" r="40" fill="url(#gradient-text-circle)" className={animationClass} />
         <path
-          d="M40 20C40 20 35 13.3333 26.6667 13.3333C18.3333 13.3333 11.6667 21.6667 11.6667 30C11.6667 43.3333 40 56.6667 40 56.6667C40 56.6667 68.3333 43.3333 68.3333 30C68.3333 21.6667 61.6667 13.3333 53.3333 13.3333C45 13.3333 40 20 40 20Z"
+          d="M40 20C40 20 32 13.3333 22 13.3333C12 13.3333 7 21.6667 7 30C7 46.6667 40 60 40 60C40 60 73 46.6667 73 30C73 21.6667 68 13.3333 58 13.3333C48 13.3333 40 20 40 20Z"
           fill="white"
-        />
-        <path
-          d="M23.3333 40H30L33.3333 33.3333L40 53.3333L46.6667 30L50 40H56.6667"
-          stroke="#ff2d55"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
         />
         <path
           d="M95.6172 29.8594C96.7891 29.8594 97.8125 30.0781 98.6875 30.5156C99.5625 30.9531 100.25 31.5625 100.75 32.3438C101.25 33.125 101.531 34.0312 101.594 35.0625H99.2812C99.1875 34.125 98.8125 33.3906 98.1562 32.8594C97.5 32.3281 96.6562 32.0625 95.625 32.0625C94.6875 32.0625 93.8906 32.2969 93.2344 32.7656C92.5781 33.2344 92.0781 33.8984 91.7344 34.7656C91.3906 35.6328 91.2188 36.6562 91.2188 37.8438C91.2188 39.0312 91.3906 40.0625 91.7344 40.9375C92.0781 41.8125 92.5781 42.4844 93.2344 42.9531C93.8906 43.4219 94.6875 43.6562 95.625 43.6562C96.2188 43.6562 96.75 43.5469 97.2188 43.3281C97.6875 43.1094 98.0781 42.7969 98.3906 42.3906C98.7031 41.9844 98.9062 41.5 99 40.9375H101.312C101.219 41.9375 100.938 42.8281 100.469 43.6094C100 44.3906 99.3594 45 98.5469 45.4375C97.7344 45.875 96.75 46.0938 95.6016 46.0938C94.2891 46.0938 93.1562 45.7812 92.2031 45.1562C91.25 44.5312 90.5156 43.6406 90 42.4844C89.4844 41.3281 89.2266 39.9844 89.2266 38.4531C89.2266 36.9219 89.4922 35.5781 90.0234 34.4219C90.5547 33.2656 91.2969 32.375 92.25 31.75C93.2031 31.125 94.3203 30.8125 95.6172 30.8594Z" 
@@ -203,19 +171,12 @@ export function CuralinkLogo({
       viewBox="0 0 120 120"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
+      className={combinedClassName}
     >
       <circle cx="60" cy="60" r="60" fill="url(#gradient-default)" />
       <path
-        d="M60 30C60 30 52.5 20 40.5 20C28.5 20 18 32 18 44C18 65 60 83 60 83C60 83 102 65 102 44C102 32 91.5 20 79.5 20C67.5 20 60 30 60 30Z"
+        d="M60 30C60 30 48 20 34 20C20 20 12 32 12 44C12 68 60 90 60 90C60 90 108 68 108 44C108 32 100 20 86 20C72 20 60 30 60 30Z"
         fill="white"
-      />
-      <path
-        d="M30 60H45L50 45L60 85L70 35L80 60H90"
-        stroke="#ff2d55"
-        strokeWidth="4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
       />
       <defs>
         <linearGradient
