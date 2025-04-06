@@ -7,7 +7,8 @@ import {
   CalendarDays, 
   Ambulance, 
   MoreVertical, 
-  ArrowRight
+  ArrowRight,
+  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -88,42 +89,61 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
 
   return (
     <>
-      {/* Navigation Menu Button */}
-      <div>
+      {/* Navigation Menu Button - Now positioned in top right */}
+      <div className="fixed top-3 right-4 z-50">
         <Button 
           ref={dotsRef}
           variant="outline" 
           size="icon" 
-          className="h-9 w-9 rounded-full border-blue-700/30 text-blue-400 hover:text-white hover:bg-blue-800/50 hover:border-blue-600/50 transition-colors"
+          className="h-9 w-9 rounded-full border-blue-700/30 text-blue-400 hover:text-white hover:bg-blue-800/50 hover:border-blue-600/50 transition-colors shadow-md"
           onClick={toggleMenu}
         >
           <MoreVertical className="h-5 w-5" />
         </Button>
       </div>
 
-      {/* Apple-style Slide-in Menu Panel */}
+      {/* Semi-transparent overlay behind the menu */}
+      <div 
+        className={cn(
+          "fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 z-30",
+          isMenuOpen 
+            ? "opacity-100" 
+            : "opacity-0 pointer-events-none"
+        )}
+        onClick={toggleMenu}
+      />
+      
+      {/* Improved slide-in menu with transition animation */}
       <div 
         ref={menuRef}
         className={cn(
-          "fixed right-4 top-20 w-64 bg-gray-900/95 backdrop-blur-lg rounded-xl border border-blue-800/20 shadow-lg shadow-blue-900/10 transform transition-all duration-300 ease-in-out z-40 overflow-hidden",
+          "fixed inset-y-0 right-0 w-72 bg-gray-900/95 backdrop-blur-lg border-l border-blue-800/20 shadow-lg shadow-blue-900/10 transform transition-all duration-300 ease-in-out z-40 overflow-hidden",
           isMenuOpen 
-            ? "translate-y-0 opacity-100" 
-            : "translate-y-4 opacity-0 pointer-events-none"
+            ? "translate-x-0" 
+            : "translate-x-full"
         )}
       >
-        {/* Menu Header */}
-        <div className="py-3 px-4 border-b border-gray-800/50">
-          <h3 className="text-sm font-medium text-gray-200">Navigation</h3>
+        {/* Menu Header with close button */}
+        <div className="py-4 px-5 border-b border-gray-800/50 flex items-center justify-between">
+          <h3 className="text-sm font-medium text-blue-100">Navigation Menu</h3>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 rounded-full hover:bg-gray-800"
+            onClick={toggleMenu}
+          >
+            <X className="h-4 w-4 text-gray-400" />
+          </Button>
         </div>
         
         {/* Menu Items */}
-        <div className="p-2">
-          <div className="space-y-1 py-1">
+        <div className="p-4 pt-6">
+          <div className="space-y-2.5">
             {navItems.map(item => (
               <div
                 key={item.id}
                 className={cn(
-                  "flex items-center px-3 py-2.5 rounded-md cursor-pointer transition-all",
+                  "flex items-center px-4 py-3 rounded-lg cursor-pointer transition-all",
                   activeTab === item.id 
                     ? "bg-blue-600/20 text-white" 
                     : "text-gray-300 hover:bg-gray-800 hover:text-white"
@@ -131,9 +151,9 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
                 onClick={() => handleTabChange(item.id)}
               >
                 <div className={cn(
-                  "flex items-center justify-center w-7 h-7 rounded-md mr-3", 
+                  "flex items-center justify-center w-8 h-8 rounded-md mr-3", 
                   activeTab === item.id 
-                    ? `${item.colorClass} bg-gray-800/80` 
+                    ? `${item.colorClass} bg-gray-800/80 border border-blue-500/30` 
                     : "bg-gray-800/50"
                 )}>
                   {item.icon}
@@ -144,6 +164,19 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
                 )}
               </div>
             ))}
+          </div>
+          
+          {/* Decorative Element */}
+          <div className="mt-8 p-4 bg-blue-800/10 border border-blue-800/20 rounded-lg">
+            <div className="flex items-center text-blue-300 text-sm">
+              <div className="mr-2 p-1.5 bg-blue-800/30 rounded-md">
+                <Bot className="h-4 w-4" />
+              </div>
+              <span className="font-medium">AI Health Bridge</span>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              Your health assistant is always ready to help with any questions or concerns.
+            </p>
           </div>
         </div>
       </div>
