@@ -14,6 +14,10 @@ import Dashboard from "@/pages/dashboard";
 import VideoCall from "@/pages/video-call";
 import LoadingDemo from "@/pages/loading-demo";
 import NotFound from "@/pages/not-found";
+import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
+import Notifications from "@/pages/Notifications";
+import Logout from "@/pages/Logout";
 
 function Router() {
   return (
@@ -24,6 +28,10 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/video-call" component={VideoCall} />
       <Route path="/video-call/:id" component={VideoCall} />
+      <Route path="/profile" component={Profile} />
+      <Route path="/settings" component={Settings} />
+      <Route path="/notifications" component={Notifications} />
+      <Route path="/logout" component={Logout} />
       <Route path="/loading-demo" component={LoadingDemo} />
       <Route component={NotFound} />
     </Switch>
