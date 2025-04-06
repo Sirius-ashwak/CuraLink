@@ -152,12 +152,12 @@ export default function PatientDashboard() {
   if (!user) return null;
   
   return (
-    <div className="flex min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-gray-950">
       {/* Side Navigation */}
       <SideNavigation activeTab={activeTab} onTabChange={setActiveTab} />
       
-      {/* Main Content Area with proper padding for the side nav and top header */}
-      <div className="flex-1 p-6 ml-0 md:ml-64 mt-16">
+      {/* Main Content Area with proper padding for top header */}
+      <div className="p-6 mt-16">
         {/* Welcome Section */}
         <div className="mb-6">
           <h2 className="text-xl font-medium text-white">Welcome back, {user.firstName}</h2>
