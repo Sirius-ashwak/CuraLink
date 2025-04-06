@@ -182,6 +182,10 @@ export default function SymptomChecker() {
                 role: m.type === "user" ? "user" : "assistant",
                 content: m.content
               }))
+              // Ensure history starts with a user message for Gemini API requirements
+              .filter((_, index, array) => 
+                index === 0 ? array[0].role === "user" : true
+              )
           }),
         });
         
@@ -289,6 +293,10 @@ export default function SymptomChecker() {
               role: m.type === "user" ? "user" : "assistant",
               content: m.content
             }))
+            // Ensure history starts with a user message for Gemini API requirements
+            .filter((_, index, array) => 
+              index === 0 ? array[0].role === "user" : true
+            )
         }),
       });
       

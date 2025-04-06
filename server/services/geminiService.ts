@@ -62,14 +62,26 @@ Format your response with:
 
 User question: ${query}`;
       
-      // For the chat history, we'll use the standard history approach
-      // We will convert history to the format Gemini API expects
-      const formattedHistory = chatHistory.map(msg => ({
-        role: msg.role === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.content }],
-      }));
+      // For the chat history, we'll ensure it follows Gemini API requirements
+      // The first message must be from the user to meet API requirements
+      let formattedHistory: Array<{role: string; parts: Array<{text: string}>}> = [];
       
-      // If we have chat history, use it, otherwise make a direct request
+      if (chatHistory.length > 0) {
+        // Ensure the first message is from the user
+        if (chatHistory[0].role !== 'user') {
+          // If first message isn't from user, we'll use the direct content generation
+          // instead of chat history
+          formattedHistory = [];
+        } else {
+          // Format the chat history correctly for Gemini API
+          formattedHistory = chatHistory.map(msg => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.content }],
+          }));
+        }
+      }
+      
+      // If we have valid chat history, use it, otherwise make a direct request
       let response;
       if (formattedHistory.length > 0) {
         const chat = this.model.startChat({
