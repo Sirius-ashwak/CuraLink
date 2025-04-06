@@ -154,18 +154,33 @@ export default function SymptomChecker() {
   
   const renderMessageContent = (content: string) => {
     // Enhanced markdown-like rendering with proper spacing and formatting
-    return content.split("\n").map((line, i) => {
+    // First, replace **text** patterns with styled spans we can format better
+    const processedContent = content.replace(/\*\*(.*?)\*\*/g, '{{BOLD}}$1{{/BOLD}}');
+    
+    return processedContent.split("\n").map((line, i) => {
       // Skip empty lines but preserve space
       if (line.trim() === '') {
         return <div key={i} className="h-2"></div>;
       }
+      
+      // Process the line to handle bold markers
+      const processLine = (text: string) => {
+        const parts = text.split(/({{BOLD}}.*?{{\/BOLD}})/g);
+        return parts.map((part, partIndex) => {
+          if (part.startsWith('{{BOLD}}') && part.endsWith('{{/BOLD}}')) {
+            const boldText = part.replace('{{BOLD}}', '').replace('{{/BOLD}}', '');
+            return <span key={partIndex} className="font-bold text-blue-300">{boldText}</span>;
+          }
+          return <span key={partIndex}>{part}</span>;
+        });
+      };
       
       // Handle bullet points
       if (line.trim().startsWith('•') || line.trim().startsWith('-') || line.trim().startsWith('*')) {
         return (
           <p key={i} className="pl-4 mb-1">
             <span className="inline-block w-4 text-blue-400">•</span>
-            <span>{line.trim().substring(1).trim()}</span>
+            <span>{processLine(line.trim().substring(1).trim())}</span>
           </p>
         );
       }
@@ -176,22 +191,26 @@ export default function SymptomChecker() {
         return (
           <p key={i} className="pl-4 mb-1">
             <span className="inline-block min-w-6 text-blue-400">{numberedMatch[1]}</span>
-            <span>{numberedMatch[2]}</span>
+            <span>{processLine(numberedMatch[2])}</span>
           </p>
         );
       }
       
-      // Handle headers or important text
-      if (line.startsWith("#") || line.startsWith("**")) {
+      // Handle headers - use blue theme
+      if (line.startsWith("#")) {
         return (
-          <p key={i} className="font-semibold mt-2 mb-1 text-blue-300">
-            {line.startsWith("#") ? line.substring(1).trim() : line.replace(/\*\*/g, '')}
+          <p key={i} className="font-semibold mt-3 mb-2 text-blue-400">
+            {processLine(line.substring(1).trim())}
           </p>
         );
       }
       
-      // Regular text with proper margin
-      return <p key={i} className="mb-1">{line}</p>;
+      // Regular text with proper margin and blue accent for first sentence
+      if (i === 0 || line.trim().startsWith("I am an AI") || line.trim().startsWith("Please note")) {
+        return <p key={i} className="mb-2 text-blue-100">{processLine(line)}</p>;
+      }
+      
+      return <p key={i} className="mb-2">{processLine(line)}</p>;
     });
   };
   
@@ -215,7 +234,7 @@ export default function SymptomChecker() {
                 message.type === "user"
                   ? "bg-blue-600 text-white rounded-tr-none"
                   : message.type === "bot"
-                  ? "bg-gray-800 text-gray-100 rounded-tl-none border border-gray-700 leading-relaxed"
+                  ? "bg-gray-800 text-gray-100 rounded-tl-none border border-blue-900 border-opacity-50 leading-relaxed shadow-md"
                   : "bg-gray-900 text-gray-400 text-sm italic border border-gray-800"
               }`}
             >
