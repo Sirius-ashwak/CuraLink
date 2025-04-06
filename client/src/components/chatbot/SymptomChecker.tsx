@@ -184,9 +184,9 @@ export default function SymptomChecker() {
       // Handle bullet points
       if (line.trim().startsWith('•') || line.trim().startsWith('-') || line.trim().startsWith('*')) {
         return (
-          <div key={i} className="flex items-start mb-2 text-center">
+          <div key={i} className="flex items-start mb-2">
             <span className="inline-block w-6 text-blue-400 flex-shrink-0">•</span>
-            <span className="flex-1 text-left">{processLine(line.trim().substring(1).trim())}</span>
+            <span className="flex-1">{processLine(line.trim().substring(1).trim())}</span>
           </div>
         );
       }
@@ -195,9 +195,9 @@ export default function SymptomChecker() {
       const numberedMatch = line.trim().match(/^(\d+\.|\d+\))\s+(.+)$/);
       if (numberedMatch) {
         return (
-          <div key={i} className="flex items-start mb-2 text-center">
+          <div key={i} className="flex items-start mb-2">
             <span className="inline-block w-8 text-blue-400 flex-shrink-0">{numberedMatch[1]}</span>
-            <span className="flex-1 text-left">{processLine(numberedMatch[2])}</span>
+            <span className="flex-1">{processLine(numberedMatch[2])}</span>
           </div>
         );
       }
@@ -205,7 +205,7 @@ export default function SymptomChecker() {
       // Handle headers - use blue theme
       if (line.startsWith("#")) {
         return (
-          <h3 key={i} className="font-semibold mt-3 mb-2 text-blue-400 text-center">
+          <h3 key={i} className="font-semibold mt-3 mb-2 text-blue-400">
             {processLine(line.substring(1).trim())}
           </h3>
         );
@@ -213,10 +213,10 @@ export default function SymptomChecker() {
       
       // Regular text with proper margin and blue accent for first sentence
       if (i === 0 || line.trim().startsWith("I am an AI") || line.trim().startsWith("Please note")) {
-        return <p key={i} className="mb-3 text-blue-100 text-center">{processLine(line)}</p>;
+        return <p key={i} className="mb-3 text-blue-100">{processLine(line)}</p>;
       }
       
-      return <p key={i} className="mb-2 text-center">{processLine(line)}</p>;
+      return <p key={i} className="mb-2">{processLine(line)}</p>;
     });
   };
 
@@ -245,49 +245,53 @@ export default function SymptomChecker() {
       </div>
       
       {/* Chat messages with enhanced styling */}
-      <div className="flex-1 overflow-y-auto p-0 space-y-0 bg-gradient-to-b from-gray-950 to-gray-900">
+      <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-gradient-to-b from-gray-950 to-gray-900">
         {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`p-3 ${getMessageClasses(message)} ${
-              message.type === "user" ? "ml-12" : "mr-0"
-            }`}
-          >
-            <div className="max-w-3xl mx-auto flex items-start">
-              {message.type === "bot" && (
-                <div className="flex-shrink-0 mr-3">
-                  <Avatar className="w-9 h-9 border-2 border-blue-500 p-0.5">
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-700 text-white text-xs">
-                      AI
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-              )}
-              
-              <div className={`flex-1 py-2 px-4 rounded-2xl ${
-                message.type === "user"
-                  ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white ml-auto max-w-md"
-                  : message.type === "bot"
-                  ? "bg-gray-900 text-gray-100 border border-blue-900/50 shadow-lg shadow-blue-900/10 max-w-2xl"
-                  : "bg-gray-900 bg-opacity-50 text-gray-400 text-sm italic border border-gray-800/50 max-w-2xl mx-auto"
-              }`}
-              >
-                {renderMessageContent(message.content)}
-                <div className="text-xs opacity-70 mt-2 text-right pr-1">
-                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <div key={message.id} className={`${getMessageClasses(message)}`}>
+            {message.type === "system" ? (
+              <div className="w-full px-4 py-3 my-2">
+                <div className="bg-gray-900 bg-opacity-50 text-gray-400 text-sm italic border border-gray-800/50 px-4 py-3 rounded-lg max-w-md mx-auto">
+                  {renderMessageContent(message.content)}
+                  <div className="text-xs opacity-70 mt-2 text-right pr-1">
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
               </div>
-              
-              {message.type === "user" && (
-                <div className="flex-shrink-0 ml-3">
-                  <Avatar className="w-9 h-9 border-2 border-blue-600 p-0.5">
-                    <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-800 text-white">
-                      {user?.firstName?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
+            ) : (
+              <div className={`w-full flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
+                {message.type === "bot" && (
+                  <div className="flex-shrink-0 mr-3 self-end">
+                    <Avatar className="w-9 h-9 border-2 border-blue-500 p-0.5">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-700 text-white text-xs">
+                        AI
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                )}
+                
+                <div className={`py-3 px-4 rounded-2xl ${
+                  message.type === "user"
+                    ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-tr-none max-w-md"
+                    : "bg-gray-900 text-gray-100 border border-blue-900/50 shadow-lg shadow-blue-900/10 rounded-tl-none max-w-lg"
+                }`}
+                >
+                  {renderMessageContent(message.content)}
+                  <div className="text-xs opacity-70 mt-2 text-right pr-1">
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
-              )}
-            </div>
+                
+                {message.type === "user" && (
+                  <div className="flex-shrink-0 ml-3 self-end">
+                    <Avatar className="w-9 h-9 border-2 border-blue-600 p-0.5">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-800 text-white">
+                        {user?.firstName?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />
