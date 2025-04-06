@@ -5,6 +5,7 @@ import { ThemeSwitch } from "../ui/theme-switch";
 import { useLocation } from "wouter";
 import ProfileMenu from "./ProfileMenu";
 import { useState } from "react";
+import { CuralinkLogo } from "../ui/CuralinkLogo";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -45,10 +46,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <div className="flex items-center justify-center h-8 w-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg mr-3 shadow-md">
-                <span className="text-white font-bold text-lg">+</span>
-              </div>
-              <h1 className="text-lg font-medium text-black dark:text-white">AI Health Bridge</h1>
+              <CuralinkLogo size={32} variant="default" className="mr-3" />
+              <h1 className="text-lg font-medium text-black dark:text-white">Curalink</h1>
               {isDoctor && (
                 <span className="ml-3 text-xs font-medium py-1 px-3 bg-blue-900/50 text-blue-400 rounded-full border border-blue-800/50">
                   Doctor
