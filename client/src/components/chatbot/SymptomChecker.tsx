@@ -39,8 +39,9 @@ import {
 } from "lucide-react";
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import Webcam from 'react-webcam';
-import * as tf from '@tensorflow/tfjs';
-import * as mobilenet from '@tensorflow-models/mobilenet';
+// Remove TensorFlow imports
+// import * as tf from '@tensorflow/tfjs';
+// import * as mobilenet from '@tensorflow-models/mobilenet';
 
 // Define message types
 type MessageType = "user" | "bot" | "system";
@@ -54,6 +55,14 @@ interface ChatMessage {
   imageAnalysis?: string;     // Results from image analysis
 }
 
+// Define image analysis response type
+interface ImageAnalysisResponse {
+  observations: string[];
+  possibleConditions: string[];
+  recommendations: string[];
+  furtherQuestions: string[];
+}
+
 export default function SymptomChecker() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -63,7 +72,8 @@ export default function SymptomChecker() {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isImageAnalyzing, setIsImageAnalyzing] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [model, setModel] = useState<mobilenet.MobileNet | null>(null);
+  // Removed TensorFlow model state
+  // const [model, setModel] = useState<mobilenet.MobileNet | null>(null);
   const welcomeMessage = {
     id: "welcome",
     type: "bot" as MessageType, 
@@ -84,34 +94,65 @@ export default function SymptomChecker() {
     browserSupportsSpeechRecognition
   } = useSpeechRecognition();
   
-  // Load TensorFlow model on component mount
+  // Check if Gemini API is available
   useEffect(() => {
-    const loadModel = async () => {
+    const checkGeminiAPI = async () => {
       try {
-        await tf.ready();
-        const loadedModel = await mobilenet.load();
-        setModel(loadedModel);
-        console.log("MobileNet model loaded successfully");
-      } catch (error) {
-        console.error("Failed to load MobileNet model:", error);
-      }
-    };
-    
-    loadModel();
-    
-    // Cleanup function
-    return () => {
-      if (model) {
-        // Dispose any tensors when component unmounts
-        console.log("Cleaning up TensorFlow resources");
-      }
-    };
-  }, []);
+        const response = await fetch("/api/ai-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: "Hello, I'm checking if you're available." })
+        });
 
-  // Update input field when speech transcript changes
+        if (response.ok) {
+          console.log("Gemini API is available for chat, voice, and image analysis");
+        } else {
+          console.error("Gemini API check failed");
+          toast({
+            title: "Service Unavailable",
+            description: "The AI service is currently unavailable. Some features may be limited.",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error("Error checking Gemini API:", error);
+      }
+    };
+    
+    checkGeminiAPI();
+  }, [toast]);
+
+  // Process voice transcript through Gemini API for improved accuracy
+  const processTranscript = async (rawTranscript: string) => {
+    try {
+      const response = await fetch("/api/ai-chat/process-voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transcript: rawTranscript })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.transcript;
+      } else {
+        console.error("Failed to process transcript");
+        return rawTranscript; // Fall back to original if API fails
+      }
+    } catch (error) {
+      console.error("Error processing voice transcript:", error);
+      return rawTranscript; // Fall back to original if API fails
+    }
+  };
+
+  // Update input field when speech transcript changes, with Gemini processing
   useEffect(() => {
     if (transcript) {
-      setInput(transcript);
+      const updateWithProcessedTranscript = async () => {
+        const processedTranscript = await processTranscript(transcript);
+        setInput(processedTranscript);
+      };
+      
+      updateWithProcessedTranscript();
     }
   }, [transcript]);
 
@@ -204,27 +245,15 @@ export default function SymptomChecker() {
     }
   };
 
-  // Capture image and analyze
+  // Capture image and analyze using Gemini API
   const captureImage = useCallback(async () => {
-    if (webcamRef.current && model) {
+    if (webcamRef.current) {
       const imageSrc = webcamRef.current.getScreenshot();
       if (!imageSrc) return;
       
       setIsImageAnalyzing(true);
       
       try {
-        // Create an image element from the screenshot
-        const img = new Image();
-        img.src = imageSrc;
-        await new Promise((resolve) => { img.onload = resolve; });
-        
-        // Run the image through the model
-        const predictions = await model.classify(img);
-        
-        const analysisResults = predictions
-          .map(p => `${p.className} (${Math.round(p.probability * 100)}% confidence)`)
-          .join(', ');
-        
         // Add the image message
         const imageMessage: ChatMessage = {
           id: `user-${Date.now()}`,
@@ -247,49 +276,55 @@ export default function SymptomChecker() {
           },
         ]);
         
-        // Prepare API request with image analysis
-        const chatResponse = await fetch("/api/ai-chat", {
+        // Send image to Gemini API via our new endpoint
+        const imageAnalysisResponse = await fetch("/api/ai-chat/analyze-image", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ 
-            message: `Analyze this image. The image analysis detected: ${analysisResults}. What health implications might this have?`,
-            history: messages
-              .filter(m => m.type !== "system")
-              .map(m => ({
-                role: m.type === "user" ? "user" : "assistant",
-                content: m.content
-              }))
-              // Ensure history starts with a user message for Gemini API requirements
-              .filter((_, index, array) => 
-                index === 0 ? array[0].role === "user" : true
-              )
+            imageData: imageSrc,
+            description: "This is a medical image that needs analysis."
           }),
         });
         
-        if (!chatResponse.ok) {
-          throw new Error(`API error: ${chatResponse.status}`);
+        if (!imageAnalysisResponse.ok) {
+          throw new Error(`API error: ${imageAnalysisResponse.status}`);
         }
         
-        const response = await chatResponse.json();
+        const analysisResult: ImageAnalysisResponse = await imageAnalysisResponse.json();
+        
+        // Format the analysis results
+        const formattedAnalysis = `
+**Image Analysis Results**
+
+**Observations:**
+${analysisResult.observations.map(obs => `* ${obs}`).join('\n')}
+
+**Possible Conditions:**
+${analysisResult.possibleConditions.map(condition => `* ${condition}`).join('\n')}
+
+**Recommendations:**
+${analysisResult.recommendations.map(rec => `* ${rec}`).join('\n')}
+
+**Further Assessment:**
+${analysisResult.furtherQuestions.map(q => `* ${q}`).join('\n')}
+        `;
         
         // Remove typing indicator
         setMessages(prev => prev.filter(m => m.id !== "typing"));
         
-        // Add bot response
-        if (response && typeof response === 'object' && 'message' in response) {
-          setMessages(prev => [
-            ...prev,
-            {
-              id: `bot-${Date.now()}`,
-              type: "bot",
-              content: response.message as string,
-              timestamp: new Date(),
-              imageAnalysis: analysisResults
-            }
-          ]);
-        }
+        // Add bot response with the analysis
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `bot-${Date.now()}`,
+            type: "bot",
+            content: formattedAnalysis,
+            timestamp: new Date(),
+            imageAnalysis: analysisResult.observations.join(', ')
+          }
+        ]);
         
         // Close camera after successful analysis
         setIsCameraOpen(false);
@@ -319,7 +354,7 @@ export default function SymptomChecker() {
         setIsImageAnalyzing(false);
       }
     }
-  }, [webcamRef, model, messages, toast]);
+  }, [webcamRef, messages, toast]);
   
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -604,7 +639,7 @@ export default function SymptomChecker() {
               </Button>
               <Button 
                 onClick={captureImage} 
-                disabled={isImageAnalyzing || !model}
+                disabled={isImageAnalyzing}
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
                 <Camera className="mr-2 h-4 w-4" /> Capture
@@ -768,7 +803,7 @@ export default function SymptomChecker() {
             <div className="flex items-center justify-center sm:justify-end space-x-1">
               <p>Powered by</p>
               <div className="bg-blue-600/20 border border-blue-900/30 rounded-md px-1.5 py-0.5 text-blue-300 font-medium">
-                TensorFlow.js
+                Gemini AI
               </div>
             </div>
           </div>
