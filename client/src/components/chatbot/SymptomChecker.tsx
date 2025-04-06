@@ -641,7 +641,7 @@ export default function SymptomChecker() {
                 
                 <div className={`py-3 px-4 rounded-2xl ${
                   message.type === "user"
-                    ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-tr-none max-w-md"
+                    ? "bg-blue-600 text-white rounded-tr-none max-w-md"
                     : "bg-gray-900 text-gray-100 border border-blue-900/50 shadow-lg shadow-blue-900/10 rounded-tl-none max-w-lg"
                 }`}
                 >
@@ -690,7 +690,7 @@ export default function SymptomChecker() {
               size="sm"
               variant={isListening ? "default" : "outline"}
               className={`${isListening 
-                ? 'bg-blue-600 hover:bg-blue-700' 
+                ? 'bg-blue-600 hover:bg-blue-500' 
                 : 'border-blue-900/50 text-blue-400 hover:bg-blue-950/50'}`}
               onClick={toggleListening}
               disabled={!browserSupportsSpeechRecognition || isLoading}
@@ -746,7 +746,7 @@ export default function SymptomChecker() {
               disabled={isLoading || !input.trim()}
               className={`rounded-none px-4 ${isLoading 
                 ? 'bg-blue-800/50 text-blue-200' 
-                : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white'}`}
+                : 'bg-blue-600 hover:bg-blue-500 text-white'}`}
             >
               {isLoading ? (
                 <ActivityIcon className="h-5 w-5 animate-pulse" />
@@ -859,7 +859,7 @@ export default function SymptomChecker() {
           
           <DialogFooter>
             <DialogClose asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-blue-600 hover:bg-blue-500">
                 Got it
               </Button>
             </DialogClose>
