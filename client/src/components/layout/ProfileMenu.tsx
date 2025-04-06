@@ -45,9 +45,9 @@ export default function ProfileMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full">
-          <Avatar className={`h-9 w-9 ${isDoctor ? 'bg-blue-500' : 'bg-blue-700'}`}>
-            <AvatarFallback className="text-white">{firstLetters}</AvatarFallback>
+        <Button variant="ghost" size="icon" className="relative h-8 w-8 rounded-full p-0">
+          <Avatar className={`h-8 w-8 ${isDoctor ? 'bg-blue-500' : 'bg-blue-700'} border-2 border-white/10`}>
+            <AvatarFallback className="text-white text-xs">{firstLetters}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
