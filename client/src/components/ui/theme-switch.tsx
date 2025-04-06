@@ -7,16 +7,16 @@ export function ThemeSwitch() {
 
   return (
     <Button 
-      variant="ghost" 
+      variant="outline" 
       size="icon"
       onClick={toggleTheme} 
-      className="h-8 w-8 p-0 rounded-full"
+      className={`rounded-full ${theme === 'light' ? 'bg-gray-100 border-gray-200' : 'bg-gray-900 border-gray-700'}`}
       title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
       {theme === 'light' ? (
-        <Moon className="h-4 w-4 text-gray-600" />
+        <Moon className="h-[1.2rem] w-[1.2rem] text-gray-800" />
       ) : (
-        <Sun className="h-4 w-4 text-yellow-400" />
+        <Sun className="h-[1.2rem] w-[1.2rem] text-yellow-400" />
       )}
       <span className="sr-only">Toggle theme</span>
     </Button>
