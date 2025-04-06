@@ -1,11 +1,25 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { apiRequest } from "@/lib/queryClient";
-import { SendIcon, ActivityIcon, Heart } from "lucide-react";
+import { 
+  SendIcon, 
+  ActivityIcon, 
+  Heart, 
+  Mic, 
+  MicOff, 
+  Camera, 
+  Image as ImageIcon, 
+  Loader2,
+  X
+} from "lucide-react";
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import Webcam from 'react-webcam';
+import * as tf from '@tensorflow/tfjs';
+import * as mobilenet from '@tensorflow-models/mobilenet';
 
 // Define message types
 type MessageType = "user" | "bot" | "system";
@@ -15,6 +29,8 @@ interface ChatMessage {
   type: MessageType;
   content: string;
   timestamp: Date;
+  imageData?: string;         // URL for captured image data
+  imageAnalysis?: string;     // Results from image analysis
 }
 
 export default function SymptomChecker() {
@@ -22,24 +38,205 @@ export default function SymptomChecker() {
   const { toast } = useToast();
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [isImageAnalyzing, setIsImageAnalyzing] = useState(false);
+  const [model, setModel] = useState<mobilenet.MobileNet | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
-      type: "system",
-      content: "Welcome to the AI Health Assistant! Describe your symptoms, and I'll help identify possible conditions and when you should seek medical attention.",
+      type: "bot",
+      content: `Hello${user ? ', ' + user.firstName : ''}`,
       timestamp: new Date(),
     },
   ]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const webcamRef = useRef<Webcam>(null);
   
+  // Speech recognition hook
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition
+  } = useSpeechRecognition();
+  
+  // Load TensorFlow model on component mount
+  useEffect(() => {
+    const loadModel = async () => {
+      try {
+        await tf.ready();
+        const loadedModel = await mobilenet.load();
+        setModel(loadedModel);
+        console.log("MobileNet model loaded successfully");
+      } catch (error) {
+        console.error("Failed to load MobileNet model:", error);
+      }
+    };
+    
+    loadModel();
+    
+    // Cleanup function
+    return () => {
+      if (model) {
+        // Dispose any tensors when component unmounts
+        console.log("Cleaning up TensorFlow resources");
+      }
+    };
+  }, []);
+
+  // Update input field when speech transcript changes
+  useEffect(() => {
+    if (transcript) {
+      setInput(transcript);
+    }
+  }, [transcript]);
+
   // Scroll to bottom of messages when messages update
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+  
+  // Focus input on load or when camera closes
+  useEffect(() => {
+    if (inputRef.current && !isCameraOpen) {
+      inputRef.current.focus();
+    }
+  }, [isCameraOpen]);
+  
+  // Toggle speech recognition
+  const toggleListening = () => {
+    if (listening) {
+      SpeechRecognition.stopListening();
+      setIsListening(false);
+    } else {
+      resetTranscript();
+      SpeechRecognition.startListening({ continuous: true });
+      setIsListening(true);
+    }
+  };
+
+  // Toggle camera
+  const toggleCamera = () => {
+    setIsCameraOpen(!isCameraOpen);
+  };
+
+  // Capture image and analyze
+  const captureImage = useCallback(async () => {
+    if (webcamRef.current && model) {
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (!imageSrc) return;
+      
+      setIsImageAnalyzing(true);
+      
+      try {
+        // Create an image element from the screenshot
+        const img = new Image();
+        img.src = imageSrc;
+        await new Promise((resolve) => { img.onload = resolve; });
+        
+        // Run the image through the model
+        const predictions = await model.classify(img);
+        
+        const analysisResults = predictions
+          .map(p => `${p.className} (${Math.round(p.probability * 100)}% confidence)`)
+          .join(', ');
+        
+        // Add the image message
+        const imageMessage: ChatMessage = {
+          id: `user-${Date.now()}`,
+          type: "user",
+          content: "I've captured an image for analysis.",
+          timestamp: new Date(),
+          imageData: imageSrc
+        };
+        
+        setMessages(prev => [...prev, imageMessage]);
+        
+        // Add typing indicator
+        setMessages(prev => [
+          ...prev,
+          {
+            id: "typing",
+            type: "system",
+            content: "Analyzing image...",
+            timestamp: new Date(),
+          },
+        ]);
+        
+        // Prepare API request with image analysis
+        const chatResponse = await fetch("/api/ai-chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ 
+            message: `Analyze this image. The image analysis detected: ${analysisResults}. What health implications might this have?`,
+            history: messages
+              .filter(m => m.type !== "system")
+              .map(m => ({
+                role: m.type === "user" ? "user" : "assistant",
+                content: m.content
+              }))
+          }),
+        });
+        
+        if (!chatResponse.ok) {
+          throw new Error(`API error: ${chatResponse.status}`);
+        }
+        
+        const response = await chatResponse.json();
+        
+        // Remove typing indicator
+        setMessages(prev => prev.filter(m => m.id !== "typing"));
+        
+        // Add bot response
+        if (response && typeof response === 'object' && 'message' in response) {
+          setMessages(prev => [
+            ...prev,
+            {
+              id: `bot-${Date.now()}`,
+              type: "bot",
+              content: response.message as string,
+              timestamp: new Date(),
+              imageAnalysis: analysisResults
+            }
+          ]);
+        }
+        
+        // Close camera after successful analysis
+        setIsCameraOpen(false);
+        
+      } catch (error) {
+        console.error("Error analyzing image:", error);
+        
+        // Remove typing indicator
+        setMessages(prev => prev.filter(m => m.id !== "typing"));
+        
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `error-${Date.now()}`,
+            type: "system",
+            content: "Sorry, I encountered an error while analyzing the image. Please try again.",
+            timestamp: new Date()
+          }
+        ]);
+        
+        toast({
+          title: "Error",
+          description: "Failed to analyze the image. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsImageAnalyzing(false);
+      }
+    }
+  }, [webcamRef, model, messages, toast]);
   
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -244,6 +441,67 @@ export default function SymptomChecker() {
         </div>
       </div>
       
+      {/* Webcam Modal */}
+      {isCameraOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80">
+          <div className="bg-gray-900 p-4 rounded-xl border border-blue-900/50 w-full max-w-md mx-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-white font-medium">Image Analysis</h3>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={toggleCamera}
+                className="hover:bg-gray-800 text-gray-400"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <div className="relative rounded-lg overflow-hidden bg-black mb-4">
+              <Webcam
+                audio={false}
+                ref={webcamRef}
+                screenshotFormat="image/jpeg"
+                videoConstraints={{
+                  facingMode: "environment"
+                }}
+                className="w-full h-auto"
+              />
+              {isImageAnalyzing && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <div className="text-white text-center">
+                    <ActivityIcon className="h-8 w-8 mx-auto animate-spin mb-2" />
+                    <p>Analyzing...</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <p className="text-gray-300 text-sm mb-4">
+              Capture an image of a visible health condition for AI analysis. 
+              Position the affected area in good lighting.
+            </p>
+            
+            <div className="flex space-x-3">
+              <Button 
+                onClick={toggleCamera} 
+                variant="outline" 
+                className="flex-1 border-gray-700"
+              >
+                <X className="mr-2 h-4 w-4" /> Cancel
+              </Button>
+              <Button 
+                onClick={captureImage} 
+                disabled={isImageAnalyzing || !model}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                <Camera className="mr-2 h-4 w-4" /> Capture
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Chat messages with enhanced styling */}
       <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-gradient-to-b from-gray-950 to-gray-900">
         {messages.map((message) => (
@@ -275,6 +533,20 @@ export default function SymptomChecker() {
                     : "bg-gray-900 text-gray-100 border border-blue-900/50 shadow-lg shadow-blue-900/10 rounded-tl-none max-w-lg"
                 }`}
                 >
+                  {message.imageData && (
+                    <div className="mb-2">
+                      <img 
+                        src={message.imageData} 
+                        alt="Captured for analysis" 
+                        className="rounded-lg max-h-60 w-auto mx-auto" 
+                      />
+                      {message.imageAnalysis && (
+                        <div className="mt-2 text-xs italic text-gray-300">
+                          <p>Analysis: {message.imageAnalysis}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {renderMessageContent(message.content)}
                   <div className="text-xs opacity-70 mt-2 text-right pr-1">
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -300,10 +572,57 @@ export default function SymptomChecker() {
       {/* Enhanced input area */}
       <div className="border-t border-blue-900/30 p-4 bg-gray-900 bg-opacity-90 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto">
+          {/* Additional input options */}
+          <div className="flex justify-center space-x-3 mb-3">
+            <Button
+              size="sm"
+              variant={isListening ? "default" : "outline"}
+              className={`${isListening 
+                ? 'bg-blue-600 hover:bg-blue-700' 
+                : 'border-blue-900/50 text-blue-400 hover:bg-blue-950/50'}`}
+              onClick={toggleListening}
+              disabled={!browserSupportsSpeechRecognition || isLoading}
+              title={browserSupportsSpeechRecognition ? "Use voice to describe symptoms" : "Voice recognition not supported in your browser"}
+            >
+              {isListening ? (
+                <>
+                  <Mic className="w-4 h-4 mr-1 animate-pulse" /> Stop Listening
+                </>
+              ) : (
+                <>
+                  <Mic className="w-4 h-4 mr-1" /> Voice Input
+                </>
+              )}
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-blue-900/50 text-blue-400 hover:bg-blue-950/50"
+              onClick={toggleCamera}
+              disabled={isLoading}
+              title="Upload image for analysis"
+            >
+              <Camera className="w-4 h-4 mr-1" /> Image Analysis
+            </Button>
+          </div>
+          
+          {/* Main input field */}
           <div className="flex bg-gray-800 rounded-xl border border-blue-900/30 overflow-hidden shadow-lg">
+            {/* Voice indicator */}
+            {isListening && (
+              <div className="pl-3 flex items-center">
+                <div className="flex space-x-1">
+                  <div className="w-1.5 h-5 bg-blue-500 rounded-full animate-pulse"></div>
+                  <div className="w-1.5 h-7 bg-blue-500 rounded-full animate-pulse"></div>
+                  <div className="w-1.5 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+            )}
+            
             <Input
               ref={inputRef}
-              placeholder="Describe your symptoms..."
+              placeholder={isListening ? "Listening to your voice..." : "Describe your symptoms..."}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
@@ -324,9 +643,18 @@ export default function SymptomChecker() {
               )}
             </Button>
           </div>
-          <p className="text-xs text-center text-blue-300/70 mt-3 max-w-sm mx-auto">
-            This AI assistant provides general health information. Always consult with a healthcare professional for medical advice.
-          </p>
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-3 text-xs text-blue-300/70">
+            <p className="max-w-sm text-center sm:text-left mb-2 sm:mb-0">
+              This AI assistant provides general health information. Always consult with a healthcare professional for medical advice.
+            </p>
+            <div className="flex items-center justify-center sm:justify-end space-x-1">
+              <p>Powered by</p>
+              <div className="bg-blue-600/20 border border-blue-900/30 rounded-md px-1.5 py-0.5 text-blue-300 font-medium">
+                TensorFlow.js
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
