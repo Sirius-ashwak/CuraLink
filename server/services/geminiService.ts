@@ -51,9 +51,16 @@ export class GeminiService {
    */
   async getMedicalResponse(query: string, chatHistory: Array<{role: string, content: string}> = []): Promise<string> {
     try {
-      // Instead of using systemInstruction which is causing issues, 
-      // we'll include our medical prompting in the message itself
-      const adjustedQuery = `${MEDICAL_SYSTEM_PROMPT}\n\nUser question: ${query}`;
+      // Enhanced prompt that encourages structured responses
+      const adjustedQuery = `${MEDICAL_SYSTEM_PROMPT}
+
+Format your response with:
+- Clear paragraphs with line breaks between them
+- Bullet points for lists (use * or - for bullet points)
+- Numbered lists where appropriate (1., 2., etc.)
+- Bold text for important information (use ** around important text)
+
+User question: ${query}`;
       
       // For the chat history, we'll use the standard history approach
       // We will convert history to the format Gemini API expects
@@ -77,7 +84,16 @@ export class GeminiService {
         response = result.response.text();
       }
       
-      return response;
+      // Ensure response has proper formatting and structure
+      let formattedResponse = response;
+      
+      // Add line breaks if the response doesn't have them
+      if (!formattedResponse.includes('\n\n') && formattedResponse.length > 200) {
+        // Split long paragraphs for better readability
+        formattedResponse = formattedResponse.replace(/\. /g, '.\n\n');
+      }
+      
+      return formattedResponse;
     } catch (error: any) {
       console.error('Error getting AI response:', error);
       return 'I apologize, but I encountered an error processing your request. Please try again later.';
