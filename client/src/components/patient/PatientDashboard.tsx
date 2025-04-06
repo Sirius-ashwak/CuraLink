@@ -172,40 +172,6 @@ export default function PatientDashboard() {
           {/* Quick Actions */}
           <div className="mb-10">
             <h3 className="text-white font-medium mb-4 text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-blue-500">Quick Actions</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              <a onClick={() => setActiveTab("settings")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-blue-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition-all duration-300 transform group-hover:scale-110">
-                  <Settings className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
-                </div>
-                <span className="text-sm font-medium text-center text-white group-hover:text-blue-300 transition-colors duration-300">Settings</span>
-              </a>
-              <a onClick={() => setActiveTab("profile")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-purple-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(124,58,237,0.5)] group-hover:shadow-[0_0_25px_rgba(124,58,237,0.6)] transition-all duration-300 transform group-hover:scale-110">
-                  <User className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
-                </div>
-                <span className="text-sm font-medium text-center text-white group-hover:text-purple-300 transition-colors duration-300">Profile</span>
-              </a>
-              <a onClick={() => setActiveTab("notifications")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-amber-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(217,119,6,0.5)] group-hover:shadow-[0_0_25px_rgba(217,119,6,0.6)] transition-all duration-300 transform group-hover:scale-110">
-                  <Bell className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
-                </div>
-                <span className="text-sm font-medium text-center text-white group-hover:text-amber-300 transition-colors duration-300">Notifications</span>
-              </a>
-              <a onClick={() => { 
-                // Handle logout functionality here
-                setLocation("/login");
-              }} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-red-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(239,68,68,0.5)] group-hover:shadow-[0_0_25px_rgba(239,68,68,0.6)] transition-all duration-300 transform group-hover:scale-110">
-                  <LogOut className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
-                </div>
-                <span className="text-sm font-medium text-center text-white group-hover:text-red-300 transition-colors duration-300">Logout</span>
-              </a>
-            </div>
-          </div>
-          
-          {/* Health Services */}
-          <div className="mb-10">
-            <h3 className="text-white font-medium mb-4 text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-blue-500">Health Services</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
               <a onClick={() => setActiveTab("appointments")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-blue-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition-all duration-300 transform group-hover:scale-110">
