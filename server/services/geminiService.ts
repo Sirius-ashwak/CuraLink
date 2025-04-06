@@ -233,6 +233,110 @@ User question: ${query}`;
       };
     }
   }
+
+  /**
+   * Process and transcribe voice data
+   * This method processes voice transcripts through Gemini for improved accuracy
+   */
+  async processVoiceTranscript(transcript: string): Promise<string> {
+    try {
+      const promptText = `
+        I need you to correct and improve this voice transcript for a medical assistant:
+        "${transcript}"
+        
+        Correct any obvious errors in the transcript.
+        If medical terms are misrecognized, fix them to their likely correct versions.
+        Return only the corrected transcript text without any additional explanation.
+      `;
+
+      const result = await this.model.generateContent(promptText);
+      const response = result.response.text();
+      
+      return response.trim();
+    } catch (error: any) {
+      console.error('Error processing voice transcript:', error);
+      // Return the original transcript if there's an error
+      return transcript;
+    }
+  }
+
+  /**
+   * Analyze an image and provide medical insights
+   * Takes a base64-encoded image and returns analysis
+   */
+  async analyzeImage(imageBase64: string, userDescription: string = ""): Promise<{
+    observations: string[];
+    possibleConditions: string[];
+    recommendations: string[];
+    furtherQuestions: string[];
+  }> {
+    try {
+      // For Gemini 1.5 Pro that supports multimodal inputs
+      // We need to create a model that accepts images
+      const visionModel = genAI.getGenerativeModel({ 
+        model: modelName, 
+        generationConfig,
+      });
+
+      const prompt = `
+        ${MEDICAL_SYSTEM_PROMPT}
+        
+        Analyze this medical image and provide insights.
+        ${userDescription ? `User description: ${userDescription}` : ''}
+        
+        Provide your response in the following JSON format:
+        {
+          "observations": ["List 3-4 visible observations from the image"],
+          "possibleConditions": ["List 2-3 potential conditions that might be related"],
+          "recommendations": ["List 2-3 recommended steps or actions"],
+          "furtherQuestions": ["List 2-3 questions you would ask to better assess the situation"]
+        }
+        
+        Only return the JSON with no additional text.
+      `;
+
+      // Remove the data URL prefix if present to get just the base64 data
+      const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+      
+      // Create the parts array with both the text prompt and the image
+      const parts = [
+        { text: prompt },
+        { inlineData: { data: base64Data, mimeType: "image/jpeg" } }
+      ];
+
+      const result = await visionModel.generateContent({ contents: [{ role: "user", parts }] });
+      const response = result.response.text();
+      
+      try {
+        // Handle responses that might be wrapped in markdown code blocks
+        let jsonStr = response.trim();
+        
+        // Check if the response is wrapped in markdown code block ```json ... ```
+        const codeBlockMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (codeBlockMatch && codeBlockMatch[1]) {
+          jsonStr = codeBlockMatch[1].trim();
+        }
+        
+        return JSON.parse(jsonStr);
+      } catch (parseError) {
+        console.error('Failed to parse AI image analysis as JSON:', parseError);
+        return {
+          observations: ["Unable to analyze the image clearly"],
+          possibleConditions: ["Image analysis inconclusive"],
+          recommendations: ["Consider taking a clearer image", "Consult with a healthcare provider"],
+          furtherQuestions: ["Can you describe what you're concerned about?", "How long have you noticed this?"]
+        };
+      }
+    } catch (error: any) {
+      console.error('Error analyzing image:', error);
+      return {
+        observations: ["Error processing the image"],
+        possibleConditions: ["Unable to analyze due to technical issues"],
+        recommendations: ["Try uploading a different image", "Consult with a healthcare provider directly"],
+        furtherQuestions: ["Can you describe your symptoms instead?"]
+      };
+    }
+  }
 }
 
 // Export a singleton instance
