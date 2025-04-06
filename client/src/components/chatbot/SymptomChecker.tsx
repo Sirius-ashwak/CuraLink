@@ -335,21 +335,53 @@ ${analysisResult.furtherQuestions.map(q => `* ${q}`).join('\n')}
         // Remove typing indicator
         setMessages(prev => prev.filter(m => m.id !== "typing"));
         
-        setMessages(prev => [
-          ...prev,
-          {
-            id: `error-${Date.now()}`,
-            type: "system",
-            content: "Sorry, I encountered an error while analyzing the image. Please try again.",
-            timestamp: new Date()
-          }
-        ]);
-        
-        toast({
-          title: "Error",
-          description: "Failed to analyze the image. Please try again.",
-          variant: "destructive",
-        });
+        // Check API connection status
+        fetch('/api/debug/status')
+          .then(res => res.json())
+          .then(status => {
+            console.log("API Status Check for Image Analysis:", status);
+            
+            const errorMessage = status.authStatus.geminiConfigured 
+              ? "Sorry, I encountered an error while analyzing the image. This could be due to image quality or content limitations."
+              : "Sorry, I couldn't analyze the image. The AI service is not properly configured. Please contact support.";
+            
+            // Add detailed error message
+            setMessages(prev => [
+              ...prev,
+              {
+                id: `error-${Date.now()}`,
+                type: "system",
+                content: errorMessage,
+                timestamp: new Date()
+              }
+            ]);
+            
+            toast({
+              title: "Image Analysis Error",
+              description: status.authStatus.geminiConfigured 
+                ? "Failed to analyze the image. Try with better lighting or a clearer image." 
+                : "AI service configuration issue detected. Please contact support.",
+              variant: "destructive",
+            });
+          })
+          .catch(() => {
+            // Fallback error message if status check fails
+            setMessages(prev => [
+              ...prev,
+              {
+                id: `error-${Date.now()}`,
+                type: "system",
+                content: "Sorry, I encountered an error while analyzing the image. Please check your connection and try again.",
+                timestamp: new Date()
+              }
+            ]);
+            
+            toast({
+              title: "Connection Error",
+              description: "Failed to analyze the image. Please check your connection.",
+              variant: "destructive",
+            });
+          });
       } finally {
         setIsImageAnalyzing(false);
       }
@@ -445,22 +477,55 @@ ${analysisResult.furtherQuestions.map(q => `* ${q}`).join('\n')}
       // Remove typing indicator
       setMessages(prev => prev.filter(m => m.id !== "typing"));
       
-      // Add error message
-      setMessages(prev => [
-        ...prev,
-        {
-          id: `error-${Date.now()}`,
-          type: "system",
-          content: "Sorry, I couldn't process your request. Please try again.",
-          timestamp: new Date(),
-        },
-      ]);
-      
-      toast({
-        title: "Error",
-        description: "Failed to get a response. Please try again.",
-        variant: "destructive",
-      });
+      // Check API connection status
+      fetch('/api/debug/status')
+        .then(res => res.json())
+        .then(status => {
+          console.log("API Status Check:", status);
+          
+          const errorMessage = status.authStatus.geminiConfigured 
+            ? "Sorry, I couldn't process your request. The AI service is properly configured but encountered an error."
+            : "Sorry, I couldn't process your request. The AI service is not properly configured. Please contact support.";
+          
+          // Add detailed error message
+          setMessages(prev => [
+            ...prev,
+            {
+              id: `error-${Date.now()}`,
+              type: "system",
+              content: errorMessage,
+              timestamp: new Date(),
+            },
+          ]);
+          
+          toast({
+            title: "AI Service Error",
+            description: status.authStatus.geminiConfigured 
+              ? "Failed to get a response. Please try again later." 
+              : "AI service configuration issue detected. Please contact support.",
+            variant: "destructive",
+          });
+        })
+        .catch(err => {
+          console.error("Status check failed:", err);
+          
+          // Add generic error message if status check fails
+          setMessages(prev => [
+            ...prev,
+            {
+              id: `error-${Date.now()}`,
+              type: "system",
+              content: "Sorry, I couldn't process your request. There might be a connection issue.",
+              timestamp: new Date(),
+            },
+          ]);
+          
+          toast({
+            title: "Connection Error",
+            description: "Failed to check system status. Please verify your connection.",
+            variant: "destructive",
+          });
+        });
     } finally {
       setIsLoading(false);
       // Focus back on input after sending

@@ -2,8 +2,20 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+console.log('=== SERVER STARTUP ===');
+console.log('Node environment:', process.env.NODE_ENV);
+console.log('Current directory:', process.cwd());
+console.log('=== ENVIRONMENT VARIABLES ===');
+console.log('GEMINI_API_KEY set:', Boolean(process.env.GEMINI_API_KEY));
+console.log('TWILIO credentials configured:', 
+  Boolean(process.env.TWILIO_ACCOUNT_SID) && 
+  Boolean(process.env.TWILIO_API_KEY) && 
+  Boolean(process.env.TWILIO_API_SECRET)
+);
+console.log('=== SERVER INITIALIZATION ===');
+
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Increased limit for image uploads
 app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
@@ -44,16 +56,60 @@ app.use((req, res, next) => {
     const message = err.message || "Internal Server Error";
 
     console.error('Error:', err);
-    res.status(status).json({ message });
+    console.error('Stack trace:', err.stack);
+    res.status(status).json({ 
+      message,
+      stack: process.env.NODE_ENV === 'production' ? 'Error details hidden in production' : err.stack
+    });
   });
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
+    console.log("Running in development mode, setting up Vite middleware");
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    console.log("Running in production mode, serving static files");
+    console.log("NODE_ENV:", process.env.NODE_ENV);
+    console.log("Current directory:", __dirname);
+    
+    // Log out file system info for debugging production deployment
+    const fs = require('fs');
+    const path = require('path');
+    
+    try {
+      // Check if the dist/public directory exists
+      const distPublicPath = path.resolve(__dirname, "public");
+      const rootDistPath = path.resolve(process.cwd(), "dist", "public");
+      
+      console.log("Checking static file paths:");
+      console.log("- Relative to __dirname:", distPublicPath);
+      console.log("- Exists:", fs.existsSync(distPublicPath));
+      
+      console.log("- Relative to cwd:", rootDistPath);
+      console.log("- Exists:", fs.existsSync(rootDistPath));
+      
+      // List available directories
+      console.log("\nAvailable directories at cwd:");
+      try {
+        console.log(fs.readdirSync(process.cwd()));
+      } catch (error) {
+        console.error("Error listing cwd:", error);
+      }
+      
+      console.log("\nAvailable directories at __dirname:");
+      try { 
+        console.log(fs.readdirSync(__dirname));
+      } catch (error) {
+        console.error("Error listing __dirname:", error);
+      }
+      
+      serveStatic(app);
+      console.log("Static files configured successfully");
+    } catch (error) {
+      console.error("Error setting up static file serving:", error);
+    }
   }
 
   // ALWAYS serve the app on port 5000
