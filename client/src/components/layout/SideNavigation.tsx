@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { CuralinkLogo } from '@/components/ui/CuralinkLogo';
 
 interface SideNavigationProps {
   activeTab: string;
@@ -174,10 +175,8 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
           {/* Decorative Element */}
           <div className="mt-10 p-5 bg-gradient-to-br from-indigo-900/20 via-indigo-950/20 to-gray-900/20 border border-indigo-800/30 rounded-xl shadow-inner">
             <div className="flex items-center text-indigo-200 text-sm">
-              <div className="mr-3 p-2 bg-indigo-900/40 rounded-lg border border-indigo-700/30 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
-                <Bot className="h-4 w-4" />
-              </div>
-              <span className="font-medium bg-clip-text text-transparent bg-gradient-to-r from-indigo-100 to-blue-200">AI Health Bridge</span>
+              <CuralinkLogo size={24} variant="simple" className="mr-3" />
+              <span className="font-medium bg-clip-text text-transparent bg-gradient-to-r from-indigo-100 to-blue-200">Curalink</span>
             </div>
             <p className="text-xs text-indigo-300/70 mt-3 leading-relaxed">
               Your health assistant is always ready to help with any questions or concerns.

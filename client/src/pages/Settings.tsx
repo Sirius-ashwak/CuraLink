@@ -221,7 +221,7 @@ export default function Settings() {
             Application Settings
           </CardTitle>
           <CardDescription>
-            Customize your experience with HealthConnect
+            Customize your experience with Curalink
           </CardDescription>
         </CardHeader>
         
