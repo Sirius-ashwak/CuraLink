@@ -8,20 +8,19 @@
     <feComposite in="SourceGraphic" in2="blur" operator="over" />
   </filter>
   
-  <!-- Subtle outer glow -->
+  <!-- Simple heart with white fill -->
   <path
     d="M60 30C60 30 48 20 34 20C20 20 12 32 12 44C12 68 60 90 60 90C60 90 108 68 108 44C108 32 100 20 86 20C72 20 60 30 60 30Z"
-    fill="#ff6b9d"
-    opacity="0.4"
-    filter="url(#glow-favicon)"
-    transform="scale(1.08)"
-    transform-origin="center"
+    fill="white"
   />
   
-  <!-- Main heart -->
+  <!-- Glowing outline -->
   <path
     d="M60 30C60 30 48 20 34 20C20 20 12 32 12 44C12 68 60 90 60 90C60 90 108 68 108 44C108 32 100 20 86 20C72 20 60 30 60 30Z"
-    fill="url(#heart-gradient-favicon)"
+    fill="none"
+    stroke="#ff2d70"
+    stroke-width="3"
+    filter="url(#glow-favicon)"
   />
   
   <defs>
@@ -33,21 +32,8 @@
       y2="120"
       gradientUnits="userSpaceOnUse"
     >
-      <stop offset="0%" stopColor="#6366F1" />
-      <stop offset="100%" stopColor="#3B82F6" />
-    </linearGradient>
-    
-    <linearGradient
-      id="heart-gradient-favicon"
-      x1="20"
-      y1="20"
-      x2="100"
-      y2="90"
-      gradientUnits="userSpaceOnUse"
-    >
-      <stop offset="0%" stopColor="#ff6b9d" />
-      <stop offset="70%" stopColor="#ff2d70" />
-      <stop offset="100%" stopColor="#ff0055" />
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#3B82F6" />
     </linearGradient>
   </defs>
 </svg>
