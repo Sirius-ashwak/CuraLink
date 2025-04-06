@@ -55,10 +55,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 </span>
               )}
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-5">
               <ThemeSwitch />
               <ConnectionStatus />
-              <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
+              <div className="h-6 w-px bg-gray-300 dark:bg-gray-700"></div>
               <ProfileMenu />
             </div>
           </div>
