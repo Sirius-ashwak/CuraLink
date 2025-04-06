@@ -2,15 +2,8 @@
 <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="60" cy="60" r="60" fill="url(#gradient-default)" />
   <path
-    d="M60 30C60 30 52.5 20 40.5 20C28.5 20 18 32 18 44C18 65 60 83 60 83C60 83 102 65 102 44C102 32 91.5 20 79.5 20C67.5 20 60 30 60 30Z"
+    d="M60 30C60 30 48 20 34 20C20 20 12 32 12 44C12 68 60 90 60 90C60 90 108 68 108 44C108 32 100 20 86 20C72 20 60 30 60 30Z"
     fill="white"
-  />
-  <path
-    d="M30 60H45L50 45L60 85L70 35L80 60H90"
-    stroke="#ff2d55"
-    strokeWidth="4"
-    strokeLinecap="round"
-    strokeLinejoin="round"
   />
   <defs>
     <linearGradient
