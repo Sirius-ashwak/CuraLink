@@ -152,16 +152,16 @@ export default function PatientDashboard() {
   if (!user) return null;
   
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900">
       {/* Side Navigation */}
       <SideNavigation activeTab={activeTab} onTabChange={setActiveTab} />
       
       {/* Main Content Area with proper padding for top header */}
       <div className="p-6 mt-16">
-        {/* Welcome Section */}
-        <div className="mb-6">
-          <h2 className="text-xl font-medium text-white">Welcome back, {user.firstName}</h2>
-          <p className="text-gray-400">How can we help you today?</p>
+        {/* Welcome Section with enhanced styling */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-medium text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-blue-500">Welcome back, {user.firstName}</h2>
+          <p className="text-gray-400 mt-1">How can we help you today?</p>
         </div>
         
         {/* Main Content Using Tabs but without the visible TabsList */}
@@ -170,53 +170,58 @@ export default function PatientDashboard() {
         {/* Dashboard Tab */}
         <TabsContent value="dashboard">
           {/* Quick Actions */}
-          <div className="mb-8">
-            <h3 className="text-white font-medium mb-3">Quick Actions</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-              <a onClick={() => setActiveTab("appointments")} className="flex flex-col items-center p-5 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-                  <CalendarDays className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
+          <div className="mb-10">
+            <h3 className="text-white font-medium mb-4 text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-blue-500">Quick Actions</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
+              <a onClick={() => setActiveTab("appointments")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-blue-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition-all duration-300 transform group-hover:scale-110">
+                  <CalendarDays className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="text-sm font-medium text-center text-white">Book Appointment</span>
+                <span className="text-sm font-medium text-center text-white group-hover:text-blue-300 transition-colors duration-300">Book Appointment</span>
               </a>
-              <a onClick={() => setActiveTab("ai-chat")} className="flex flex-col items-center p-5 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(124,58,237,0.5)]">
-                  <Bot className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
+              <a onClick={() => setActiveTab("ai-chat")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-purple-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(124,58,237,0.5)] group-hover:shadow-[0_0_25px_rgba(124,58,237,0.6)] transition-all duration-300 transform group-hover:scale-110">
+                  <Bot className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="text-sm font-medium text-center text-white">AI Health Chat</span>
+                <span className="text-sm font-medium text-center text-white group-hover:text-purple-300 transition-colors duration-300">AI Health Chat</span>
               </a>
-              <a onClick={() => setActiveTab("medicine-tracker")} className="flex flex-col items-center p-5 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(16,185,129,0.5)]">
-                  <Pill className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
+              <a onClick={() => setActiveTab("medicine-tracker")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-green-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(16,185,129,0.5)] group-hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] transition-all duration-300 transform group-hover:scale-110">
+                  <Pill className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="text-sm font-medium text-center text-white">Medicine Tracker</span>
+                <span className="text-sm font-medium text-center text-white group-hover:text-green-300 transition-colors duration-300">Medicine Tracker</span>
               </a>
-              <a onClick={() => setActiveTab("doctor-matcher")} className="flex flex-col items-center p-5 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(14,165,233,0.5)]">
-                  <UserSearch className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
+              <a onClick={() => setActiveTab("doctor-matcher")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-sky-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(14,165,233,0.5)] group-hover:shadow-[0_0_25px_rgba(14,165,233,0.6)] transition-all duration-300 transform group-hover:scale-110">
+                  <UserSearch className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="text-sm font-medium text-center text-white">Find Doctor</span>
+                <span className="text-sm font-medium text-center text-white group-hover:text-sky-300 transition-colors duration-300">Find Doctor</span>
               </a>
-              <a onClick={() => setLocation("/video-call")} className="flex flex-col items-center p-5 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(79,70,229,0.5)]">
-                  <Video className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
+              <a onClick={() => setLocation("/video-call")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-indigo-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(79,70,229,0.5)] group-hover:shadow-[0_0_25px_rgba(79,70,229,0.6)] transition-all duration-300 transform group-hover:scale-110">
+                  <Video className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="text-sm font-medium text-center text-white">Video Consult</span>
+                <span className="text-sm font-medium text-center text-white group-hover:text-indigo-300 transition-colors duration-300">Video Consult</span>
               </a>
-              <a onClick={() => setActiveTab("emergency-transport")} className="flex flex-col items-center p-5 rounded-lg bg-gray-900 shadow-sm hover:bg-gray-800 transition-colors cursor-pointer border border-gray-800">
-                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(244,63,94,0.5)]">
-                  <Ambulance className="h-6 w-6 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
+              <a onClick={() => setActiveTab("emergency-transport")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-rose-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(244,63,94,0.5)] group-hover:shadow-[0_0_25px_rgba(244,63,94,0.6)] transition-all duration-300 transform group-hover:scale-110">
+                  <Ambulance className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="text-sm font-medium text-center text-white">Emergency Transport</span>
+                <span className="text-sm font-medium text-center text-white group-hover:text-rose-300 transition-colors duration-300">Emergency Transport</span>
               </a>
             </div>
           </div>
           
-          {/* Upcoming Appointments */}
-          <section id="upcoming-appointments" className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium text-white">Upcoming Appointments</h3>
-              <a onClick={() => setActiveTab("appointments")} className="text-blue-500 text-sm cursor-pointer hover:text-blue-400">View all</a>
+          {/* Upcoming Appointments with enhanced styling */}
+          <section id="upcoming-appointments" className="mb-10">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-lg font-medium bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-blue-500">Upcoming Appointments</h3>
+              <a 
+                onClick={() => setActiveTab("appointments")} 
+                className="text-blue-400 text-sm cursor-pointer hover:text-blue-300 transition-colors flex items-center gap-1 group"
+              >
+                View all <span className="transform group-hover:translate-x-1 transition-transform duration-300">→</span>
+              </a>
             </div>
             
             {isLoading ? (
@@ -228,88 +233,118 @@ export default function PatientDashboard() {
                 className="py-6"
               />
             ) : appointments.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {appointments.map((appointment) => (
                   <AppointmentCard key={appointment.id} appointment={appointment} />
                 ))}
               </div>
             ) : (
-              <div className="bg-gray-900 rounded-lg shadow-sm p-6 text-center border border-gray-800">
-                <p className="text-gray-400">You don't have any upcoming appointments.</p>
-                <a onClick={() => setActiveTab("appointments")} className="text-blue-500 font-medium mt-2 inline-block cursor-pointer hover:text-blue-400">
+              <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl shadow-lg p-8 text-center border border-gray-800/50 backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400/30 to-blue-600/30 flex items-center justify-center mx-auto mb-4">
+                  <CalendarDays className="h-8 w-8 text-blue-300 opacity-70" />
+                </div>
+                <p className="text-gray-300 mb-4">You don't have any upcoming appointments.</p>
+                <a 
+                  onClick={() => setActiveTab("appointments")} 
+                  className="inline-flex items-center justify-center px-4 py-2 rounded-full 
+                    bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600
+                    text-white font-medium text-sm transition-all duration-300 cursor-pointer shadow-md
+                    hover:shadow-blue-900/30 transform hover:-translate-y-0.5"
+                >
                   Book your first appointment
                 </a>
               </div>
             )}
           </section>
           
-          {/* Health Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <Card className="bg-gray-900 border border-gray-800">
-              <CardHeader className="bg-blue-900 bg-opacity-30 pb-2 border-b border-gray-800">
-                <CardTitle className="text-base flex items-center text-white">
-                  <Bot className="h-4 w-4 mr-2 text-blue-500" />
-                  AI Health Assistant
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <p className="text-sm text-gray-400 mb-3">Get instant answers to your health questions and symptoms from our AI companion.</p>
-                <a onClick={() => setActiveTab("ai-chat")} className="text-blue-500 text-sm font-medium cursor-pointer hover:text-blue-400">Chat with AI Assistant →</a>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gray-900 border border-gray-800">
-              <CardHeader className="bg-blue-800 bg-opacity-30 pb-2 border-b border-gray-800">
-                <CardTitle className="text-base flex items-center text-white">
-                  <UserSearch className="h-4 w-4 mr-2 text-blue-500" />
-                  Find the Right Doctor
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <p className="text-sm text-gray-400 mb-3">Answer a few questions about your symptoms to find doctors who specialize in your needs.</p>
-                <a onClick={() => setActiveTab("doctor-matcher")} className="text-blue-500 text-sm font-medium cursor-pointer hover:text-blue-400">Find Matching Doctors →</a>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gray-900 border border-gray-800">
-              <CardHeader className="bg-blue-700 bg-opacity-30 pb-2 border-b border-gray-800">
-                <CardTitle className="text-base flex items-center text-white">
-                  <Pill className="h-4 w-4 mr-2 text-blue-500" />
-                  Medicine Tracker
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <p className="text-sm text-gray-400 mb-3">Keep track of your medications, get reminders, and learn more about your prescriptions.</p>
-                <a onClick={() => setActiveTab("medicine-tracker")} className="text-blue-500 text-sm font-medium cursor-pointer hover:text-blue-400">Manage Medicines →</a>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-gray-900 border border-gray-800">
-              <CardHeader className="bg-red-900 bg-opacity-30 pb-2 border-b border-gray-800">
-                <CardTitle className="text-base flex items-center text-white">
-                  <Ambulance className="h-4 w-4 mr-2 text-red-500" />
-                  Emergency Transport
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <p className="text-sm text-gray-400 mb-3">Request emergency medical transport if you're in a rural area and need immediate assistance.</p>
-                <a onClick={() => setActiveTab("emergency-transport")} className="text-red-500 text-sm font-medium cursor-pointer hover:text-red-400">Request Transport →</a>
-              </CardContent>
-            </Card>
+          {/* Health Overview Cards with enhanced styling */}
+          <div className="mb-12">
+            <h3 className="text-white font-medium mb-4 text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-blue-500">Health Services</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="group bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-lg hover:shadow-blue-900/20 transition-all duration-300 overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-blue-900/40 via-blue-800/30 to-blue-900/40 pb-3 border-b border-blue-900/30 transition-all duration-300">
+                  <CardTitle className="text-base flex items-center text-white">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] transition-all duration-300">
+                      <Bot className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
+                    </div>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-100 to-blue-300 group-hover:from-blue-50 group-hover:to-blue-200 transition-all duration-300">AI Health Assistant</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <p className="text-sm text-gray-300 mb-4 leading-relaxed">Get instant answers to your health questions and symptoms from our AI companion.</p>
+                  <a onClick={() => setActiveTab("ai-chat")} className="inline-flex items-center text-blue-400 text-sm font-medium cursor-pointer hover:text-blue-300 transition-colors duration-300 group-hover:translate-x-1 transform transition-transform">
+                    Chat with AI Assistant <span className="ml-1 text-xs">→</span>
+                  </a>
+                </CardContent>
+              </Card>
+              
+              <Card className="group bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-lg hover:shadow-purple-900/20 transition-all duration-300 overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-purple-900/40 via-purple-800/30 to-purple-900/40 pb-3 border-b border-purple-900/30 transition-all duration-300">
+                  <CardTitle className="text-base flex items-center text-white">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(124,58,237,0.5)] group-hover:shadow-[0_0_20px_rgba(124,58,237,0.6)] transition-all duration-300">
+                      <UserSearch className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
+                    </div>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-100 to-purple-300 group-hover:from-purple-50 group-hover:to-purple-200 transition-all duration-300">Find the Right Doctor</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <p className="text-sm text-gray-300 mb-4 leading-relaxed">Answer a few questions about your symptoms to find doctors who specialize in your needs.</p>
+                  <a onClick={() => setActiveTab("doctor-matcher")} className="inline-flex items-center text-purple-400 text-sm font-medium cursor-pointer hover:text-purple-300 transition-colors duration-300 group-hover:translate-x-1 transform transition-transform">
+                    Find Matching Doctors <span className="ml-1 text-xs">→</span>
+                  </a>
+                </CardContent>
+              </Card>
+              
+              <Card className="group bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-lg hover:shadow-green-900/20 transition-all duration-300 overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-green-900/40 via-green-800/30 to-green-900/40 pb-3 border-b border-green-900/30 transition-all duration-300">
+                  <CardTitle className="text-base flex items-center text-white">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(16,185,129,0.5)] group-hover:shadow-[0_0_20px_rgba(16,185,129,0.6)] transition-all duration-300">
+                      <Pill className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
+                    </div>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-100 to-green-300 group-hover:from-green-50 group-hover:to-green-200 transition-all duration-300">Medicine Tracker</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <p className="text-sm text-gray-300 mb-4 leading-relaxed">Keep track of your medications, get reminders, and learn more about your prescriptions.</p>
+                  <a onClick={() => setActiveTab("medicine-tracker")} className="inline-flex items-center text-green-400 text-sm font-medium cursor-pointer hover:text-green-300 transition-colors duration-300 group-hover:translate-x-1 transform transition-transform">
+                    Manage Medicines <span className="ml-1 text-xs">→</span>
+                  </a>
+                </CardContent>
+              </Card>
+              
+              <Card className="group bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-lg hover:shadow-rose-900/20 transition-all duration-300 overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-rose-900/40 via-rose-800/30 to-rose-900/40 pb-3 border-b border-rose-900/30 transition-all duration-300">
+                  <CardTitle className="text-base flex items-center text-white">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(244,63,94,0.5)] group-hover:shadow-[0_0_20px_rgba(244,63,94,0.6)] transition-all duration-300">
+                      <Ambulance className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
+                    </div>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-100 to-rose-300 group-hover:from-rose-50 group-hover:to-rose-200 transition-all duration-300">Emergency Transport</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <p className="text-sm text-gray-300 mb-4 leading-relaxed">Request emergency medical transport if you're in a rural area and need immediate assistance.</p>
+                  <a onClick={() => setActiveTab("emergency-transport")} className="inline-flex items-center text-rose-400 text-sm font-medium cursor-pointer hover:text-rose-300 transition-colors duration-300 group-hover:translate-x-1 transform transition-transform">
+                    Request Transport <span className="ml-1 text-xs">→</span>
+                  </a>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
         
         {/* AI Companion Chat Tab */}
         <TabsContent value="ai-chat">
-          <Card className="mb-4 bg-gray-900 border border-gray-800">
-            <CardHeader className="bg-blue-900 bg-opacity-30 border-b border-gray-800">
-              <CardTitle className="flex items-center text-white">
-                <Bot className="w-5 h-5 mr-2 text-blue-500" />
-                AI Health Companion
+          <Card className="mb-4 bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-900/40 via-blue-800/30 to-blue-900/40 border-b border-blue-900/30">
+              <CardTitle className="flex items-center">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                  <Bot className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
+                </div>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-100 to-blue-300">AI Health Companion</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="h-[600px]">
+              <div className="h-[650px]">
                 <SymptomChecker />
               </div>
             </CardContent>
@@ -318,15 +353,17 @@ export default function PatientDashboard() {
         
         {/* Medicine Tracker Tab */}
         <TabsContent value="medicine-tracker">
-          <Card className="mb-4 bg-gray-900 border border-gray-800">
-            <CardHeader className="bg-blue-700 bg-opacity-30 border-b border-gray-800">
-              <CardTitle className="flex items-center text-white">
-                <Pill className="w-5 h-5 mr-2 text-blue-500" />
-                Medicine Tracker
+          <Card className="mb-4 bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-green-900/40 via-green-800/30 to-green-900/40 border-b border-green-900/30">
+              <CardTitle className="flex items-center">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+                  <Pill className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
+                </div>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-100 to-green-300">Medicine Tracker</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="h-[600px] overflow-auto">
+              <div className="h-[650px] overflow-auto">
                 <MedicineTracker />
               </div>
             </CardContent>
@@ -335,15 +372,17 @@ export default function PatientDashboard() {
         
         {/* Doctor Matcher Tab */}
         <TabsContent value="doctor-matcher">
-          <Card className="mb-4 bg-gray-900 border border-gray-800">
-            <CardHeader className="bg-blue-800 bg-opacity-30 border-b border-gray-800">
-              <CardTitle className="flex items-center text-white">
-                <UserSearch className="w-5 h-5 mr-2 text-blue-500" />
-                Find the Right Doctor
+          <Card className="mb-4 bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-purple-900/40 via-purple-800/30 to-purple-900/40 border-b border-purple-900/30">
+              <CardTitle className="flex items-center">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(124,58,237,0.5)]">
+                  <UserSearch className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
+                </div>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-100 to-purple-300">Find the Right Doctor</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="h-[600px] overflow-auto">
+              <div className="h-[650px] overflow-auto">
                 <DoctorMatcher />
               </div>
             </CardContent>
@@ -352,15 +391,17 @@ export default function PatientDashboard() {
         
         {/* Appointments Tab */}
         <TabsContent value="appointments">
-          <Card className="mb-4 bg-gray-900 border border-gray-800">
-            <CardHeader className="bg-blue-600 bg-opacity-30 border-b border-gray-800">
-              <CardTitle className="flex items-center text-white">
-                <CalendarDays className="w-5 h-5 mr-2 text-blue-500" />
-                Schedule an Appointment
+          <Card className="mb-4 bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-900/40 via-blue-800/30 to-blue-900/40 border-b border-blue-900/30">
+              <CardTitle className="flex items-center">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                  <CalendarDays className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
+                </div>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-100 to-blue-300">Schedule an Appointment</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div id="book-appointment" className="h-[600px] overflow-auto p-4">
+              <div id="book-appointment" className="h-[650px] overflow-auto p-5">
                 <AppointmentBooking />
               </div>
             </CardContent>
@@ -369,15 +410,17 @@ export default function PatientDashboard() {
         
         {/* Emergency Transport Tab */}
         <TabsContent value="emergency-transport">
-          <Card className="mb-4 bg-gray-900 border border-gray-800">
-            <CardHeader className="bg-red-900 bg-opacity-30 border-b border-gray-800">
-              <CardTitle className="flex items-center text-white">
-                <Ambulance className="w-5 h-5 mr-2 text-red-500" />
-                Emergency Transport
+          <Card className="mb-4 bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-rose-900/40 via-rose-800/30 to-rose-900/40 border-b border-rose-900/30">
+              <CardTitle className="flex items-center">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(244,63,94,0.5)]">
+                  <Ambulance className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
+                </div>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-100 to-rose-300">Emergency Transport</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="h-[600px] overflow-auto p-4">
+              <div className="h-[650px] overflow-auto p-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <EmergencyTransportForm />
