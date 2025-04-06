@@ -152,16 +152,26 @@ export default function PatientDashboard() {
   if (!user) return null;
   
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-950 to-gray-900 relative overflow-hidden">
+      {/* Background glow effects */}
+      <div className="absolute top-20 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full filter blur-[80px] opacity-20 pointer-events-none"></div>
+      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full filter blur-[80px] opacity-20 pointer-events-none"></div>
       {/* Side Navigation */}
       <SideNavigation activeTab={activeTab} onTabChange={setActiveTab} />
       
       {/* Main Content Area with proper padding for top header */}
       <div className="p-6 mt-16">
         {/* Welcome Section with enhanced styling */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-medium text-white bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-blue-500">Welcome back, {user.firstName}</h2>
-          <p className="text-gray-400 mt-1">How can we help you today?</p>
+        <div className="mb-10 relative">
+          {/* Background glow effect */}
+          <div className="absolute -top-10 -left-10 w-32 h-32 bg-indigo-600/20 rounded-full filter blur-3xl opacity-70 pointer-events-none"></div>
+          
+          <h2 className="text-3xl font-semibold text-white bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 to-blue-200">
+            Welcome back, {user.firstName}
+          </h2>
+          <p className="text-indigo-300/80 mt-2 text-lg max-w-xl leading-relaxed">
+            How can we help you today? Your health is our top priority.
+          </p>
         </div>
         
         {/* Main Content Using Tabs but without the visible TabsList */}
@@ -171,7 +181,12 @@ export default function PatientDashboard() {
         <TabsContent value="dashboard">
           {/* Quick Actions */}
           <div className="mb-10">
-            <h3 className="text-white font-medium mb-4 text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-blue-500">Quick Actions</h3>
+            <h3 className="flex items-center mb-5 text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 to-blue-200">
+              <span className="inline-block mr-3 p-1.5 rounded-lg bg-indigo-900/30 border border-indigo-700/30 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
+                <CalendarDays className="w-5 h-5 text-indigo-400" />
+              </span>
+              Quick Actions
+            </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
               <a onClick={() => setActiveTab("appointments")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-blue-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition-all duration-300 transform group-hover:scale-110">
@@ -215,10 +230,15 @@ export default function PatientDashboard() {
           {/* Upcoming Appointments with enhanced styling */}
           <section id="upcoming-appointments" className="mb-10">
             <div className="flex justify-between items-center mb-5">
-              <h3 className="text-lg font-medium bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-blue-500">Upcoming Appointments</h3>
+              <h3 className="flex items-center text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 to-blue-200">
+                <span className="inline-block mr-3 p-1.5 rounded-lg bg-indigo-900/30 border border-indigo-700/30 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
+                  <CalendarDays className="w-5 h-5 text-indigo-400" />
+                </span>
+                Upcoming Appointments
+              </h3>
               <a 
                 onClick={() => setActiveTab("appointments")} 
-                className="text-blue-400 text-sm cursor-pointer hover:text-blue-300 transition-colors flex items-center gap-1 group"
+                className="text-indigo-400 text-sm cursor-pointer hover:text-indigo-300 transition-colors flex items-center gap-2 group px-3 py-1.5 rounded-full border border-indigo-900/40 hover:border-indigo-700/40 hover:bg-indigo-900/20"
               >
                 View all <span className="transform group-hover:translate-x-1 transition-transform duration-300">→</span>
               </a>
@@ -239,17 +259,20 @@ export default function PatientDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl shadow-lg p-8 text-center border border-gray-800/50 backdrop-blur-sm">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400/30 to-blue-600/30 flex items-center justify-center mx-auto mb-4">
-                  <CalendarDays className="h-8 w-8 text-blue-300 opacity-70" />
+              <div className="bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 rounded-xl shadow-xl p-8 text-center border border-indigo-900/30 relative overflow-hidden backdrop-blur-sm">
+                {/* Background glow effects */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-indigo-600/10 rounded-full filter blur-3xl opacity-30 pointer-events-none"></div>
+                
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-400/20 to-indigo-600/20 border border-indigo-500/30 flex items-center justify-center mx-auto mb-6 relative shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+                  <CalendarDays className="h-9 w-9 text-indigo-300 opacity-90" />
                 </div>
-                <p className="text-gray-300 mb-4">You don't have any upcoming appointments.</p>
+                <p className="text-indigo-300/80 mb-5 text-lg">You don't have any upcoming appointments.</p>
                 <a 
                   onClick={() => setActiveTab("appointments")} 
-                  className="inline-flex items-center justify-center px-4 py-2 rounded-full 
-                    bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600
+                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-full 
+                    bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600
                     text-white font-medium text-sm transition-all duration-300 cursor-pointer shadow-md
-                    hover:shadow-blue-900/30 transform hover:-translate-y-0.5"
+                    hover:shadow-[0_0_20px_rgba(79,70,229,0.4)] transform hover:-translate-y-0.5"
                 >
                   Book your first appointment
                 </a>
@@ -259,7 +282,12 @@ export default function PatientDashboard() {
           
           {/* Health Overview Cards with enhanced styling */}
           <div className="mb-12">
-            <h3 className="text-white font-medium mb-4 text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-blue-500">Health Services</h3>
+            <h3 className="flex items-center mb-5 text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-indigo-200 to-blue-200">
+              <span className="inline-block mr-3 p-1.5 rounded-lg bg-indigo-900/30 border border-indigo-700/30 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
+                <Bot className="w-5 h-5 text-indigo-400" />
+              </span>
+              Health Services
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="group bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-lg hover:shadow-blue-900/20 transition-all duration-300 overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-blue-900/40 via-blue-800/30 to-blue-900/40 pb-3 border-b border-blue-900/30 transition-all duration-300">
@@ -334,16 +362,19 @@ export default function PatientDashboard() {
         
         {/* AI Companion Chat Tab */}
         <TabsContent value="ai-chat">
-          <Card className="mb-4 bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-blue-900/40 via-blue-800/30 to-blue-900/40 border-b border-blue-900/30">
+          <Card className="mb-4 bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 border border-indigo-900/30 shadow-2xl overflow-hidden relative">
+            {/* Background glow effect */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-600/10 rounded-full filter blur-3xl opacity-30 pointer-events-none"></div>
+            
+            <CardHeader className="bg-gradient-to-r from-indigo-900/40 via-indigo-800/30 to-indigo-900/40 border-b border-indigo-900/30 relative z-10">
               <CardTitle className="flex items-center">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(99,102,241,0.5)]">
                   <Bot className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-100 to-blue-300">AI Health Companion</span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-100 to-blue-200 text-lg">AI Health Companion</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent className="p-0 relative z-10">
               <div className="h-[650px]">
                 <SymptomChecker />
               </div>
@@ -391,17 +422,20 @@ export default function PatientDashboard() {
         
         {/* Appointments Tab */}
         <TabsContent value="appointments">
-          <Card className="mb-4 bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-blue-900/40 via-blue-800/30 to-blue-900/40 border-b border-blue-900/30">
+          <Card className="mb-4 bg-gradient-to-b from-gray-900 via-gray-900 to-gray-950 border border-indigo-900/30 shadow-2xl overflow-hidden relative">
+            {/* Background glow effect */}
+            <div className="absolute -top-20 -left-20 w-64 h-64 bg-indigo-600/10 rounded-full filter blur-3xl opacity-30 pointer-events-none"></div>
+            
+            <CardHeader className="bg-gradient-to-r from-indigo-900/40 via-indigo-800/30 to-indigo-900/40 border-b border-indigo-900/30 relative z-10">
               <CardTitle className="flex items-center">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(99,102,241,0.5)]">
                   <CalendarDays className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-100 to-blue-300">Schedule an Appointment</span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-100 to-blue-200 text-lg">Schedule an Appointment</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
-              <div id="book-appointment" className="h-[650px] overflow-auto p-5">
+            <CardContent className="p-0 relative z-10">
+              <div id="book-appointment" className="h-[650px] overflow-auto p-6">
                 <AppointmentBooking />
               </div>
             </CardContent>
