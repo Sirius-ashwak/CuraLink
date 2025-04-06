@@ -15,6 +15,7 @@ export const users = pgTable("users", {
     gender?: string;
     bio?: string;
     avatar?: string;
+    phone?: string;
   }>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
