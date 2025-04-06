@@ -21,17 +21,18 @@ export default function ConnectionStatus() {
   }, [connected]);
   
   return (
-    <div className="relative w-3 h-3">
+    <div className="relative connection-status">
       <span 
-        className={`absolute inset-0 rounded-full ${
-          status === "online" ? "bg-green-500" : "bg-red-500"
+        className={`material-icons text-sm ${
+          status === "online" ? "text-secondary" : "text-error" 
         }`}
-      ></span>
+      >
+        {status === "online" ? "wifi" : "wifi_off"}
+      </span>
       <span 
-        className={`absolute inset-0 rounded-full ${
-          status === "online" ? "bg-green-400" : "bg-red-400"
-        } animate-ping opacity-75`}
-        style={{ animationDuration: '2s' }}
+        className={`absolute -top-1 -right-1 h-2 w-2 ${
+          status === "online" ? "bg-secondary" : "bg-error"
+        } rounded-full`}
       ></span>
     </div>
   );

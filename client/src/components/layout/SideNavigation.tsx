@@ -88,22 +88,24 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
 
   return (
     <>
-      {/* Compact Navigation Menu Button */}
-      <Button 
-        ref={dotsRef}
-        variant="ghost" 
-        size="icon" 
-        className="ml-1 h-8 w-8 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-        onClick={toggleMenu}
-      >
-        <MoreVertical className="h-4 w-4" />
-      </Button>
+      {/* Navigation Menu Button */}
+      <div>
+        <Button 
+          ref={dotsRef}
+          variant="outline" 
+          size="icon" 
+          className="h-9 w-9 rounded-full border-blue-700/30 text-blue-400 hover:text-white hover:bg-blue-800/50 hover:border-blue-600/50 transition-colors"
+          onClick={toggleMenu}
+        >
+          <MoreVertical className="h-5 w-5" />
+        </Button>
+      </div>
 
       {/* Apple-style Slide-in Menu Panel */}
       <div 
         ref={menuRef}
         className={cn(
-          "fixed right-4 top-16 w-64 bg-gray-900/95 backdrop-blur-lg rounded-xl border border-blue-800/20 shadow-lg shadow-blue-900/10 transform transition-all duration-300 ease-in-out z-40 overflow-hidden",
+          "fixed right-4 top-20 w-64 bg-gray-900/95 backdrop-blur-lg rounded-xl border border-blue-800/20 shadow-lg shadow-blue-900/10 transform transition-all duration-300 ease-in-out z-40 overflow-hidden",
           isMenuOpen 
             ? "translate-y-0 opacity-100" 
             : "translate-y-4 opacity-0 pointer-events-none"
