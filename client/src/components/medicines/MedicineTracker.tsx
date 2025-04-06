@@ -324,9 +324,9 @@ export default function MedicineTracker() {
                       ) : isExpiringSoon(medicine.expiryDate) ? (
                         <Badge variant="warning">Expiring Soon</Badge>
                       ) : isLowStock(medicine) ? (
-                        <Badge variant="outline" className="bg-orange-100 text-orange-800 hover:bg-orange-100">Low Stock</Badge>
+                        <Badge variant="warning">Low Stock</Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">Good</Badge>
+                        <Badge variant="success">Good</Badge>
                       )}
                     </TableCell>
                     <TableCell>

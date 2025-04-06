@@ -618,6 +618,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Chat API
   app.use('/api/ai-chat', aiChatRoutes);
   
+  // Health check endpoint for Render
+  app.get('/api/health', (_req, res) => {
+    res.status(200).json({
+      status: 'OK',
+      timestamp: new Date().toISOString()
+    });
+  });
+  
   // Debugging endpoints
   app.get('/api/debug/status', (_req, res) => {
     console.log('Debug status endpoint called');
