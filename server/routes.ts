@@ -227,26 +227,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post('/api/auth/login', express.json(), async (req, res) => {
     try {
+      console.log('Login attempt:', req.body.email);
       const { email, password } = req.body;
       
       if (!email || !password) {
+        console.log('Login failed: Missing email or password');
         return res.status(400).json({ message: 'Email and password are required' });
       }
       
       const user = await storage.getUserByEmail(email);
       
       if (!user) {
+        console.log('Login failed: User not found');
         return res.status(401).json({ message: 'Invalid credentials' });
       }
       
-      // Use a timing-safe comparison for passwords
-      const crypto = require('crypto');
-      const match = crypto.timingSafeEqual(
-        Buffer.from(user.password),
-        Buffer.from(password)
-      );
+      console.log('User found, validating password');
       
-      if (!match) {
+      // Simple string comparison for development 
+      // (in production we'd use bcrypt or similar)
+      if (user.password !== password) {
+        console.log('Login failed: Password mismatch');
         return res.status(401).json({ message: 'Invalid credentials' });
       }
       
@@ -256,9 +257,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add doctor information if user is a doctor
       if (user.role === 'doctor') {
         const doctor = await storage.getDoctorByUserId(user.id);
+        console.log('Doctor login successful, returning doctor info');
         return res.json({ ...userData, doctorInfo: doctor });
       }
       
+      console.log('Patient login successful');
       return res.json(userData);
     } catch (error) {
       console.error('Login error:', error);
@@ -614,6 +617,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // AI Chat API
   app.use('/api/ai-chat', aiChatRoutes);
+  
+  // Debugging endpoints
+  app.get('/api/debug/status', (_req, res) => {
+    console.log('Debug status endpoint called');
+    res.json({
+      status: 'OK',
+      environment: process.env.NODE_ENV,
+      time: new Date().toISOString(),
+      serverStartTime: new Date(Date.now() - process.uptime() * 1000).toISOString(),
+      uptime: process.uptime(),
+      authStatus: {
+        geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
+        twilioConfigured: Boolean(process.env.TWILIO_ACCOUNT_SID) && 
+                         Boolean(process.env.TWILIO_API_KEY) && 
+                         Boolean(process.env.TWILIO_API_SECRET)
+      }
+    });
+  });
   
   return httpServer;
 }

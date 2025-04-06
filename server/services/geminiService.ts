@@ -4,12 +4,22 @@ import { GoogleGenerativeAI, GenerativeModel, GenerationConfig } from '@google/g
 const apiKey = process.env.GEMINI_API_KEY || '';
 
 if (!apiKey) {
-  console.error('GEMINI_API_KEY is not defined. AI features will not work.');
+  console.error('ERROR: GEMINI_API_KEY is not defined. AI features will not work.');
 } else {
-  console.log('GEMINI_API_KEY is configured. AI features are available.');
+  console.log('SUCCESS: GEMINI_API_KEY is configured. AI features are available.');
+  console.log(`API key begins with: ${apiKey.substring(0, 3)}... and has length: ${apiKey.length}`);
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
+// Create the Google Generative AI client
+let genAI: GoogleGenerativeAI;
+try {
+  genAI = new GoogleGenerativeAI(apiKey);
+  console.log('SUCCESS: Gemini API client initialized successfully');
+} catch (error) {
+  console.error('ERROR initializing Gemini API client:', error);
+  // Initialize with empty string to prevent crashes, but the service won't work
+  genAI = new GoogleGenerativeAI('');
+}
 
 // Model configuration
 const modelName = 'gemini-1.5-pro';  // Updated to the latest Gemini model
@@ -51,6 +61,9 @@ export class GeminiService {
    */
   async getMedicalResponse(query: string, chatHistory: Array<{role: string, content: string}> = []): Promise<string> {
     try {
+      console.log('getMedicalResponse called with query:', query.substring(0, 50) + '...');
+      console.log('Chat history length:', chatHistory.length);
+      
       // Enhanced prompt that encourages structured responses
       const adjustedQuery = `${MEDICAL_SYSTEM_PROMPT}
 
@@ -69,10 +82,12 @@ User question: ${query}`;
       if (chatHistory.length > 0) {
         // Ensure the first message is from the user
         if (chatHistory[0].role !== 'user') {
+          console.log('First message not from user, using direct content generation');
           // If first message isn't from user, we'll use the direct content generation
           // instead of chat history
           formattedHistory = [];
         } else {
+          console.log('Using chat history with Gemini API');
           // Format the chat history correctly for Gemini API
           formattedHistory = chatHistory.map(msg => ({
             role: msg.role === 'user' ? 'user' : 'model',
@@ -84,15 +99,20 @@ User question: ${query}`;
       // If we have valid chat history, use it, otherwise make a direct request
       let response;
       if (formattedHistory.length > 0) {
+        console.log('Starting chat with history');
         const chat = this.model.startChat({
           history: formattedHistory
         });
         
+        console.log('Sending message to chat');
         const result = await chat.sendMessage(adjustedQuery);
+        console.log('Chat response received');
         response = result.response.text();
       } else {
+        console.log('Generating content directly');
         // For the first message, we can use generateContent directly
         const result = await this.model.generateContent(adjustedQuery);
+        console.log('Direct response received');
         response = result.response.text();
       }
       
@@ -105,10 +125,15 @@ User question: ${query}`;
         formattedResponse = formattedResponse.replace(/\. /g, '.\n\n');
       }
       
+      console.log('Returning formatted response with length:', formattedResponse.length);
       return formattedResponse;
     } catch (error: any) {
-      console.error('Error getting AI response:', error);
-      return 'I apologize, but I encountered an error processing your request. Please try again later.';
+      console.error('ERROR getting AI response:', error);
+      console.error('Error details:', error.message);
+      if (error.stack) {
+        console.error('Stack trace:', error.stack);
+      }
+      return 'I apologize, but I encountered an error processing your request. Please try again later. (Error: ' + error.message + ')';
     }
   }
 
