@@ -4,6 +4,22 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   SendIcon, 
@@ -14,7 +30,12 @@ import {
   Camera, 
   Image as ImageIcon, 
   Loader2,
-  X
+  X,
+  MoreVertical,
+  Trash2,
+  Download,
+  HelpCircle,
+  Info
 } from "lucide-react";
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import Webcam from 'react-webcam';
@@ -41,15 +62,15 @@ export default function SymptomChecker() {
   const [isListening, setIsListening] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [isImageAnalyzing, setIsImageAnalyzing] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [model, setModel] = useState<mobilenet.MobileNet | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      type: "bot",
-      content: `Hello${user ? ', ' + user.firstName : ''}`,
-      timestamp: new Date(),
-    },
-  ]);
+  const welcomeMessage = {
+    id: "welcome",
+    type: "bot" as MessageType, 
+    content: `Hello${user ? ', ' + user.firstName : ''}! I'm your AI Health Assistant. How can I help you today?`,
+    timestamp: new Date(),
+  };
+  const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -123,6 +144,64 @@ export default function SymptomChecker() {
   // Toggle camera
   const toggleCamera = () => {
     setIsCameraOpen(!isCameraOpen);
+  };
+  
+  // Clear chat history
+  const clearHistory = () => {
+    // Reset to just the welcome message
+    setMessages([{
+      ...welcomeMessage,
+      id: `welcome-${Date.now()}`,
+      timestamp: new Date()
+    }]);
+    
+    toast({
+      title: "Chat history cleared",
+      description: "Your conversation has been reset.",
+    });
+  };
+  
+  // Save chat transcript
+  const saveTranscript = () => {
+    try {
+      // Create a formatted text version of the chat
+      const transcriptText = messages
+        .filter(m => m.type !== "system") // Exclude system messages
+        .map(m => {
+          const sender = m.type === "user" ? "You" : "AI Health Assistant";
+          const time = m.timestamp.toLocaleString();
+          const analysis = m.imageAnalysis ? `\nImage Analysis: ${m.imageAnalysis}` : '';
+          return `[${time}] ${sender}:${analysis}\n${m.content}\n`;
+        })
+        .join("\n-------------------------------------------------\n");
+      
+      // Create a downloadable file
+      const blob = new Blob([transcriptText], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      
+      // Create a temporary anchor element and trigger download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `health-chat-${new Date().toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Transcript saved",
+        description: "Your conversation has been downloaded as a text file.",
+      });
+    } catch (error) {
+      console.error("Failed to save transcript:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save the transcript. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Capture image and analyze
@@ -439,14 +518,39 @@ export default function SymptomChecker() {
   return (
     <div className="flex flex-col h-full bg-gray-950">
       {/* Header */}
-      <div className="bg-blue-900 bg-opacity-30 backdrop-blur-sm border-b border-blue-900/50 px-4 py-3 flex items-center">
-        <div className="mr-3 bg-blue-600 p-2 rounded-full">
-          <Heart className="h-5 w-5 text-white" />
+      <div className="bg-blue-900 bg-opacity-30 backdrop-blur-sm border-b border-blue-900/50 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center">
+          <div className="mr-3 bg-blue-600 p-2 rounded-full">
+            <Heart className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-white">AI Health Assistant</h2>
+            <p className="text-xs text-blue-200">Get answers to your health questions</p>
+          </div>
         </div>
-        <div>
-          <h2 className="font-semibold text-white">AI Health Assistant</h2>
-          <p className="text-xs text-blue-200">Get answers to your health questions</p>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="hover:bg-blue-950/50 text-blue-200"
+            >
+              <MoreVertical className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-gray-900 border border-blue-900/50">
+            <DropdownMenuItem className="text-white hover:bg-blue-900/30 cursor-pointer" onClick={clearHistory}>
+              <Trash2 className="h-4 w-4 mr-2" /> Clear History
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-white hover:bg-blue-900/30 cursor-pointer" onClick={saveTranscript}>
+              <Download className="h-4 w-4 mr-2" /> Save Transcript
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-blue-900/30" />
+            <DropdownMenuItem className="text-white hover:bg-blue-900/30 cursor-pointer" onClick={() => setIsHelpOpen(true)}>
+              <HelpCircle className="h-4 w-4 mr-2" /> Help & FAQ
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       
       {/* Webcam Modal */}
@@ -665,6 +769,103 @@ export default function SymptomChecker() {
           </div>
         </div>
       </div>
+      
+      {/* Help & FAQ Dialog */}
+      <Dialog open={isHelpOpen} onOpenChange={setIsHelpOpen}>
+        <DialogContent className="bg-gray-900 border border-blue-900/50 text-white max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-blue-300 flex items-center gap-2">
+              <HelpCircle className="h-5 w-5" /> AI Health Assistant Help & FAQ
+            </DialogTitle>
+            <DialogDescription className="text-gray-300">
+              Learn how to effectively use the AI Health Assistant to get the most out of your experience.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 my-2 max-h-[60vh] overflow-y-auto pr-2">
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium text-blue-200">Getting Started</h3>
+              <p className="text-gray-300 text-sm">
+                The AI Health Assistant uses artificial intelligence to provide information about health concerns, symptoms, and general medical questions. Simply type your question or describe your symptoms in the chat box and press enter.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium text-blue-200">Features</h3>
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                <div className="bg-gray-800 rounded-lg p-3 border border-blue-900/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Mic className="h-4 w-4 text-blue-400" />
+                    <span className="font-medium text-blue-100">Voice Input</span>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    Click the "Voice Input" button to speak your symptoms or questions instead of typing them.
+                  </p>
+                </div>
+                
+                <div className="bg-gray-800 rounded-lg p-3 border border-blue-900/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Camera className="h-4 w-4 text-blue-400" />
+                    <span className="font-medium text-blue-100">Image Analysis</span>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    Use the "Image Analysis" button to capture and analyze images of visible symptoms using AI technology.
+                  </p>
+                </div>
+                
+                <div className="bg-gray-800 rounded-lg p-3 border border-blue-900/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Download className="h-4 w-4 text-blue-400" />
+                    <span className="font-medium text-blue-100">Save Transcript</span>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    Save your conversation as a text file for future reference or to share with healthcare providers.
+                  </p>
+                </div>
+                
+                <div className="bg-gray-800 rounded-lg p-3 border border-blue-900/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Trash2 className="h-4 w-4 text-blue-400" />
+                    <span className="font-medium text-blue-100">Clear History</span>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    Clear your conversation history and start fresh. This ensures your privacy when using shared devices.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium text-blue-200">Tips for Better Results</h3>
+              <ul className="space-y-2 text-gray-300 text-sm pl-5 list-disc">
+                <li>Be specific when describing symptoms (location, duration, severity)</li>
+                <li>Mention relevant medical history when appropriate</li>
+                <li>For image analysis, ensure good lighting and clear focus</li>
+                <li>Ask follow-up questions to get more detailed information</li>
+                <li>Use voice input in a quiet environment for better recognition</li>
+              </ul>
+            </div>
+            
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium text-blue-200">Important Disclaimer</h3>
+              <div className="bg-blue-900/20 border border-blue-800/50 rounded-lg p-3 text-blue-100 text-sm flex gap-2">
+                <Info className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <p>
+                  The AI Health Assistant provides general health information for educational purposes only. It is not a substitute for professional medical advice, diagnosis, or treatment. Always consult with a qualified healthcare provider for medical concerns.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                Got it
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
