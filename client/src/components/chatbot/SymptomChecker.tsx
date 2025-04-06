@@ -72,7 +72,12 @@ export default function SymptomChecker() {
       ]);
       
       // Make API request to symptom checker
-      const response = await fetch("/api/ai-chat", {
+      console.log("Sending chat request to API", {
+        message: userMessage.content,
+        historyLength: messages.filter(m => m.type !== "system").length
+      });
+      
+      const chatResponse = await fetch("/api/ai-chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,22 +91,31 @@ export default function SymptomChecker() {
               content: m.content
             }))
         }),
-      }).then(res => res.json());
+      });
+      
+      if (!chatResponse.ok) {
+        console.error("API error:", chatResponse.status, await chatResponse.text());
+        throw new Error(`API error: ${chatResponse.status}`);
+      }
+      
+      const response = await chatResponse.json();
+      console.log("API response:", response);
       
       // Remove typing indicator
       setMessages(prev => prev.filter(m => m.id !== "typing"));
       
       // Add bot response
-      if (response && typeof response === 'object' && 'response' in response) {
+      if (response && typeof response === 'object' && 'message' in response) {
         const botMessage: ChatMessage = {
           id: `bot-${Date.now()}`,
           type: "bot",
-          content: response.response as string,
+          content: response.message as string,
           timestamp: new Date(),
         };
         
         setMessages(prev => [...prev, botMessage]);
       } else {
+        console.error("Unexpected response format:", response);
         throw new Error("Invalid response format");
       }
     } catch (error) {
