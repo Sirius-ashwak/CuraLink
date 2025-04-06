@@ -25,8 +25,25 @@ Curalink is a cutting-edge telehealth platform revolutionizing digital healthcar
 
 1. Clone the repository
 2. Install dependencies with `npm install`
-3. Start the development server with `npm run dev`
-4. Open your browser to view the application
+3. Copy `.env.example` to `.env` and update with your API keys
+4. Start the development server with `npm run dev`
+5. Open your browser to view the application
+
+## Environment Variables
+
+The application requires the following environment variables to be set:
+
+- `GEMINI_API_KEY`: Google Gemini API key for AI chat and symptom analysis
+- `TWILIO_ACCOUNT_SID`: Twilio Account SID for video calling
+- `TWILIO_API_KEY`: Twilio API Key for video calling
+- `TWILIO_API_SECRET`: Twilio API Secret for video calling
+
+For local development:
+- Create a `.env` file in the root directory based on the `.env.example` template
+- Fill in your API keys and credentials
+
+For production deployment:
+- Set these environment variables in your hosting platform (Render, etc.)
 
 ## Prerequisites
 
