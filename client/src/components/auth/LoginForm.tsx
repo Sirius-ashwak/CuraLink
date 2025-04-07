@@ -3,10 +3,9 @@ import { useLocation } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Heart, Stethoscope, User, UserCog, ArrowRight } from "lucide-react";
+import { Heart, Stethoscope, User, UserCog, ArrowRight, AlertCircle } from "lucide-react";
 
 import {
   Form,
@@ -20,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -31,9 +31,8 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginForm() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { setUser } = useAuth();
+  const { login, loginError, isAuthenticating } = useAuth();
   const [role, setRole] = useState<"patient" | "doctor">("patient");
-  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -56,66 +55,35 @@ export default function LoginForm() {
   };
 
   const loginWithDemoAccount = async (accountType: "patient" | "doctor") => {
-    setIsLoading(true);
+    if (isAuthenticating) return; // Prevent multiple clicks
+    
     setRole(accountType);
-
-    try {
-      const demoUser = demoAccounts[accountType];
-      form.setValue("email", demoUser.email);
-      form.setValue("password", demoUser.password);
-
-      const response = await apiRequest('POST', '/api/auth/login', {
-        email: demoUser.email,
-        password: demoUser.password,
-        role: accountType
-      });
-
-      const userData = await response.json();
-      setUser(userData);
-      setLocation("/dashboard");
-      
+    const demoUser = demoAccounts[accountType];
+    
+    // Update form values
+    form.setValue("email", demoUser.email);
+    form.setValue("password", demoUser.password);
+    
+    // Use the login function from useAuth
+    const userData = await login(demoUser.email, demoUser.password);
+    
+    if (userData) {
       toast({
         title: "Demo login successful",
         description: `Welcome ${userData.firstName} ${userData.lastName}!`,
       });
-    } catch (error) {
-      console.error("Demo login failed:", error);
-      toast({
-        title: "Demo login failed",
-        description: "There was an error logging in with the demo account. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const onSubmit = async (data: LoginFormValues) => {
-    setIsLoading(true);
-    try {
-      const response = await apiRequest('POST', '/api/auth/login', {
-        email: data.email,
-        password: data.password,
-        role: role
-      });
-
-      const userData = await response.json();
-      setUser(userData);
-      setLocation("/dashboard");
-      
+    // Use enhanced login function from useAuth hook
+    const userData = await login(data.email, data.password);
+    
+    if (userData) {
       toast({
         title: "Login successful",
         description: `Welcome back, ${userData.firstName || 'User'}!`,
       });
-    } catch (error) {
-      console.error("Login error:", error);
-      toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Invalid credentials",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -143,7 +111,7 @@ export default function LoginForm() {
               size="sm" 
               variant="ghost" 
               className="mt-2 text-xs text-blue-400 hover:text-white hover:bg-blue-800/50"
-              disabled={isLoading}
+              disabled={isAuthenticating}
             >
               <ArrowRight className="h-3 w-3 mr-1" />
               Sign in as Patient
@@ -163,7 +131,7 @@ export default function LoginForm() {
               size="sm" 
               variant="ghost" 
               className="mt-2 text-xs text-green-400 hover:text-white hover:bg-green-800/50"
-              disabled={isLoading}
+              disabled={isAuthenticating}
             >
               <ArrowRight className="h-3 w-3 mr-1" />
               Sign in as Doctor
@@ -173,6 +141,14 @@ export default function LoginForm() {
       </div>
       
       <div className="bg-gray-900 rounded-xl shadow-lg p-8 border border-gray-800">
+        {/* Show error alert if login fails */}
+        {loginError && (
+          <Alert className="mb-4 bg-red-900/20 border-red-800 text-red-300">
+            <AlertCircle className="h-4 w-4 text-red-400" />
+            <AlertDescription>{loginError}</AlertDescription>
+          </Alert>
+        )}
+      
         <Tabs defaultValue="patient" onValueChange={(value) => setRole(value as "patient" | "doctor")}>
           <TabsList className="grid grid-cols-2 mb-6 p-1 bg-gray-800 rounded-lg">
             <TabsTrigger value="patient" className="rounded-md text-sm font-medium transition-all data-[state=active]:bg-blue-600 data-[state=active]:text-white">Patient</TabsTrigger>
@@ -226,9 +202,9 @@ export default function LoginForm() {
                 <Button 
                   type="submit" 
                   className="w-full h-11 text-base font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all shadow-md"
-                  disabled={isLoading}
+                  disabled={isAuthenticating}
                 >
-                  {isLoading ? "Signing in..." : "Sign In"}
+                  {isAuthenticating ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
             </Form>
@@ -281,9 +257,9 @@ export default function LoginForm() {
                 <Button 
                   type="submit" 
                   className="w-full h-11 text-base font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition-all shadow-md"
-                  disabled={isLoading}
+                  disabled={isAuthenticating}
                 >
-                  {isLoading ? "Signing in..." : "Sign In"}
+                  {isAuthenticating ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
             </Form>
