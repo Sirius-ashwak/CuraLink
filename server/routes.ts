@@ -2,7 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { insertUserSchema, insertAppointmentSchema } from "@shared/schema";
+import { insertUserSchema, insertAppointmentSchema, Availability } from "@shared/schema";
 import { z } from "zod";
 
 // Initialize WebSocket server for early export
@@ -415,6 +415,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(201).json(availability);
     } catch (error) {
       console.error('Create availability error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  app.patch('/api/doctors/:id/availability/:availabilityId', express.json(), async (req, res) => {
+    try {
+      const doctorId = parseInt(req.params.id);
+      const availabilityId = parseInt(req.params.availabilityId);
+      
+      if (isNaN(doctorId) || isNaN(availabilityId)) {
+        return res.status(400).json({ message: 'Invalid doctor ID or availability ID' });
+      }
+      
+      const { startTime, endTime, isAvailable } = req.body;
+      
+      // Validate required fields are present and of correct type
+      if ((startTime && typeof startTime !== 'string') || 
+          (endTime && typeof endTime !== 'string') || 
+          (isAvailable !== undefined && typeof isAvailable !== 'boolean')) {
+        return res.status(400).json({ message: 'Invalid availability data' });
+      }
+      
+      // Only update the fields that were provided
+      const updateData: Partial<Availability> = {};
+      if (startTime !== undefined) updateData.startTime = startTime;
+      if (endTime !== undefined) updateData.endTime = endTime;
+      if (isAvailable !== undefined) updateData.isAvailable = isAvailable;
+      
+      const availability = await storage.updateAvailability(availabilityId, updateData);
+      
+      return res.json(availability);
+    } catch (error) {
+      console.error('Update availability error:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   });

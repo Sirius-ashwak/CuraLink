@@ -147,28 +147,28 @@ export default function DoctorDashboard() {
     <>
       {/* Welcome & Stats */}
       <div className="mb-6">
-        <h2 className="text-xl font-medium text-white">Welcome, Dr. {user.lastName}</h2>
-        <p className="text-gray-400">Your schedule for today</p>
+        <h2 className="text-xl font-medium">Welcome, Dr. {user.lastName}</h2>
+        <p className="text-gray-500">Your schedule for today</p>
         
         <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 md:grid-cols-4">
-          <div className="bg-gray-900 rounded-lg shadow-sm p-4 border border-gray-800">
-            <h3 className="text-sm font-medium text-gray-400">Today's Schedule</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Today's Schedule</h3>
             <div className="flex items-center space-x-2 mt-1">
               <CalendarDays className="h-5 w-5 text-blue-500" />
-              <p className="text-2xl font-medium text-white">{appointments.length}</p>
+              <p className="text-2xl font-medium">{appointments.length}</p>
             </div>
-            <p className="text-xs text-gray-400 mt-1">Appointments today</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Appointments today</p>
           </div>
           
-          <div className="bg-gray-900 rounded-lg shadow-sm p-4 border border-gray-800">
-            <h3 className="text-sm font-medium text-gray-400">Next Appointment</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Next Appointment</h3>
             {nextAppointment ? (
               <>
                 <div className="flex items-center space-x-2 mt-1">
                   <Clock className="h-5 w-5 text-blue-500" />
-                  <p className="text-xl font-medium text-white">{nextAppointment.startTime}</p>
+                  <p className="text-xl font-medium">{nextAppointment.startTime}</p>
                 </div>
-                <p className="text-xs text-gray-400 mt-1 truncate">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
                   {nextAppointment.patient.firstName} {nextAppointment.patient.lastName} ({nextAppointment.reason})
                 </p>
               </>
@@ -176,18 +176,18 @@ export default function DoctorDashboard() {
               <>
                 <div className="flex items-center space-x-2 mt-1">
                   <Clock className="h-5 w-5 text-gray-400" />
-                  <p className="text-xl font-medium text-white">-</p>
+                  <p className="text-xl font-medium">-</p>
                 </div>
-                <p className="text-xs text-gray-400 mt-1">No more appointments today</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">No more appointments today</p>
               </>
             )}
           </div>
           
-          <div className="bg-gray-900 rounded-lg shadow-sm p-4 border border-gray-800">
-            <h3 className="text-sm font-medium text-gray-400">Availability Status</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700">
+            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Availability Status</h3>
             <div className="flex items-center space-x-2 mt-1">
               <div className={`h-3 w-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-500'}`}></div>
-              <p className={`text-lg font-medium ${isOnline ? 'text-green-500' : 'text-gray-400'}`}>
+              <p className={`text-lg font-medium ${isOnline ? 'text-green-500' : 'text-gray-500'}`}>
                 {isOnline ? 'Online' : 'Offline'}
               </p>
             </div>
@@ -203,18 +203,18 @@ export default function DoctorDashboard() {
           </div>
           
           <div 
-            className="bg-gray-900 rounded-lg shadow-sm p-4 border border-gray-800 cursor-pointer hover:bg-gray-800 transition-colors"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             onClick={() => setActiveTab("emergency-transport")}
           >
-            <h3 className="text-sm font-medium text-gray-400">Emergency Requests</h3>
+            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">Emergency Requests</h3>
             <div className="flex items-center space-x-2 mt-1">
               <Ambulance className="h-5 w-5 text-red-500" />
-              <p className="text-2xl font-medium text-white">{emergencyTransports.length}</p>
+              <p className="text-2xl font-medium">{emergencyTransports.length}</p>
             </div>
             {emergencyTransports.length > 0 ? (
               <p className="text-xs text-red-400 mt-1">Active transport requests</p>
             ) : (
-              <p className="text-xs text-gray-400 mt-1">No active transport requests</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">No active transport requests</p>
             )}
           </div>
         </div>
@@ -222,28 +222,28 @@ export default function DoctorDashboard() {
       
       {/* Doctor Tabs */}
       <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6 w-full border-b border-gray-800 rounded-none p-0 h-auto flex overflow-x-auto scrollbar-hide">
+        <TabsList className="mb-6 w-full border-b border-gray-200 dark:border-gray-700 rounded-none p-0 h-auto flex overflow-x-auto scrollbar-hide">
           <TabsTrigger 
             value="schedule"
-            className="border-b-2 border-transparent data-[state=active]:border-blue-500 py-2 px-4 text-sm rounded-none whitespace-nowrap flex-shrink-0 text-white"
+            className="border-b-2 border-transparent data-[state=active]:border-blue-500 py-2 px-4 text-sm rounded-none whitespace-nowrap flex-shrink-0"
           >
             Today's Schedule
           </TabsTrigger>
           <TabsTrigger 
             value="availability" 
-            className="border-b-2 border-transparent data-[state=active]:border-blue-500 py-2 px-4 text-sm rounded-none whitespace-nowrap flex-shrink-0 text-white"
+            className="border-b-2 border-transparent data-[state=active]:border-blue-500 py-2 px-4 text-sm rounded-none whitespace-nowrap flex-shrink-0"
           >
             Availability
           </TabsTrigger>
           <TabsTrigger 
             value="patients" 
-            className="border-b-2 border-transparent data-[state=active]:border-blue-500 py-2 px-4 text-sm rounded-none whitespace-nowrap flex-shrink-0 text-white"
+            className="border-b-2 border-transparent data-[state=active]:border-blue-500 py-2 px-4 text-sm rounded-none whitespace-nowrap flex-shrink-0"
           >
             Patient Records
           </TabsTrigger>
           <TabsTrigger 
             value="emergency-transport" 
-            className="border-b-2 border-transparent data-[state=active]:border-red-500 py-2 px-4 text-sm rounded-none whitespace-nowrap flex-shrink-0 text-white"
+            className="border-b-2 border-transparent data-[state=active]:border-red-500 py-2 px-4 text-sm rounded-none whitespace-nowrap flex-shrink-0"
           >
             <div className="flex items-center">
               <Ambulance className="h-4 w-4 mr-1 text-red-500" />
