@@ -19,6 +19,7 @@ import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Notifications from "@/pages/Notifications";
 import Logout from "@/pages/Logout";
+import Documents from "@/pages/documents";
 
 function Router() {
   return (
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/profile" component={Profile} />
       <Route path="/settings" component={Settings} />
       <Route path="/notifications" component={Notifications} />
+      <Route path="/documents" component={Documents} />
       <Route path="/logout" component={Logout} />
       <Route path="/loading-demo" component={LoadingDemo} />
       <Route component={NotFound} />

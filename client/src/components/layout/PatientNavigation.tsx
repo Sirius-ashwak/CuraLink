@@ -46,20 +46,12 @@ export default function PatientNavigation() {
         
         <a 
           onClick={() => {
-            setLocation("/dashboard"); 
-            setTimeout(() => {
-              const element = document.getElementById("upcoming-appointments");
-              if (element) {
-                element.scrollIntoView({ behavior: "smooth" });
-              }
-            }, 100);
+            setLocation("/documents");
           }}
-          className={`flex flex-col items-center py-2 px-3 cursor-pointer ${
-            location === "/dashboard" && location.includes("upcoming-appointments") ? "text-blue-500" : "text-gray-500 dark:text-gray-400"
-          }`}
+          className={`flex flex-col items-center py-2 px-3 cursor-pointer ${isActive("/documents")}`}
         >
-          <span className="material-icons">event</span>
-          <span className="text-xs mt-1">Appointments</span>
+          <span className="material-icons">description</span>
+          <span className="text-xs mt-1">Documents</span>
         </a>
         
         <a 

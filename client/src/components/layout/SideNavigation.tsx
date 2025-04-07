@@ -8,11 +8,14 @@ import {
   Ambulance, 
   MoreVertical, 
   ArrowRight,
-  X
+  X,
+  FileText,
+  Phone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { CuralinkLogo } from '@/components/ui/CuralinkLogo';
+import { useLocation } from 'wouter';
 
 interface SideNavigationProps {
   activeTab: string;
@@ -23,6 +26,7 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const dotsRef = useRef<HTMLButtonElement>(null);
+  const [, setLocation] = useLocation();
   
   // Handle clicks outside the menu to close it
   useEffect(() => {
@@ -47,6 +51,13 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
   const handleTabChange = (tabName: string) => {
     onTabChange(tabName);
     setIsMenuOpen(false);
+    
+    // Handle navigation for specific tabs
+    if (tabName === 'health-documents') {
+      setLocation('/documents');
+    } else if (tabName === 'dashboard') {
+      setLocation('/dashboard');
+    }
   };
 
   const navItems = [

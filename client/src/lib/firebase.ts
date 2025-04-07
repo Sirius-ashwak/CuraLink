@@ -1,7 +1,8 @@
 // Firebase configuration and initialization
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { initializeApp, FirebaseApp } from "firebase/app";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getAuth, Auth } from "firebase/auth";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -14,9 +15,10 @@ const firebaseConfig = {
 };
 
 // Check if we're in a browser environment to prevent server-side initialization errors
-let app;
-let db;
-let auth;
+let app: FirebaseApp;
+let db: Firestore;
+let auth: Auth;
+let storage: FirebaseStorage;
 
 try {
   // Initialize Firebase only in browser environment
@@ -24,6 +26,8 @@ try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
+    storage = getStorage(app);
+    console.log("Firebase initialized successfully with storage");
   }
 } catch (error) {
   console.error("Firebase initialization error:", error);
@@ -31,6 +35,7 @@ try {
   app = {} as any;
   db = {} as any;
   auth = {} as any;
+  storage = {} as any;
 }
 
-export { app, db, auth };
+export { app, db, auth, storage };
