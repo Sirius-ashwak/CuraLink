@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { Heart, Stethoscope } from "lucide-react";
+import { Heart, Stethoscope, User, UserCog, ArrowRight } from "lucide-react";
 
 import {
   Form,
@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -42,6 +43,53 @@ export default function LoginForm() {
     },
   });
 
+  // Demo account credentials
+  const demoAccounts = {
+    patient: {
+      email: "john@example.com",
+      password: "password123",
+    },
+    doctor: {
+      email: "sarah@example.com",
+      password: "password123",
+    }
+  };
+
+  const loginWithDemoAccount = async (accountType: "patient" | "doctor") => {
+    setIsLoading(true);
+    setRole(accountType);
+
+    try {
+      const demoUser = demoAccounts[accountType];
+      form.setValue("email", demoUser.email);
+      form.setValue("password", demoUser.password);
+
+      const response = await apiRequest('POST', '/api/auth/login', {
+        email: demoUser.email,
+        password: demoUser.password,
+        role: accountType
+      });
+
+      const userData = await response.json();
+      setUser(userData);
+      setLocation("/dashboard");
+      
+      toast({
+        title: "Demo login successful",
+        description: `Welcome ${userData.firstName} ${userData.lastName}!`,
+      });
+    } catch (error) {
+      console.error("Demo login failed:", error);
+      toast({
+        title: "Demo login failed",
+        description: "There was an error logging in with the demo account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
@@ -60,6 +108,7 @@ export default function LoginForm() {
         description: `Welcome back, ${userData.firstName || 'User'}!`,
       });
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Login failed",
         description: error instanceof Error ? error.message : "Invalid credentials",
@@ -78,6 +127,49 @@ export default function LoginForm() {
         </div>
         <h1 className="text-3xl font-bold text-white">AI Health Bridge</h1>
         <p className="text-gray-400 mt-3 text-base">Connecting communities to healthcare</p>
+      </div>
+      
+      {/* Demo Login Cards */}
+      <div className="mb-6 grid grid-cols-2 gap-3">
+        <Card 
+          className="p-4 bg-gradient-to-br from-blue-600/20 to-blue-800/30 border border-blue-700/40 hover:border-blue-600 cursor-pointer transition-all"
+          onClick={() => loginWithDemoAccount("patient")}
+        >
+          <div className="flex flex-col items-center text-center">
+            <User className="w-10 h-10 text-blue-400 mb-2" />
+            <h3 className="text-sm font-medium text-white mb-1">Patient Demo</h3>
+            <p className="text-xs text-gray-400">John Doe</p>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="mt-2 text-xs text-blue-400 hover:text-white hover:bg-blue-800/50"
+              disabled={isLoading}
+            >
+              <ArrowRight className="h-3 w-3 mr-1" />
+              Sign in as Patient
+            </Button>
+          </div>
+        </Card>
+        
+        <Card 
+          className="p-4 bg-gradient-to-br from-green-600/20 to-green-800/30 border border-green-700/40 hover:border-green-600 cursor-pointer transition-all"
+          onClick={() => loginWithDemoAccount("doctor")}
+        >
+          <div className="flex flex-col items-center text-center">
+            <UserCog className="w-10 h-10 text-green-400 mb-2" />
+            <h3 className="text-sm font-medium text-white mb-1">Doctor Demo</h3>
+            <p className="text-xs text-gray-400">Dr. Sarah Johnson</p>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="mt-2 text-xs text-green-400 hover:text-white hover:bg-green-800/50"
+              disabled={isLoading}
+            >
+              <ArrowRight className="h-3 w-3 mr-1" />
+              Sign in as Doctor
+            </Button>
+          </div>
+        </Card>
       </div>
       
       <div className="bg-gray-900 rounded-xl shadow-lg p-8 border border-gray-800">
