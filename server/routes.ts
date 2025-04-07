@@ -324,6 +324,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  app.get('/api/auth/validate', async (req, res) => {
+    try {
+      // Get token from Authorization header
+      const authHeader = req.headers.authorization;
+      
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Missing or invalid token' });
+      }
+      
+      const token = authHeader.split(' ')[1];
+      
+      // In a real app, we'd verify the JWT token here
+      // For this demo app, we're just checking if the token exists in localStorage
+      
+      // Look up the user by the token
+      // In this simplified version, let's get the user ID from the token
+      const userId = parseInt(token);
+      
+      if (isNaN(userId)) {
+        console.log('Invalid token format:', token);
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        console.log('User not found for token:', token);
+        return res.status(401).json({ message: 'Invalid token' });
+      }
+      
+      // Return user data without password
+      const { password: _, ...userData } = user;
+      
+      // Add doctor information if user is a doctor
+      if (user.role === 'doctor') {
+        const doctor = await storage.getDoctorByUserId(user.id);
+        return res.json({ ...userData, doctorInfo: doctor });
+      }
+      
+      return res.json(userData);
+    } catch (error) {
+      console.error('Auth validation error:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
   // Doctor routes
   app.get('/api/doctors', async (req, res) => {
     try {

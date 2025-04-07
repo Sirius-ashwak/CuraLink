@@ -32,9 +32,10 @@ export function useAuth() {
       // Set user in context
       setUser(userData);
       
-      // Save token if provided
-      if (userData.token) {
-        localStorage.setItem('token', userData.token);
+      // Store the user ID as token for auth validation
+      // In a real app, this would be a JWT token
+      if (userData.id) {
+        localStorage.setItem('token', userData.id.toString());
       }
       
       // Log success for debugging
