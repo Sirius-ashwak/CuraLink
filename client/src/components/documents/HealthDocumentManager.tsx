@@ -1,11 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Upload, FileText, Trash2, Download, Eye, Clock, X } from 'lucide-react';
+import { Upload, FileText, Trash2, Download, Eye, Clock, X, AlertTriangle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { firebaseStorage } from '@/lib/firebaseStorage';
 import { useAuth } from '@/hooks/useAuth';
 import { Progress } from '@/components/ui/progress';
 import { 
@@ -17,6 +16,22 @@ import {
   DialogFooter,
   DialogClose
 } from '@/components/ui/dialog';
+import { 
+  Alert,
+  AlertDescription,
+  AlertTitle
+} from "@/components/ui/alert";
+
+// Import the Firebase modules conditionally to prevent initialization errors
+let firebaseStorage: any = null;
+try {
+  if (typeof window !== 'undefined') {
+    const { firebaseStorage: fbStorage } = require('@/lib/firebaseStorage');
+    firebaseStorage = fbStorage;
+  }
+} catch (error) {
+  console.error("Firebase storage import error:", error);
+}
 
 type DocumentItem = {
   name: string;
@@ -33,19 +48,38 @@ export default function HealthDocumentManager() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [viewDocument, setViewDocument] = useState<DocumentItem | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [firebaseAvailable, setFirebaseAvailable] = useState(true);
   
   // User path for storing documents
   const userStoragePath = user ? `users/${user.id}/documents` : '';
 
   useEffect(() => {
-    if (user) {
-      loadDocuments();
+    // Check if Firebase is properly configured
+    if (!firebaseStorage) {
+      setFirebaseAvailable(false);
+      return;
     }
+
+    // Attempt to use Firebase Storage to confirm it's working
+    const checkFirebaseStorage = async () => {
+      try {
+        if (user) {
+          setIsLoading(true);
+          await loadDocuments();
+        }
+      } catch (error) {
+        console.error("Firebase storage error:", error);
+        setFirebaseAvailable(false);
+        setIsLoading(false);
+      }
+    };
+    
+    checkFirebaseStorage();
   }, [user]);
 
   const loadDocuments = async () => {
-    if (!userStoragePath) return;
+    if (!userStoragePath || !firebaseStorage) return;
     
     setIsLoading(true);
     try {
@@ -70,7 +104,7 @@ export default function HealthDocumentManager() {
   };
 
   const handleUpload = async () => {
-    if (!userStoragePath || localFiles.length === 0) return;
+    if (!userStoragePath || localFiles.length === 0 || !firebaseStorage) return;
     
     setIsUploading(true);
     setUploadProgress(0);
@@ -79,7 +113,7 @@ export default function HealthDocumentManager() {
       await firebaseStorage.uploadMultipleFiles(
         localFiles,
         userStoragePath,
-        (progress) => setUploadProgress(progress)
+        (progress: number) => setUploadProgress(progress)
       );
       
       toast({
@@ -107,7 +141,7 @@ export default function HealthDocumentManager() {
   };
 
   const handleDeleteStoredFile = async (document: DocumentItem) => {
-    if (!userStoragePath) return;
+    if (!userStoragePath || !firebaseStorage) return;
     
     try {
       await firebaseStorage.deleteFile(document.path);
@@ -149,6 +183,54 @@ export default function HealthDocumentManager() {
   const isPdf = (filename: string) => {
     return fileExtension(filename) === 'pdf';
   };
+
+  // If Firebase is not available, show a message
+  if (!firebaseAvailable) {
+    return (
+      <div className="space-y-6">
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4 mr-2" />
+          <AlertTitle>Firebase Storage Not Configured</AlertTitle>
+          <AlertDescription>
+            The document management feature requires Firebase Storage to be properly configured. 
+            Please provide your Firebase credentials to enable document storage.
+          </AlertDescription>
+        </Alert>
+        
+        <Card className="p-6">
+          <div className="flex items-center space-x-4 mb-4">
+            <Info className="h-8 w-8 text-blue-500" />
+            <h3 className="text-lg font-medium">How to Setup Firebase Storage</h3>
+          </div>
+          
+          <ol className="list-decimal pl-6 space-y-2 mb-6">
+            <li>Go to <a href="https://firebase.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">firebase.google.com</a> and sign in with your Google account</li>
+            <li>Create a new Firebase project (or use an existing one)</li>
+            <li>From the Firebase console, go to Project Settings</li>
+            <li>Add a Web App to your project</li>
+            <li>Copy the Firebase configuration values</li>
+            <li>Add them to the environment variables in your Replit</li>
+          </ol>
+          
+          <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md mb-6">
+            <p className="font-mono text-sm mb-2">Required environment variables:</p>
+            <ul className="font-mono text-xs space-y-1 pl-4">
+              <li>VITE_FIREBASE_API_KEY</li>
+              <li>VITE_FIREBASE_AUTH_DOMAIN</li>
+              <li>VITE_FIREBASE_PROJECT_ID</li>
+              <li>VITE_FIREBASE_STORAGE_BUCKET</li>
+              <li>VITE_FIREBASE_MESSAGING_SENDER_ID</li>
+              <li>VITE_FIREBASE_APP_ID</li>
+            </ul>
+          </div>
+          
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Once you've configured Firebase, you'll be able to securely store and manage health documents.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
