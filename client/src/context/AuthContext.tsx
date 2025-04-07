@@ -22,20 +22,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Check if we have a user in local storage
-    const storedUser = localStorage.getItem("user");
-    
-    if (storedUser) {
+    const checkAuth = async () => {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
+        const token = localStorage.getItem("token");
+        if (token) {
+          const response = await fetch('/api/auth/validate', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          } else {
+            localStorage.removeItem("token");
+            setUser(null);
+          }
+        }
       } catch (error) {
-        console.error("Failed to parse stored user:", error);
-        localStorage.removeItem("user");
+        console.error("Auth validation failed:", error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
     
-    setIsLoading(false);
+    checkAuth();
   }, []);
   
   // Persist user to localStorage when it changes
