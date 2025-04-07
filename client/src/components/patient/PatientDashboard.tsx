@@ -443,7 +443,39 @@ export default function PatientDashboard() {
         </TabsContent>
         
         {/* Emergency Transport Tab */}
-        <TabsContent value="emergency-transport">
+        <TabsContent value="health-documents">
+  <Card className="mb-4 bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-xl overflow-hidden">
+    <CardHeader className="bg-gradient-to-r from-cyan-900/40 via-cyan-800/30 to-cyan-900/40 border-b border-cyan-900/30">
+      <CardTitle className="flex items-center">
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(34,211,238,0.5)]">
+          <FileText className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
+        </div>
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-cyan-300">Health Documents</span>
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="p-6">
+      <HealthDocumentManager />
+    </CardContent>
+  </Card>
+</TabsContent>
+
+<TabsContent value="emergency-contacts">
+  <Card className="mb-4 bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-xl overflow-hidden">
+    <CardHeader className="bg-gradient-to-r from-orange-900/40 via-orange-800/30 to-orange-900/40 border-b border-orange-900/30">
+      <CardTitle className="flex items-center">
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center mr-3 shadow-[0_0_15px_rgba(251,146,60,0.5)]">
+          <Phone className="h-5 w-5 text-white drop-shadow-[0_0_2px_rgba(255,255,255,0.6)]" />
+        </div>
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-100 to-orange-300">Emergency Contacts</span>
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="p-6">
+      <EmergencyContactNetwork />
+    </CardContent>
+  </Card>
+</TabsContent>
+
+<TabsContent value="emergency-transport">
           <Card className="mb-4 bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-800/50 shadow-xl overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-rose-900/40 via-rose-800/30 to-rose-900/40 border-b border-rose-900/30">
               <CardTitle className="flex items-center">

@@ -56,6 +56,18 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
       icon: <LayoutDashboard className="h-4.5 w-4.5" />,
       colorClass: 'text-indigo-400'
     },
+    {
+      id: 'health-documents',
+      label: 'Health Documents',
+      icon: <FileText className="h-4.5 w-4.5" />,
+      colorClass: 'text-cyan-400'
+    },
+    {
+      id: 'emergency-contacts',
+      label: 'Emergency Contacts',
+      icon: <Phone className="h-4.5 w-4.5" />,
+      colorClass: 'text-orange-400'
+    },
     { 
       id: 'ai-chat', 
       label: 'AI Companion', 
