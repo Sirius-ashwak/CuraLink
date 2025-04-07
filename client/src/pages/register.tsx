@@ -91,7 +91,9 @@ export default function Register() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-blue-800 mb-4">
-            <span className="material-icons text-white text-2xl">health_and_safety</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"></path>
+            </svg>
           </div>
           <h1 className="text-2xl font-bold text-white">AI Health Bridge</h1>
           <p className="text-gray-400 mt-2">Create your account</p>
@@ -276,7 +278,7 @@ export default function Register() {
           
           <div className="mt-6 pt-4 border-t border-gray-800 text-center">
             <p className="text-sm text-gray-400">
-              Already have an account? <a href="/" className="text-blue-500 hover:text-blue-400 font-medium transition-colors">Sign in</a>
+              Already have an account? <a href="/login" className="text-blue-500 hover:text-blue-400 font-medium transition-colors">Sign in</a>
             </p>
           </div>
         </div>

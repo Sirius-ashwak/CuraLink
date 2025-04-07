@@ -1,26 +1,59 @@
+import { useState } from "react";
 import { Heart, Activity, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function WelcomeScreen() {
   const { setUser } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Sample user for auto-login (remove in production)
-  const handleGuestLogin = () => {
-    setUser({
-      id: 1,
-      email: "guest@example.com",
-      password: "guest123",  // Note: This is just for the demo
-      firstName: "Guest",
-      lastName: "User",
-      role: "patient",
-      specialty: null,
-      profile: null,
-      createdAt: new Date(),
-    });
-    setLocation("/dashboard");
+  // Demo account credentials
+  const demoPatient = {
+    email: "john@example.com",
+    password: "password123",
+  };
+
+  // Handle guest login with the demo patient account
+  const handleGuestLogin = async () => {
+    setIsLoading(true);
+    try {
+      const response = await apiRequest('POST', '/api/auth/login', {
+        email: demoPatient.email,
+        password: demoPatient.password,
+        role: "patient"
+      });
+
+      const userData = await response.json();
+      setUser(userData);
+      setLocation("/dashboard");
+      
+      toast({
+        title: "Guest login successful",
+        description: `Welcome, ${userData.firstName}!`,
+      });
+    } catch (error) {
+      console.error("Guest login failed:", error);
+      toast({
+        title: "Guest login failed",
+        description: "Could not log in as guest. Please try again or create an account.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = () => {
+    setLocation("/register");
+  };
+
+  const handleSignIn = () => {
+    setLocation("/login");
   };
 
   return (
@@ -62,7 +95,8 @@ export default function WelcomeScreen() {
       <div className="space-y-4 mt-10 pb-4">
         <Button 
           className="w-full py-6 bg-blue-500 hover:bg-blue-600 text-black font-medium text-lg rounded-xl"
-          onClick={() => setLocation("/login")}
+          onClick={handleSignIn}
+          disabled={isLoading}
         >
           Sign In
         </Button>
@@ -70,17 +104,20 @@ export default function WelcomeScreen() {
         <Button 
           variant="outline" 
           className="w-full py-6 border-blue-500 text-blue-500 hover:bg-blue-900/20 font-medium text-lg rounded-xl"
-          onClick={() => setLocation("/register")}
+          onClick={handleRegister}
+          disabled={isLoading}
         >
           Create Account
         </Button>
         
-        <button 
+        <Button 
+          variant="ghost"
           onClick={handleGuestLogin} 
-          className="text-blue-500 hover:text-blue-400 text-sm font-medium mt-4 w-full text-center"
+          className="text-blue-500 hover:text-blue-400 hover:bg-blue-900/10 text-sm font-medium mt-4 w-full text-center py-2"
+          disabled={isLoading}
         >
-          Continue as guest
-        </button>
+          {isLoading ? "Logging in..." : "Continue as guest"}
+        </Button>
       </div>
     </div>
   );
