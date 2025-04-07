@@ -45,20 +45,19 @@ export default function LoginForm() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest.post('/api/auth/login', {
+      const response = await apiRequest('POST', '/api/auth/login', {
         email: data.email,
         password: data.password,
         role: role
       });
 
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
+      const userData = await response.json();
+      setUser(userData);
       setLocation("/dashboard");
       
       toast({
         title: "Login successful",
-        description: `Welcome back, ${demoUser.firstName}!`,
+        description: `Welcome back, ${userData.firstName || 'User'}!`,
       });
     } catch (error) {
       toast({
