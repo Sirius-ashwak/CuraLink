@@ -84,7 +84,7 @@ A cutting-edge, HIPAA-compliant telehealth platform designed for seamless cross-
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository-url>
+git clone <https://github.com/Sirius-ashwak/CuraLink.git>
 cd curalink-telehealth
 npm install
 ```
