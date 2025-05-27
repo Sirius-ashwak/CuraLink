@@ -29,7 +29,7 @@ export default function AppointmentSchedule() {
   
   // Get appointments for selected date
   const { data: appointments = [], isLoading } = useQuery({
-    queryKey: [`/api/appointments?doctorId=${doctorInfo?.id}&date=${selectedDate.toISOString().split('T')[0]}`],
+    queryKey: ["/api/appointments", { doctorId: doctorInfo?.id, date: selectedDate.toISOString().split('T')[0] }],
     enabled: !!doctorInfo,
   });
   
@@ -70,21 +70,21 @@ export default function AppointmentSchedule() {
   
   return (
     <section className="mb-8">
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div className="p-4 bg-neutral border-b border-neutral-dark flex justify-between items-center">
-          <h3 className="font-medium">{format(selectedDate, 'MMMM d, yyyy')}</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-gray-800">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <h3 className="font-medium text-gray-900 dark:text-white">{format(selectedDate, 'MMMM d, yyyy')}</h3>
           <div className="flex">
             <button 
-              className="p-1 mr-2 hover:bg-neutral-dark rounded text-text-secondary"
+              className="p-1 mr-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-400"
               onClick={goToPreviousDay}
             >
-              <span className="material-icons text-sm">chevron_left</span>
+              ←
             </button>
             <button 
-              className="p-1 hover:bg-neutral-dark rounded text-text-secondary"
+              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-400"
               onClick={goToNextDay}
             >
-              <span className="material-icons text-sm">chevron_right</span>
+              →
             </button>
           </div>
         </div>
@@ -95,48 +95,47 @@ export default function AppointmentSchedule() {
               <Skeleton key={i} className="h-24 w-full" />
             ))}
           </div>
-        ) : appointments.length > 0 ? (
-          <div className="divide-y divide-neutral-dark">
+        ) : Array.isArray(appointments) && appointments.length > 0 ? (
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {appointments.map((appointment: any) => {
               const isCurrent = isCurrentAppointment(appointment);
               
               return (
                 <div 
                   key={appointment.id}
-                  className={`p-4 ${isCurrent ? 'bg-primary bg-opacity-5 border-l-4 border-primary' : ''}`}
+                  className={`p-4 ${isCurrent ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' : ''}`}
                 >
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="flex items-center">
-                        <span className="text-sm font-medium">
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
                           {formatTime(appointment.startTime)} - {formatTime(appointment.endTime)}
                         </span>
                         {isCurrent && (
-                          <span className="ml-2 text-xs font-medium py-1 px-2 bg-secondary bg-opacity-10 text-secondary rounded-full">
+                          <span className="ml-2 text-xs font-medium py-1 px-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 rounded-full">
                             Current
                           </span>
                         )}
                       </div>
-                      <h4 className="font-medium mt-1">
+                      <h4 className="font-medium mt-1 text-gray-900 dark:text-white">
                         {appointment.patient.firstName} {appointment.patient.lastName}
                       </h4>
-                      <p className="text-text-secondary text-sm">{appointment.reason}</p>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">{appointment.reason}</p>
                     </div>
                     <div className="flex">
                       {isCurrent ? (
                         <Button 
                           size="sm"
-                          className="flex items-center"
+                          className="flex items-center bg-green-600 hover:bg-green-700 text-white"
                           onClick={() => handleJoinCall(appointment.id)}
                         >
-                          <span className="material-icons text-sm mr-1">videocam</span>
-                          Join
+                          📹 Join Video Call
                         </Button>
                       ) : (
                         <Button 
                           variant="outline"
                           size="sm"
-                          className="flex items-center"
+                          className="flex items-center border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300"
                           onClick={() => {
                             toast({
                               title: "Patient Details",
@@ -144,8 +143,7 @@ export default function AppointmentSchedule() {
                             });
                           }}
                         >
-                          <span className="material-icons text-sm mr-1">description</span>
-                          View
+                          📋 View Details
                         </Button>
                       )}
                     </div>

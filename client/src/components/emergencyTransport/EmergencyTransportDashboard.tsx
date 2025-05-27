@@ -189,7 +189,7 @@ export default function EmergencyTransportDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-gray-900 dark:text-white">
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
         <DialogContent>
           <DialogHeader>

@@ -2,16 +2,16 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useLocation } from "wouter";
-import { useWebSocket } from "@/context/WebSocketContext";
 import AppointmentCard from "./AppointmentCard";
 import AppointmentBooking from "./AppointmentBooking";
-import OfflineIndicator from "../notifications/OfflineIndicator";
 import NotificationToast from "../notifications/NotificationToast";
 import SymptomChecker from "../chatbot/SymptomChecker";
 import DoctorMatcher from "../telehealth/DoctorMatcher";
 import MedicineTracker from "../medicines/MedicineTracker";
 import EmergencyTransportForm from "../emergencyTransport/EmergencyTransportForm";
 import EmergencyTransportList from "../emergencyTransport/EmergencyTransportList";
+import EnhancedEmergencyForm from "../EmergencyTransport/EnhancedEmergencyForm";
+import NearbyFacilitiesMap from "../EmergencyTransport/NearbyFacilitiesMap";
 import SideNavigation from "../layout/SideNavigation";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -22,7 +22,7 @@ import { AppointmentWithUsers } from "@shared/schema";
 export default function PatientDashboard() {
   const { user } = useAuth();
   const { appointments, isLoading } = useAppointments();
-  const { lastMessage } = useWebSocket();
+  // WebSocket removed for better reliability
   const [, setLocation] = useLocation();
   const [showNotification, setShowNotification] = useState(false);
   const [notification, setNotification] = useState({ title: "", message: "" });
@@ -49,75 +49,7 @@ export default function PatientDashboard() {
     }
   }, [appointments, showNotification]);
   
-  // Handle WebSocket messages for real-time notifications
-  useEffect(() => {
-    if (lastMessage?.data) {
-      try {
-        const data = JSON.parse(lastMessage.data);
-        
-        // Handle different types of WebSocket messages
-        if (data.type === "emergencyTransportsUpdate" || data.type === "emergencyTransports") {
-          // Show notification for emergency transport status updates if needed
-          if (data.data && data.data.length > 0) {
-            const latestTransport = data.data[data.data.length - 1];
-            
-            // Set notification based on transport status
-            if (latestTransport.status === "assigned") {
-              setNotification({
-                title: "Emergency Transport Update",
-                message: `A driver has been assigned to your emergency transport request and will arrive at ${new Date(latestTransport.estimatedArrival).toLocaleTimeString()}.`,
-              });
-              setShowNotification(true);
-              // Automatically navigate to the emergency transport tab
-              setActiveTab("emergency-transport");
-            } else if (latestTransport.status === "in_progress") {
-              setNotification({
-                title: "Emergency Transport In Progress",
-                message: "Your driver is on the way to the hospital with you.",
-              });
-              setShowNotification(true);
-            } else if (latestTransport.status === "completed") {
-              setNotification({
-                title: "Emergency Transport Completed",
-                message: "Your emergency transport has been completed. We hope you're feeling better!",
-              });
-              setShowNotification(true);
-            }
-          }
-        } else if (data.type === "appointments") {
-          // Handle appointment updates
-          if (data.data && data.data.length > 0) {
-            const todayAppointments = data.data.filter((appointment: AppointmentWithUsers) => {
-              const appointmentDate = new Date(appointment.date);
-              const today = new Date();
-              return (
-                appointmentDate.getDate() === today.getDate() &&
-                appointmentDate.getMonth() === today.getMonth() &&
-                appointmentDate.getFullYear() === today.getFullYear()
-              );
-            });
-            
-            if (todayAppointments.length > 0 && !showNotification) {
-              setNotification({
-                title: "Upcoming Appointment Today",
-                message: "You have an appointment scheduled for today. Please be available at the scheduled time.",
-              });
-              setShowNotification(true);
-            }
-          }
-        } else if (data.type === "doctorUpdate") {
-          // A doctor's status has been updated (online/offline)
-          setNotification({
-            title: "Doctor Status Updated",
-            message: `A doctor's availability has changed. They are now ${data.data.isAvailable ? 'online' : 'offline'}.`,
-          });
-          setShowNotification(true);
-        }
-      } catch (error) {
-        console.error("Error parsing WebSocket message:", error);
-      }
-    }
-  }, [lastMessage, showNotification]);
+  // Real-time updates handled through periodic polling for better reliability
   
   // Listen for tab change events from the bottom navigation
   useEffect(() => {
@@ -455,12 +387,28 @@ export default function PatientDashboard() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="h-[650px] overflow-auto p-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <EmergencyTransportForm />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <EnhancedEmergencyForm 
+                      onTransportRequested={() => {}} 
+                      patientId={user?.id?.toString() || '1'} 
+                    />
                   </div>
-                  <div>
-                    <EmergencyTransportList />
+                  <div className="space-y-4">
+                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+                      <h3 className="text-white font-medium mb-3 flex items-center">
+                        <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                        Nearby Facilities
+                      </h3>
+                      <NearbyFacilitiesMap 
+                        onSelectFacility={(name, address) => {
+                          // This will auto-fill the destination in the form
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <EmergencyTransportList />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -470,7 +418,6 @@ export default function PatientDashboard() {
       </Tabs>
       
       {/* Notifications */}
-      <OfflineIndicator />
       {showNotification && (
         <NotificationToast 
           title={notification.title}

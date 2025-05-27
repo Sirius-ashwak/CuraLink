@@ -1,24 +1,21 @@
 import { GoogleGenerativeAI, GenerativeModel, GenerationConfig } from '@google/generative-ai';
 
-// Initialize the Gemini API
-const apiKey = process.env.GEMINI_API_KEY || '';
+// Load environment variables
+import * as dotenv from 'dotenv';
+dotenv.config();
 
-if (!apiKey) {
-  console.error('ERROR: GEMINI_API_KEY is not defined. AI features will not work.');
+// Initialize the Gemini API from environment variables only
+const apiKey = process.env.GEMINI_API_KEY;
+
+let genAI: GoogleGenerativeAI | null = null;
+
+if (!apiKey || apiKey === 'undefined') {
+  console.warn('GEMINI_API_KEY is not configured. AI features will be disabled.');
+  genAI = null;
 } else {
-  console.log('SUCCESS: GEMINI_API_KEY is configured. AI features are available.');
-  console.log(`API key begins with: ${apiKey.substring(0, 3)}... and has length: ${apiKey.length}`);
-}
-
-// Create the Google Generative AI client
-let genAI: GoogleGenerativeAI;
-try {
+  console.log('GEMINI_API_KEY is configured correctly. AI features are available.');
+  console.log('Gemini API Key length:', apiKey.length);
   genAI = new GoogleGenerativeAI(apiKey);
-  console.log('SUCCESS: Gemini API client initialized successfully');
-} catch (error) {
-  console.error('ERROR initializing Gemini API client:', error);
-  // Initialize with empty string to prevent crashes, but the service won't work
-  genAI = new GoogleGenerativeAI('');
 }
 
 // Model configuration
@@ -47,9 +44,14 @@ Avoid making definitive diagnoses or prescribing specific medications.
 `;
 
 export class GeminiService {
-  private model: GenerativeModel;
+  private model: GenerativeModel | null;
 
   constructor() {
+    if (!genAI) {
+      this.model = null;
+      return;
+    }
+    
     this.model = genAI.getGenerativeModel({ 
       model: modelName,
       generationConfig,
@@ -60,10 +62,11 @@ export class GeminiService {
    * Generate a response to a medical query
    */
   async getMedicalResponse(query: string, chatHistory: Array<{role: string, content: string}> = []): Promise<string> {
+    if (!this.model) {
+      return "AI features are currently unavailable. Please configure your GEMINI_API_KEY to enable intelligent health assistance.";
+    }
+    
     try {
-      console.log('getMedicalResponse called with query:', query.substring(0, 50) + '...');
-      console.log('Chat history length:', chatHistory.length);
-      
       // Enhanced prompt that encourages structured responses
       const adjustedQuery = `${MEDICAL_SYSTEM_PROMPT}
 
@@ -82,12 +85,10 @@ User question: ${query}`;
       if (chatHistory.length > 0) {
         // Ensure the first message is from the user
         if (chatHistory[0].role !== 'user') {
-          console.log('First message not from user, using direct content generation');
           // If first message isn't from user, we'll use the direct content generation
           // instead of chat history
           formattedHistory = [];
         } else {
-          console.log('Using chat history with Gemini API');
           // Format the chat history correctly for Gemini API
           formattedHistory = chatHistory.map(msg => ({
             role: msg.role === 'user' ? 'user' : 'model',
@@ -99,20 +100,15 @@ User question: ${query}`;
       // If we have valid chat history, use it, otherwise make a direct request
       let response;
       if (formattedHistory.length > 0) {
-        console.log('Starting chat with history');
         const chat = this.model.startChat({
           history: formattedHistory
         });
         
-        console.log('Sending message to chat');
         const result = await chat.sendMessage(adjustedQuery);
-        console.log('Chat response received');
         response = result.response.text();
       } else {
-        console.log('Generating content directly');
         // For the first message, we can use generateContent directly
         const result = await this.model.generateContent(adjustedQuery);
-        console.log('Direct response received');
         response = result.response.text();
       }
       
@@ -125,15 +121,10 @@ User question: ${query}`;
         formattedResponse = formattedResponse.replace(/\. /g, '.\n\n');
       }
       
-      console.log('Returning formatted response with length:', formattedResponse.length);
       return formattedResponse;
     } catch (error: any) {
-      console.error('ERROR getting AI response:', error);
-      console.error('Error details:', error.message);
-      if (error.stack) {
-        console.error('Stack trace:', error.stack);
-      }
-      return 'I apologize, but I encountered an error processing your request. Please try again later. (Error: ' + error.message + ')';
+      console.error('Error getting AI response:', error);
+      return 'I apologize, but I encountered an error processing your request. Please try again later.';
     }
   }
 
@@ -146,6 +137,15 @@ User question: ${query}`;
     selfCare: string[];
     urgency: 'low' | 'medium' | 'high';
   }> {
+    if (!this.model) {
+      return {
+        recommendedAction: "AI symptom analysis is currently unavailable. Please consult with a healthcare professional for proper medical advice.",
+        possibleCauses: ["Unable to analyze - AI service not configured"],
+        selfCare: ["Consult a healthcare provider", "Monitor your symptoms"],
+        urgency: "medium"
+      };
+    }
+    
     try {
       const promptText = `
         I need a structured analysis of the following health symptoms:

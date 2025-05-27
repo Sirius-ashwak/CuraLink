@@ -1,0 +1,50 @@
+runtime: nodejs20
+
+service: default
+
+automatic_scaling:
+  min_instances: 1
+  max_instances: 10
+  target_cpu_utilization: 0.6
+
+# Healthcare-grade security settings
+network:
+  session_affinity: true
+
+handlers:
+  - url: /.*
+    script: auto
+    secure: always
+    redirect_http_response_code: 301
+
+# Environment variables for production
+env_variables:
+  NODE_ENV: production
+  PORT: 8080
+  
+  # Your app already has fallback to environment variables
+  USE_SECRET_MANAGER: "true"
+  
+  # Google Cloud settings (automatically available in App Engine)
+  GOOGLE_CLOUD_PROJECT_ID: "festive-freedom-460702-k4"
+  
+  # Healthcare API settings
+  GOOGLE_HEALTHCARE_LOCATION: "us-central1"
+  GOOGLE_HEALTHCARE_DATASET: "telehealth"
+  GOOGLE_HEALTHCARE_FHIR_STORE: "telehealth-fhir-store"
+  GOOGLE_HEALTHCARE_DICOM_STORE: "telehealth-dicom-store"
+
+# Health checks for your industry-ready monitoring
+readiness_check:
+  path: "/api/health"
+  check_interval_sec: 5
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+
+liveness_check:
+  path: "/api/monitoring/health"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 3
+  success_threshold: 2

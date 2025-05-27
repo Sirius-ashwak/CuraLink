@@ -23,21 +23,43 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     return (savedTheme as Theme) || 'dark';
   });
 
-  // Apply theme class to body when theme changes
+  // Initialize theme on mount
   useEffect(() => {
+    // Check if we need to apply the theme on first render
     const root = window.document.documentElement;
+    const initialTheme = localStorage.getItem('theme') as Theme || 'dark';
     
-    if (theme === 'dark') {
+    if (initialTheme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
-      document.body.style.background = '#000';
-      document.body.style.color = '#fff';
     } else {
       root.classList.add('light');
       root.classList.remove('dark');
-      document.body.style.background = '#fff';
-      document.body.style.color = '#000';
     }
+  }, []);
+
+  // Apply theme class to document when theme changes
+  useEffect(() => {
+    const root = window.document.documentElement;
+    
+    // Add a transition class first for smooth theme switching
+    root.classList.add('theme-transition');
+
+    // Set a small timeout to ensure the transition class is applied
+    setTimeout(() => {
+      if (theme === 'dark') {
+        root.classList.add('dark');
+        root.classList.remove('light');
+      } else {
+        root.classList.add('light');
+        root.classList.remove('dark');
+      }
+
+      // Remove the transition class after the switch is complete
+      setTimeout(() => {
+        root.classList.remove('theme-transition');
+      }, 500);
+    }, 10);
 
     // Save theme preference to localStorage
     localStorage.setItem('theme', theme);

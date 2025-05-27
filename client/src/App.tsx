@@ -1,10 +1,11 @@
 import { Switch, Route } from "wouter";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { queryClient } from "./lib/queryClient";
 import { AuthProvider } from "./context/AuthContext";
-import { WebSocketProvider } from "./context/WebSocketContext";
+
 import { ThemeProvider } from "./context/ThemeContext";
+import { SettingsProvider } from "./context/SettingsContext";
+import { LightThemeProvider } from "./components/light-theme/LightThemeProvider";
+import ForceLight from "./components/light-theme/ForceLight";
 import ErrorBoundary from "./components/ErrorBoundary";
 import useSettingsInit from "./hooks/useSettingsInit";
 
@@ -19,6 +20,13 @@ import Profile from "@/pages/Profile";
 import Settings from "@/pages/Settings";
 import Notifications from "@/pages/Notifications";
 import Logout from "@/pages/Logout";
+import LightThemeShowcase from "@/pages/LightThemeShowcase";
+import EnhancedEmergencyTransport from "@/pages/EnhancedEmergencyTransport";
+import Doctors from "@/pages/doctors";
+import Appointments from "@/pages/appointments";
+import ComprehensiveSettings from "@/pages/ComprehensiveSettings";
+import SymptomChecker from "@/pages/SymptomChecker";
+import IndustryDashboard from "@/pages/IndustryDashboard";
 
 function Router() {
   return (
@@ -30,10 +38,16 @@ function Router() {
       <Route path="/video-call" component={VideoCall} />
       <Route path="/video-call/:id" component={VideoCall} />
       <Route path="/profile" component={Profile} />
-      <Route path="/settings" component={Settings} />
+      <Route path="/settings" component={ComprehensiveSettings} />
       <Route path="/notifications" component={Notifications} />
       <Route path="/logout" component={Logout} />
       <Route path="/loading-demo" component={LoadingDemo} />
+      <Route path="/light-theme-showcase" component={LightThemeShowcase} />
+      <Route path="/emergency-transport" component={EnhancedEmergencyTransport} />
+      <Route path="/doctors" component={Doctors} />
+      <Route path="/appointments" component={Appointments} />
+      <Route path="/symptom-checker" component={SymptomChecker} />
+      <Route path="/industry-dashboard" component={IndustryDashboard} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -45,19 +59,14 @@ function App() {
   
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+      <SettingsProvider>
         <ThemeProvider>
           <AuthProvider>
-            {/* Wrap WebSocketProvider in another ErrorBoundary to prevent connection issues from breaking the app */}
-            <ErrorBoundary>
-              <WebSocketProvider>
-                <Router />
-                <Toaster />
-              </WebSocketProvider>
-            </ErrorBoundary>
+            <Router />
+            <Toaster />
           </AuthProvider>
         </ThemeProvider>
-      </QueryClientProvider>
+      </SettingsProvider>
     </ErrorBoundary>
   );
 }

@@ -7,6 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Heart, Stethoscope } from "lucide-react";
+import { registerWithFirebase, signInWithFirebase } from "@/lib/firebaseAuth";
 
 import {
   Form,
@@ -45,31 +46,39 @@ export default function LoginForm() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      // Demo login for development - will be replaced with actual API call in production
-      // Create demo user based on selected role
-      const demoUser = {
-        id: role === 'patient' ? 1 : 2,
-        email: data.email,
-        password: data.password, // Include password from form input
-        firstName: role === 'patient' ? 'John' : 'Dr. Sarah',
-        lastName: role === 'patient' ? 'Doe' : 'Smith',
-        role: role,
-        createdAt: new Date(),
-        // Add other required fields
-        specialty: role === 'doctor' ? 'General Physician' : null,
-        profile: { 
-          age: role === 'patient' ? 35 : 42,
-          gender: role === 'patient' ? 'Male' : 'Female',
-          bio: role === 'doctor' ? 'Experienced healthcare provider with focus on preventive care.' : 'Health-conscious individual looking for quality care.',
-        }
-      };
+      // Use Firebase Authentication directly
+      const firebaseUser = await signInWithFirebase(data.email, data.password);
       
-      setUser(demoUser);
+      // Make API call to get user profile
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Login failed");
+      }
+      
+      const result = await response.json();
+      
+      // Store the JWT token in localStorage
+      if (result.token) {
+        localStorage.setItem('authToken', result.token);
+      }
+      
+      setUser(result.user);
       setLocation("/dashboard");
       
       toast({
         title: "Login successful",
-        description: `Welcome back, ${demoUser.firstName}!`,
+        description: `Welcome back, ${result.user.firstName}!`,
       });
     } catch (error) {
       toast({

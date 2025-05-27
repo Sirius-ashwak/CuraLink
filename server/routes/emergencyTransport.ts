@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { storage } from "../storage";
 import { insertEmergencyTransportSchema } from "@shared/schema";
 import { z } from "zod";
-import { wss } from "../routes";
+// WebSocket removed for better reliability in remote areas
 
 const router = Router();
 
@@ -78,22 +78,8 @@ router.post("/", async (req: Request, res: Response) => {
     
     const transport = await storage.createEmergencyTransport(validationResult.data);
     
-    // Send WebSocket notification to doctors about the new emergency transport request
-    const patient = await storage.getUser(transport.patientId);
-    wss.clients.forEach((client: any) => {
-      if (client.readyState === 1 && client.role === "doctor") { // OPEN = 1
-        client.send(JSON.stringify({
-          type: "newEmergencyTransport",
-          transportId: transport.id,
-          patientId: transport.patientId,
-          patientName: patient ? `${patient.firstName} ${patient.lastName}` : "Unknown Patient",
-          location: transport.pickupLocation,
-          urgency: transport.urgency,
-          reason: transport.reason,
-          timestamp: new Date().toISOString()
-        }));
-      }
-    });
+    // Emergency transport created successfully
+    // Doctors will receive updates through API polling for better reliability
     
     res.status(201).json(transport);
   } catch (error) {

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Curalink - Telehealth Platform</title>
+  <meta name="description" content="A cutting-edge telehealth platform with real-time doctor availability, AI-powered symptom checking, and secure video consultations">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Curalink - Modern Telehealth Platform">
+  <meta property="og:description" content="Connect with doctors online, check symptoms with AI, and get emergency transport when needed.">
+  <meta property="og:image" content="./assets/og-image.jpg">
+  <meta property="og:url" content="https://curalink.example.com">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="./assets/styles.css">
+  
+  <!-- Set static mode -->
+  <script>
+    window.STATIC_MODE = true;
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <!-- Static Site Notice -->
+  <div id="static-site-notice" style="
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(59, 130, 246, 0.9);
+    color: white;
+    text-align: center;
+    padding: 8px;
+    font-size: 14px;
+    z-index: 9999;
+  ">
+    Static Demo Mode - Login with patient@example.com / password
+    <button id="close-notice" style="
+      margin-left: 8px;
+      background: white;
+      color: rgb(59, 130, 246);
+      border: none;
+      border-radius: 4px;
+      padding: 2px 8px;
+      cursor: pointer;
+    ">×</button>
+  </div>
+  
+  <!-- Scripts -->
+  <script>
+    // Initialize static data
+    window.STATIC_DATA = {
+      doctors: [],
+      hospitals: [],
+      emergencyTransport: []
+    };
+    
+    // Load static data files
+    const loadStaticData = async () => {
+      try {
+        // Load doctors data
+        const doctorsResponse = await fetch('./data/doctors.json');
+        if (doctorsResponse.ok) {
+          window.STATIC_DATA.doctors = await doctorsResponse.json();
+        }
+        
+        // Load hospitals data
+        const hospitalsResponse = await fetch('./data/hospitals-sf.json');
+        if (hospitalsResponse.ok) {
+          window.STATIC_DATA.hospitals = await hospitalsResponse.json();
+        }
+        
+        // Load emergency transport data
+        const transportResponse = await fetch('./data/emergency-transport.json');
+        if (transportResponse.ok) {
+          window.STATIC_DATA.emergencyTransport = await transportResponse.json();
+        }
+        
+        console.log('Static data loaded successfully');
+      } catch (error) {
+        console.error('Failed to load static data:', error);
+      }
+    };
+    
+    // Close notice handler
+    document.getElementById('close-notice').addEventListener('click', function() {
+      document.getElementById('static-site-notice').style.display = 'none';
+    });
+    
+    // Load static data
+    loadStaticData();
+  </script>
+  
+  <!-- Application script -->
+  <script type="module" src="./assets/main.js"></script>
+</body>
+</html>

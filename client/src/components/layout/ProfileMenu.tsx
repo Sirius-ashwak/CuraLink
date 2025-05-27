@@ -25,7 +25,7 @@ export default function ProfileMenu() {
   
   if (!user) return null;
   
-  const firstLetters = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
+  const firstLetters = `${user.firstName?.charAt(0) || ''}${user.lastName?.charAt(0) || ''}`;
   const isDoctor = user.role === "doctor";
   
   const handleLogout = () => {
@@ -63,16 +63,22 @@ export default function ProfileMenu() {
         
         {/* User Settings - Only these options as requested */}
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={handleProfileClick}>
-            <User className="mr-2 h-4 w-4 text-indigo-500" />
+          <DropdownMenuItem onClick={handleProfileClick} className="flex items-center">
+            <div className="mr-2 w-5 h-5 flex items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900">
+              <User className="h-3.5 w-3.5 text-blue-700 dark:text-blue-300" />
+            </div>
             <span>Profile</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleSettingsClick}>
-            <Settings className="mr-2 h-4 w-4 text-indigo-500" />
+          <DropdownMenuItem onClick={handleSettingsClick} className="flex items-center">
+            <div className="mr-2 w-5 h-5 flex items-center justify-center rounded-md bg-purple-100 dark:bg-purple-900">
+              <Settings className="h-3.5 w-3.5 text-purple-700 dark:text-purple-300" />
+            </div>
             <span>Settings</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Bell className="mr-2 h-4 w-4 text-indigo-500" />
+          <DropdownMenuItem className="flex items-center">
+            <div className="mr-2 w-5 h-5 flex items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900">
+              <Bell className="h-3.5 w-3.5 text-amber-700 dark:text-amber-300" />
+            </div>
             <span>Notifications</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -80,8 +86,10 @@ export default function ProfileMenu() {
         <DropdownMenuSeparator />
         
         {/* Logout */}
-        <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4 text-indigo-500" />
+        <DropdownMenuItem onClick={handleLogout} className="flex items-center">
+          <div className="mr-2 w-5 h-5 flex items-center justify-center rounded-md bg-red-100 dark:bg-red-900">
+            <LogOut className="h-3.5 w-3.5 text-red-700 dark:text-red-300" />
+          </div>
           <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

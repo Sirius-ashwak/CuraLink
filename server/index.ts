@@ -2,21 +2,101 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
-console.log('=== SERVER STARTUP ===');
-console.log('Node environment:', process.env.NODE_ENV);
-console.log('Current directory:', process.cwd());
-console.log('=== ENVIRONMENT VARIABLES ===');
-console.log('GEMINI_API_KEY set:', Boolean(process.env.GEMINI_API_KEY));
-console.log('TWILIO credentials configured:', 
-  Boolean(process.env.TWILIO_ACCOUNT_SID) && 
-  Boolean(process.env.TWILIO_API_KEY) && 
-  Boolean(process.env.TWILIO_API_SECRET)
-);
-console.log('=== SERVER INITIALIZATION ===');
+// Import industry-ready security and performance middleware
+import { 
+  hipaaAccessControl, 
+  hipaaSecurityHeaders, 
+  sessionTimeout, 
+  dataMinimization,
+  logHIPAAEvent 
+} from "./middleware/hipaaCompliance";
+import { 
+  authRateLimit, 
+  apiRateLimit, 
+  validateAndSanitize, 
+  securityLogger, 
+  configureCORS, 
+  healthcareCSP, 
+  detectSuspiciousActivity, 
+  requestSizeLimit 
+} from "./middleware/securityEnhanced";
+import { 
+  intelligentCache, 
+  responseCompression, 
+  queryPerformanceMonitor, 
+  memoryMonitor, 
+  optimizeResponse, 
+  preloadCriticalData 
+} from "./middleware/performanceOptimization";
+
+// Load environment variables from .env file
+import dotenv from "dotenv";
+dotenv.config();
+
+// Log important environment variables
+console.log('Firebase Storage bucket:', process.env.VITE_FIREBASE_STORAGE_BUCKET);
+
+// Import and use Secret Manager for credential checks
+import { secretManagerService } from './services/secretManagerService';
+
+// Check Gemini API Key through Secret Manager
+secretManagerService.getSecret('GEMINI_API_KEY').then(geminiKey => {
+  if (geminiKey) {
+    console.log('Gemini API Key is configured. AI features will work properly.');
+    console.log(`Gemini API Key length: ${geminiKey.length}`);
+  } else {
+    console.log('GEMINI_API_KEY is not defined. AI features will not work.');
+  }
+});
+
+// Check Google Cloud credentials through Secret Manager
+Promise.all([
+  secretManagerService.getSecret('GOOGLE_CLOUD_PROJECT_ID'),
+  secretManagerService.getSecret('GOOGLE_CLOUD_API_KEY'),
+  secretManagerService.getSecret('GOOGLE_CLOUD_CLIENT_ID'),
+  secretManagerService.getSecret('GOOGLE_CLOUD_CLIENT_SECRET')
+]).then(([projectId, apiKey, clientId, clientSecret]) => {
+  if (projectId && apiKey && clientId && clientSecret) {
+    console.log('Google Cloud credentials are fully configured. Cloud features are available.');
+    console.log(`Google Cloud Client ID length: ${clientId.length}`);
+    console.log(`Google Cloud Client Secret length: ${clientSecret.length}`);
+  } else {
+    console.log('Google Cloud credentials are not fully configured. Some features will not work.');
+  }
+});
 
 const app = express();
-app.use(express.json({ limit: '50mb' })); // Increased limit for image uploads
-app.use(express.urlencoded({ extended: false }));
+
+// Configure Express to trust proxy for rate limiting
+app.set('trust proxy', 1);
+
+// Apply industry-ready security and performance middleware
+app.use(hipaaSecurityHeaders);
+app.use(healthcareCSP());
+app.use(configureCORS());
+app.use(responseCompression);
+app.use(securityLogger);
+app.use(requestSizeLimit(50)); // 50MB limit for medical files
+app.use(detectSuspiciousActivity);
+app.use(validateAndSanitize);
+app.use(memoryMonitor);
+app.use(queryPerformanceMonitor);
+app.use(optimizeResponse);
+
+// Apply rate limiting to auth endpoints
+app.use('/api/auth', authRateLimit);
+app.use('/api/emergency', authRateLimit); // Strict rate limiting for emergency
+app.use('/api', apiRateLimit);
+
+// Apply session timeout and data minimization
+app.use(sessionTimeout(30)); // 30-minute session timeout for security
+app.use(dataMinimization);
+
+// Apply intelligent caching for performance
+app.use(intelligentCache(10)); // 10-minute cache for public data
+
+app.use(express.json({ limit: '50mb' })); // Increased limit for medical files
+app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -56,60 +136,16 @@ app.use((req, res, next) => {
     const message = err.message || "Internal Server Error";
 
     console.error('Error:', err);
-    console.error('Stack trace:', err.stack);
-    res.status(status).json({ 
-      message,
-      stack: process.env.NODE_ENV === 'production' ? 'Error details hidden in production' : err.stack
-    });
+    res.status(status).json({ message });
   });
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
-    console.log("Running in development mode, setting up Vite middleware");
     await setupVite(app, server);
   } else {
-    console.log("Running in production mode, serving static files");
-    console.log("NODE_ENV:", process.env.NODE_ENV);
-    console.log("Current directory:", __dirname);
-    
-    // Log out file system info for debugging production deployment
-    const fs = require('fs');
-    const path = require('path');
-    
-    try {
-      // Check if the dist/public directory exists
-      const distPublicPath = path.resolve(__dirname, "public");
-      const rootDistPath = path.resolve(process.cwd(), "dist", "public");
-      
-      console.log("Checking static file paths:");
-      console.log("- Relative to __dirname:", distPublicPath);
-      console.log("- Exists:", fs.existsSync(distPublicPath));
-      
-      console.log("- Relative to cwd:", rootDistPath);
-      console.log("- Exists:", fs.existsSync(rootDistPath));
-      
-      // List available directories
-      console.log("\nAvailable directories at cwd:");
-      try {
-        console.log(fs.readdirSync(process.cwd()));
-      } catch (error) {
-        console.error("Error listing cwd:", error);
-      }
-      
-      console.log("\nAvailable directories at __dirname:");
-      try { 
-        console.log(fs.readdirSync(__dirname));
-      } catch (error) {
-        console.error("Error listing __dirname:", error);
-      }
-      
-      serveStatic(app);
-      console.log("Static files configured successfully");
-    } catch (error) {
-      console.error("Error setting up static file serving:", error);
-    }
+    serveStatic(app);
   }
 
   // ALWAYS serve the app on port 5000
@@ -122,6 +158,5 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     console.log(`HTTP server running on port ${port}`);
-    console.log(`WebSocket server enabled and listening for connections`);
   });
 })();
