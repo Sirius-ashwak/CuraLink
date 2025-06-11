@@ -4,3 +4,49 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Environment variables - NEVER commit these!
+.env
+.env.local
+.env.production
+.env.staging
+
+# Google Cloud credentials
+*.json
+service-account-key.json
+gcloud-key.json
+
+# Deployment scripts with secrets
+setup-secrets.sh
+deploy-to-gcloud.sh
+
+# API keys and sensitive configs
+config/secrets.js
+config/keys.js
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+Thumbs.db
+.DS_Store
+.DS_Store?

@@ -1,0 +1,43 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // User profile images - only owner can upload/modify
+    match /profile_images/{userId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Medical documents - strict access control
+    match /medical_documents/{patientId}/{fileName} {
+      // Only patient can upload their documents
+      allow write: if request.auth != null && 
+        request.auth.uid == getPatientUserId(patientId);
+      
+      // Doctors can read if they have active appointment and consent
+      allow read: if request.auth != null && 
+        (request.auth.uid == getPatientUserId(patientId) ||
+         (hasRole(request.auth.uid, 'doctor') && 
+          hasActiveAppointmentRelation(request.auth.uid, patientId)));
+    }
+    
+    // Emergency documents - emergency staff access
+    match /emergency_documents/{transportId}/{fileName} {
+      allow read, write: if request.auth != null && 
+        hasRole(request.auth.uid, 'emergency_staff');
+    }
+    
+    function getPatientUserId(patientId) {
+      return firestore.get(/databases/(default)/documents/patients/$(patientId)).data.userId;
+    }
+    
+    function hasRole(userId, role) {
+      return firestore.get(/databases/(default)/documents/users/$(userId)).data.role == role;
+    }
+    
+    function hasActiveAppointmentRelation(doctorUserId, patientId) {
+      return firestore.exists(/databases/(default)/documents/appointments/
+        $(doctorUserId + '_' + patientId));
+    }
+  }
+}

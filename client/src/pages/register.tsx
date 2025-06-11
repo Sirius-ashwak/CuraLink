@@ -27,11 +27,6 @@ const registerSchema = z.object({
   lastName: z.string().min(1, { message: "Last name is required" }),
   role: z.enum(["patient", "doctor"]),
   specialty: z.string().optional(),
-  profile: z.object({
-    age: z.number().optional(),
-    gender: z.string().optional(),
-    bio: z.string().optional(),
-  }).optional(),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -51,11 +46,7 @@ export default function Register() {
       firstName: "",
       lastName: "",
       role: "patient",
-      profile: {
-        age: undefined,
-        gender: "",
-        bio: "",
-      },
+      specialty: "",
     },
   });
   
@@ -65,10 +56,27 @@ export default function Register() {
     
     setIsLoading(true);
     try {
-      const response = await apiRequest("POST", "/api/auth/register", data);
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Registration failed");
+      }
       
       const userData = await response.json();
-      setUser(userData);
+      
+      // Store the JWT token if provided
+      if (userData.token) {
+        localStorage.setItem('authToken', userData.token);
+      }
+      
+      setUser(userData.user || userData);
       setLocation("/dashboard");
       
       toast({
@@ -165,53 +173,8 @@ export default function Register() {
                 />
                 
                 <TabsContent value="patient">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="profile.age"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium text-gray-300">Age (Optional)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              placeholder="35" 
-                              {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                              className="rounded-md h-11 bg-gray-800 text-white border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="profile.gender"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium text-gray-300">Gender (Optional)</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="h-11 bg-gray-800 text-white border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
-                                <SelectValue placeholder="Select" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="bg-gray-800 border-gray-700">
-                              <SelectItem value="male" className="text-white hover:bg-gray-700">Male</SelectItem>
-                              <SelectItem value="female" className="text-white hover:bg-gray-700">Female</SelectItem>
-                              <SelectItem value="other" className="text-white hover:bg-gray-700">Other</SelectItem>
-                              <SelectItem value="prefer_not_to_say" className="text-white hover:bg-gray-700">Prefer not to say</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <div className="p-3 rounded-lg bg-gray-800 border border-gray-700 text-center">
+                    <p className="text-sm text-gray-300">Patient account ready! You can add more profile details after registration.</p>
                   </div>
                 </TabsContent>
                 
@@ -244,23 +207,6 @@ export default function Register() {
                     )}
                   />
                   
-                  <FormField
-                    control={form.control}
-                    name="profile.bio"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-300">Professional Bio (Optional)</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Brief description of your qualifications and experience"
-                            {...field}
-                            className="rounded-md h-11 bg-gray-800 text-white border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </TabsContent>
                 
                 <Button 

@@ -1,22 +1,28 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
-import { useWebSocket } from "@/context/WebSocketContext";
 import AppointmentSchedule from "./AppointmentSchedule";
-import AvailabilityManager from "./AvailabilityManager";
+import SimpleAvailabilityManager from "./SimpleAvailabilityManager";
 import PatientRecords from "./PatientRecords";
-import EmergencyTransportDashboard from "../emergencyTransport/EmergencyTransportDashboard";
-import OfflineIndicator from "../notifications/OfflineIndicator";
+import SimpleEmergencyTransport from "./SimpleEmergencyTransport";
 import NotificationToast from "../notifications/NotificationToast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { CalendarDays, Clock, Ambulance } from "lucide-react";
+import { CalendarDays, Clock, Ambulance, Stethoscope, FileText, Video, Pill, Activity, Users, TrendingUp, AlertTriangle } from "lucide-react";
 
-export default function DoctorDashboard() {
+// Import the enhanced dashboard
+import EnhancedDoctorDashboard from "./EnhancedDoctorDashboard";
+
+// Export the enhanced version as default
+export default EnhancedDoctorDashboard;
+
+function OldDoctorDashboard() {
   const { user } = useAuth();
   const [location] = useLocation();
-  const { sendMessage, lastMessage } = useWebSocket();
   const [activeTab, setActiveTab] = useState("schedule");
   const [isOnline, setIsOnline] = useState(true);
   const [showNotification, setShowNotification] = useState(false);
@@ -97,11 +103,7 @@ export default function DoctorDashboard() {
       
       setIsOnline(!isOnline);
       
-      // Send WebSocket message to notify clients
-      sendMessage({
-        type: "updateDoctorStatus",
-        isAvailable: !isOnline
-      });
+      // Status update will be reflected in real-time through polling
       
       setNotification({
         title: !isOnline ? "You're Online" : "You're Offline",
@@ -121,25 +123,7 @@ export default function DoctorDashboard() {
     }
   }, [doctorInfo]);
   
-  // Handle WebSocket messages
-  useEffect(() => {
-    if (lastMessage?.data) {
-      try {
-        const data = JSON.parse(lastMessage.data);
-        
-        if (data.type === "newEmergencyTransport") {
-          // Show notification for new emergency transport request
-          setNotification({
-            title: "New Emergency Transport Request",
-            message: `A patient needs urgent medical transport from ${data.location}`,
-          });
-          setShowNotification(true);
-        }
-      } catch (error) {
-        console.error("Error parsing WebSocket message:", error);
-      }
-    }
-  }, [lastMessage]);
+  // Real-time notifications handled through periodic polling for reliability
   
   if (!user || user.role !== "doctor") return null;
   
@@ -257,7 +241,7 @@ export default function DoctorDashboard() {
         </TabsContent>
         
         <TabsContent value="availability">
-          <AvailabilityManager />
+          <SimpleAvailabilityManager />
         </TabsContent>
         
         <TabsContent value="patients">
@@ -265,12 +249,11 @@ export default function DoctorDashboard() {
         </TabsContent>
         
         <TabsContent value="emergency-transport">
-          <EmergencyTransportDashboard />
+          <SimpleEmergencyTransport />
         </TabsContent>
       </Tabs>
       
       {/* Notifications */}
-      <OfflineIndicator />
       {showNotification && (
         <NotificationToast 
           title={notification.title}

@@ -210,12 +210,12 @@ export default function AvailabilityManager() {
   
   return (
     <section className="mb-8">
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h3 className="text-lg font-medium mb-4">Manage Your Availability</h3>
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-800">
+        <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Manage Your Availability</h3>
         
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
-            <h4 className="font-medium mb-3">Regular Hours</h4>
+            <h4 className="font-medium mb-3 text-gray-900 dark:text-white">Regular Hours</h4>
             <div className="space-y-4">
               {(Object.keys(weeklySchedule) as unknown as DayOfWeek[]).map((day) => (
                 <div key={day} className="flex items-center justify-between">

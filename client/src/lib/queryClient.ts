@@ -1,57 +1,60 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import axios, { AxiosRequestConfig } from 'axios';
+import { QueryClient } from '@tanstack/react-query';
 
-async function throwIfResNotOk(res: Response) {
-  if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
-  }
-}
+// Base URL for API requests
+const BASE_URL = '';
 
-export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+// Default headers
+const defaultHeaders = {
+  'Content-Type': 'application/json',
+};
 
-  await throwIfResNotOk(res);
-  return res;
-}
-
-type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
+/**
+ * Make API request with proper typing
+ */
+export const apiRequest = async <T>(config: AxiosRequestConfig): Promise<T> => {
+  try {
+    // Get auth token from local storage
+    const token = localStorage.getItem('authToken');
+    
+    // Add authorization header if token exists
+    const headers = {
+      ...defaultHeaders,
+      ...config.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+    
+    // Make request
+    const response = await axios({
+      ...config,
+      url: `${BASE_URL}${config.url}`,
+      headers,
     });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    
+    return response.data as T;
+  } catch (error) {
+    // Extract error message
+    let message = 'Unknown error occurred';
+    if (axios.isAxiosError(error)) {
+      message = error.response?.data?.error || error.message;
+    } else if (error instanceof Error) {
+      message = error.message;
     }
+    
+    console.error(`API request failed: ${message}`, error);
+    throw new Error(message);
+  }
+};
 
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
-
+/**
+ * Create query client configuration
+ * This is used by TanStack Query
+ */
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
-    },
-    mutations: {
-      retry: false,
+      retry: 1,
     },
   },
 });

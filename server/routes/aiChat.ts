@@ -72,4 +72,51 @@ router.get('/medicine-info/:name', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /api/ai-chat/process-voice
+ * Process and improve voice transcript using Gemini AI
+ */
+router.post('/process-voice', async (req: Request, res: Response) => {
+  try {
+    const { transcript } = req.body;
+
+    if (!transcript || typeof transcript !== 'string') {
+      return res.status(400).json({ error: 'Valid voice transcript is required' });
+    }
+
+    // Process voice transcript with Gemini AI
+    const processedTranscript = await geminiService.processVoiceTranscript(transcript);
+    
+    return res.status(200).json({ 
+      transcript: processedTranscript,
+      timestamp: new Date().toISOString() 
+    });
+  } catch (error) {
+    console.error('Error in voice processing endpoint:', error);
+    return res.status(500).json({ error: 'Failed to process voice transcript' });
+  }
+});
+
+/**
+ * POST /api/ai-chat/analyze-image
+ * Analyze a medical image using Gemini AI
+ */
+router.post('/analyze-image', async (req: Request, res: Response) => {
+  try {
+    const { imageData, description = '' } = req.body;
+
+    if (!imageData || typeof imageData !== 'string') {
+      return res.status(400).json({ error: 'Valid image data is required' });
+    }
+
+    // Analyze image with Gemini AI
+    const analysis = await geminiService.analyzeImage(imageData, description);
+    
+    return res.status(200).json(analysis);
+  } catch (error) {
+    console.error('Error in image analysis endpoint:', error);
+    return res.status(500).json({ error: 'Failed to analyze image' });
+  }
+});
+
 export default router;

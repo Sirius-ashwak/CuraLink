@@ -1,19 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
-import { useWebSocket } from "@/context/WebSocketContext";
 
 export function useAvailability() {
   const { user } = useAuth();
-  const { messages } = useWebSocket();
   
-  // Determine doctor ID
-  let doctorId = null;
+  // Get doctor information first
+  const { data: doctorData } = useQuery({
+    queryKey: ["/api/doctors"],
+    select: (data) => {
+      if (user && Array.isArray(data)) {
+        return data.find((doctor) => doctor.userId === user.id);
+      }
+      return null;
+    },
+    enabled: !!user && user.role === "doctor",
+  });
   
-  if (user?.role === "doctor" && user?.doctorInfo) {
-    // For doctors, use their own ID
-    doctorId = user.doctorInfo.id;
-  }
+  // Get the doctor ID from the doctor data
+  const doctorId = doctorData?.id || null;
   
+  // Fetch availability data with the doctor ID
   const {
     data: availabilityData,
     isLoading,
@@ -21,14 +27,9 @@ export function useAvailability() {
   } = useQuery({
     queryKey: [`/api/doctors/${doctorId}/availability`],
     enabled: !!doctorId,
+    // Using polling for reliability instead of WebSockets
+    refetchInterval: 15000, // Refresh data every 15 seconds
   });
-  
-  // Listen for WebSocket messages about availability changes
-  const lastMessage = messages[messages.length - 1];
-  if (lastMessage && lastMessage.type === "doctorData") {
-    // Refetch availability when we receive an update
-    refetch();
-  }
   
   return {
     availabilityData,

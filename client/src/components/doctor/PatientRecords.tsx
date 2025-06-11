@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { AppointmentWithUsers } from "@shared/schema";
+import { PrivacyController } from "@/lib/privacyControls";
 import { format } from "date-fns";
+import { Shield, Eye, Clock, UserCheck } from "lucide-react";
 
 export default function PatientRecords() {
   const { user } = useAuth();
@@ -24,33 +27,35 @@ export default function PatientRecords() {
   
   // Get all appointments for this doctor
   const { data: appointments = [], isLoading } = useQuery({
-    queryKey: [`/api/appointments?doctorId=${doctorInfo?.id}`],
+    queryKey: ["/api/appointments", { doctorId: doctorInfo?.id }],
     enabled: !!doctorInfo,
   });
   
-  // Extract unique patients from appointments
-  const patients = appointments.reduce((acc: any[], appointment: AppointmentWithUsers) => {
+  // Extract unique patients from appointments (from Firebase)
+  const patients = Array.isArray(appointments) ? appointments.reduce((acc: any[], appointment: any) => {
+    if (!appointment?.patient) return acc;
+    
     const existingPatient = acc.find((p) => p.id === appointment.patient.id);
     
     if (!existingPatient) {
-      const lastAppointment = appointments
-        .filter((a: AppointmentWithUsers) => a.patientId === appointment.patientId)
-        .sort((a: AppointmentWithUsers, b: AppointmentWithUsers) => {
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
-        })[0];
+      const patientAppointments = appointments.filter((a: any) => a.patientId === appointment.patientId);
+      const lastAppointment = patientAppointments.sort((a: any, b: any) => {
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      })[0];
       
       acc.push({
         id: appointment.patient.id,
         name: `${appointment.patient.firstName} ${appointment.patient.lastName}`,
         age: appointment.patient.profile?.age || "-",
-        gender: appointment.patient.profile?.gender || "-",
+        gender: appointment.patient.profile?.gender || "-", 
         lastVisit: lastAppointment?.date || "New Patient",
         status: lastAppointment?.status || "New",
+        appointmentCount: patientAppointments.length
       });
     }
     
     return acc;
-  }, []);
+  }, []) : [];
   
   // Filter patients based on search term
   const filteredPatients = patients.filter((patient) => {
@@ -80,9 +85,9 @@ export default function PatientRecords() {
   
   return (
     <section className="mb-8">
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-800">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">Patient Records</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">Patient Records</h3>
           <div className="relative">
             <Input
               type="text"

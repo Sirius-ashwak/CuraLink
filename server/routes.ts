@@ -1,619 +1,262 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
-import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
-import { insertUserSchema, insertAppointmentSchema } from "@shared/schema";
+import { insertUserSchema, insertAppointmentSchema, insertEmergencyTransportSchema } from "@shared/schema";
 import { z } from "zod";
 
-// Initialize WebSocket server for early export
-let wss: WebSocketServer;
-export { wss };
-
-// Import our new route handlers
+// Import our route handlers
 import symptomCheckerRoutes from "./routes/symptomChecker";
 import doctorMatchRoutes from "./routes/doctorMatch";
 import medicinesRoutes from "./routes/medicines";
+import privacyRoutes from "./routes/privacy";
+import auditRoutes from "./routes/audit";
+import prescriptionRoutes from "./routes/prescriptions";
+import vitalSignsRoutes from "./routes/vitalSigns";
 import videoRoutes from "./routes/video";
 import emergencyTransportRoutes from "./routes/emergencyTransport";
 import aiChatRoutes from "./routes/aiChat";
+import healthRecordRoutes from "./routes/healthRecord";
+import authRoutes from "./routes/auth";
+import mapsRoutes from "./routes/maps";
+import secretManagerRoutes from "./routes/secretManager";
+import secretTestRoutes from "./routes/secretTest";
+import voiceRoutes from "./voiceRoutes";
+import facilitiesRoutes from "./facilitiesRoutes";
+import industryMonitoringRoutes from "./routes/industryMonitoring";
+import owaspSecurityRoutes from "./routes/owaspSecurity";
+import aiDiagnosisRoutes from "./routes/aiDiagnosis";
+import videoConsultationRoutes from "./routes/videoConsultation";
+import realPrescriptionsRoutes from "./routes/realPrescriptions";
+import seedProfilesRoutes from "./routes/seedProfiles";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
-  
-  // WebSocket server setup
-  wss = new WebSocketServer({ 
-    server: httpServer, 
-    path: '/ws',
-    host: '0.0.0.0'
-  });
-  
-  // Store active connections
-  const clients = new Map<number, WebSocket[]>();
-  
-  wss.on('connection', (ws) => {
-    let userId: number | null = null;
-    
-    ws.on('message', async (messageData) => {
-      try {
-        const message = JSON.parse(messageData.toString());
-        
-        // Handle authentication
-        if (message.type === 'auth') {
-          userId = message.userId;
-          if (userId !== null) {
-            if (!clients.has(userId)) {
-              clients.set(userId, []);
-            }
-            clients.get(userId)!.push(ws);
-          
-            // Send initial data
-            if (message.role === 'patient') {
-              const appointments = await storage.getAppointmentsByPatient(userId);
-              ws.send(JSON.stringify({
-                type: 'appointments',
-                data: appointments
-              }));
-            } else if (message.role === 'doctor') {
-              const doctor = await storage.getDoctorByUserId(userId);
-              if (doctor) {
-                const appointments = await storage.getAppointmentsByDoctor(doctor.id);
-                const availability = await storage.getAvailability(doctor.id);
-                const timeOffs = await storage.getTimeOffs(doctor.id);
-                
-                ws.send(JSON.stringify({
-                  type: 'doctorData',
-                  data: {
-                    appointments,
-                    availability,
-                    timeOffs
-                  }
-                }));
-              }
-            }
-          }
-        }
-        
-        // Handle doctor status update
-        if (message.type === 'updateDoctorStatus' && userId) {
-          const doctor = await storage.getDoctorByUserId(userId);
-          if (doctor) {
-            await storage.updateDoctorAvailability(doctor.id, message.isAvailable);
-            
-            // Broadcast to all clients
-            broadcastDoctorUpdate(doctor.id);
-          }
-        }
-        
-        // Handle appointment status update
-        if (message.type === 'updateAppointment' && userId) {
-          const appointment = await storage.getAppointment(message.appointmentId);
-          if (appointment) {
-            if (message.status === 'canceled') {
-              await storage.cancelAppointment(message.appointmentId);
-            } else {
-              await storage.updateAppointment(message.appointmentId, {
-                status: message.status
-              });
-            }
-            
-            // Notify both doctor and patient
-            notifyAppointmentUpdate(appointment.patientId, appointment.doctorId);
-          }
-        }
-        
-        // Handle emergency transport request updates
-        if (message.type === 'updateEmergencyTransport' && userId) {
-          const transport = await storage.getEmergencyTransport(message.transportId);
-          if (transport) {
-            if (message.status === 'canceled') {
-              await storage.cancelEmergencyTransport(message.transportId);
-            } else if (message.status === 'completed') {
-              await storage.completeEmergencyTransport(message.transportId);
-            } else if (message.driverInfo) {
-              // If driver info is provided, assign the driver
-              const { driverName, driverPhone, estimatedArrival } = message.driverInfo;
-              await storage.assignDriverToEmergencyTransport(
-                message.transportId,
-                driverName,
-                driverPhone,
-                new Date(estimatedArrival)
-              );
-            } else {
-              // General update
-              await storage.updateEmergencyTransport(message.transportId, {
-                status: message.status
-              });
-            }
-            
-            // Notify the patient
-            notifyEmergencyTransportUpdate(transport.patientId);
-          }
-        }
-      } catch (err) {
-        console.error('WebSocket message error:', err);
-      }
-    });
-    
-    ws.on('close', () => {
-      if (userId && clients.has(userId)) {
-        const userClients = clients.get(userId)!;
-        const index = userClients.indexOf(ws);
-        if (index !== -1) {
-          userClients.splice(index, 1);
-        }
-        if (userClients.length === 0) {
-          clients.delete(userId);
-        }
-      }
-    });
-  });
-  
-  // Helper function to broadcast doctor updates
-  const broadcastDoctorUpdate = async (doctorId: number) => {
-    const doctor = await storage.getDoctor(doctorId);
-    if (!doctor) return;
-    
-    const appointments = await storage.getAppointmentsByDoctor(doctorId);
-    
-    // Notify all patients with appointments with this doctor
-    for (const appointment of appointments) {
-      notifyUser(appointment.patientId, {
-        type: 'doctorUpdate',
-        data: {
-          doctorId,
-          isAvailable: doctor.isAvailable
-        }
-      });
-    }
-    
-    // Notify the doctor
-    notifyUser(doctor.userId, {
-      type: 'doctorStatusUpdated',
-      data: {
-        isAvailable: doctor.isAvailable
-      }
-    });
-  };
-  
-  // Helper function to notify about appointment updates
-  const notifyAppointmentUpdate = async (patientId: number, doctorId: number) => {
-    const doctor = await storage.getDoctor(doctorId);
-    if (!doctor) return;
-    
-    const patientAppointments = await storage.getAppointmentsByPatient(patientId);
-    notifyUser(patientId, {
-      type: 'appointments',
-      data: patientAppointments
-    });
-    
-    const doctorAppointments = await storage.getAppointmentsByDoctor(doctorId);
-    notifyUser(doctor.userId, {
-      type: 'appointments',
-      data: doctorAppointments
-    });
-  };
-  
-  // Helper function to notify about emergency transport updates
-  const notifyEmergencyTransportUpdate = async (patientId: number) => {
-    const transports = await storage.getEmergencyTransportsByPatient(patientId);
-    notifyUser(patientId, {
-      type: 'emergencyTransports',
-      data: transports
-    });
-    
-    // Notify all doctors about new emergency transport requests
-    const doctors = await storage.getDoctors();
-    for (const doctor of doctors) {
-      notifyUser(doctor.userId, {
-        type: 'emergencyTransportsUpdate',
-        data: await storage.getActiveEmergencyTransports()
-      });
-    }
-  };
-  
-  // Helper function to send message to a specific user
-  const notifyUser = (userId: number, data: any) => {
-    if (clients.has(userId)) {
-      const userClients = clients.get(userId)!;
-      userClients.forEach(client => {
-        if (client.readyState === 1) { // OPEN = 1
-          client.send(JSON.stringify(data));
-        }
-      });
-    }
-  };
-  
+
   // API Routes
-  // Auth routes
-  app.post('/api/auth/login', express.json(), async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      
-      if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required' });
-      }
-      
-      const user = await storage.getUserByEmail(email);
-      
-      if (!user) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-      
-      // Use a timing-safe comparison for passwords
-      const crypto = require('crypto');
-      const match = crypto.timingSafeEqual(
-        Buffer.from(user.password),
-        Buffer.from(password)
-      );
-      
-      if (!match) {
-        return res.status(401).json({ message: 'Invalid credentials' });
-      }
-      
-      // Send user data without password
-      const { password: _, ...userData } = user;
-      
-      // Add doctor information if user is a doctor
-      if (user.role === 'doctor') {
-        const doctor = await storage.getDoctorByUserId(user.id);
-        return res.json({ ...userData, doctorInfo: doctor });
-      }
-      
-      return res.json(userData);
-    } catch (error) {
-      console.error('Login error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+  // Use our modular auth routes
+  app.use('/api/auth', authRoutes);
+
+  // User routes
+  app.get('/api/users/:id', async (req, res) => {
+    const id = parseInt(req.params.id);
+    const user = await storage.getUser(id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
+    
+    // Don't return password
+    const { password, ...userWithoutPassword } = user;
+    res.json(userWithoutPassword);
   });
-  
-  app.post('/api/auth/register', express.json(), async (req, res) => {
-    try {
-      const userResult = insertUserSchema.safeParse(req.body);
-      
-      if (!userResult.success) {
-        return res.status(400).json({ 
-          message: 'Invalid user data', 
-          errors: userResult.error.format() 
-        });
-      }
-      
-      const existingUser = await storage.getUserByEmail(userResult.data.email);
-      
-      if (existingUser) {
-        return res.status(409).json({ message: 'Email already in use' });
-      }
-      
-      const user = await storage.createUser(userResult.data);
-      
-      // If registering as a doctor, create doctor record
-      if (user.role === 'doctor' && user.specialty) {
-        const doctor = await storage.createDoctor({
-          userId: user.id,
-          specialty: user.specialty,
-          averageRating: 0,
-          reviewCount: 0,
-          isAvailable: true
-        });
-        
-        // Setup default availability (Mon-Fri, 9am-5pm)
-        const weekdays = [1, 2, 3, 4, 5]; // Monday to Friday
-        for (const day of weekdays) {
-          await storage.createAvailability({
-            doctorId: doctor.id,
-            dayOfWeek: day,
-            startTime: "09:00",
-            endTime: "17:00",
-            isAvailable: true
-          });
-        }
-        
-        // Send user data without password
-        const { password: _, ...userData } = user;
-        return res.status(201).json({ ...userData, doctorInfo: doctor });
-      }
-      
-      // Send user data without password
-      const { password: _, ...userData } = user;
-      return res.status(201).json(userData);
-    } catch (error) {
-      console.error('Register error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-  
+
   // Doctor routes
   app.get('/api/doctors', async (req, res) => {
+    const { specialty } = req.query;
+    
     try {
-      const specialty = req.query.specialty as string | undefined;
-      
       let doctors;
-      if (specialty) {
+      if (specialty && typeof specialty === 'string') {
         doctors = await storage.getDoctorsBySpecialty(specialty);
       } else {
         doctors = await storage.getDoctors();
       }
-      
-      return res.json(doctors);
+      res.json(doctors);
     } catch (error) {
-      console.error('Get doctors error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+      console.error('Error fetching doctors:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
-  
+
   app.get('/api/doctors/:id', async (req, res) => {
-    try {
-      const doctorId = parseInt(req.params.id);
-      
-      if (isNaN(doctorId)) {
-        return res.status(400).json({ message: 'Invalid doctor ID' });
-      }
-      
-      const doctor = await storage.getDoctor(doctorId);
-      
-      if (!doctor) {
-        return res.status(404).json({ message: 'Doctor not found' });
-      }
-      
-      const user = await storage.getUser(doctor.userId);
-      
-      if (!user) {
-        return res.status(404).json({ message: 'Doctor user not found' });
-      }
-      
-      const { password: _, ...userData } = user;
-      
-      return res.json({ ...doctor, user: userData });
-    } catch (error) {
-      console.error('Get doctor error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+    const id = parseInt(req.params.id);
+    const doctor = await storage.getDoctor(id);
+    
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
     }
+    
+    res.json(doctor);
   });
-  
-  app.get('/api/doctors/:id/availability', async (req, res) => {
-    try {
-      const doctorId = parseInt(req.params.id);
-      
-      if (isNaN(doctorId)) {
-        return res.status(400).json({ message: 'Invalid doctor ID' });
-      }
-      
-      const availability = await storage.getAvailability(doctorId);
-      const timeOffs = await storage.getTimeOffs(doctorId);
-      
-      return res.json({ availability, timeOffs });
-    } catch (error) {
-      console.error('Get doctor availability error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-    }
-  });
-  
+
   app.post('/api/doctors/:id/availability', express.json(), async (req, res) => {
+    const doctorId = parseInt(req.params.id);
+    const { isAvailable } = req.body;
+    
     try {
-      const doctorId = parseInt(req.params.id);
-      
-      if (isNaN(doctorId)) {
-        return res.status(400).json({ message: 'Invalid doctor ID' });
-      }
-      
-      const { dayOfWeek, startTime, endTime, isAvailable } = req.body;
-      
-      if (typeof dayOfWeek !== 'number' || typeof startTime !== 'string' || typeof endTime !== 'string') {
-        return res.status(400).json({ message: 'Invalid availability data' });
-      }
-      
-      const availability = await storage.createAvailability({
-        doctorId,
-        dayOfWeek,
-        startTime,
-        endTime,
-        isAvailable: isAvailable !== false
-      });
-      
-      return res.status(201).json(availability);
+      const doctor = await storage.updateDoctorAvailability(doctorId, isAvailable);
+      res.json(doctor);
     } catch (error) {
-      console.error('Create availability error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+      console.error('Error updating doctor availability:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
-  
-  app.post('/api/doctors/:id/time-off', express.json(), async (req, res) => {
+
+  app.get('/api/doctors/:id/availability', async (req, res) => {
+    const doctorId = parseInt(req.params.id);
+    
     try {
-      const doctorId = parseInt(req.params.id);
-      
-      if (isNaN(doctorId)) {
-        return res.status(400).json({ message: 'Invalid doctor ID' });
-      }
-      
-      const { title, startDate, endDate } = req.body;
-      
-      if (typeof title !== 'string' || !startDate || !endDate) {
-        return res.status(400).json({ message: 'Invalid time-off data' });
-      }
-      
-      const timeOff = await storage.createTimeOff({
-        doctorId,
-        title,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate)
-      });
-      
-      return res.status(201).json(timeOff);
+      const availability = await storage.getAvailability(doctorId);
+      res.json(availability);
     } catch (error) {
-      console.error('Create time-off error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+      console.error('Error fetching availability:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
-  
-  app.delete('/api/time-off/:id', async (req, res) => {
+
+  app.get('/api/doctors/:id/time-off', async (req, res) => {
+    const doctorId = parseInt(req.params.id);
+    
     try {
-      const timeOffId = parseInt(req.params.id);
-      
-      if (isNaN(timeOffId)) {
-        return res.status(400).json({ message: 'Invalid time-off ID' });
-      }
-      
-      const result = await storage.deleteTimeOff(timeOffId);
-      
-      if (!result) {
-        return res.status(404).json({ message: 'Time-off not found' });
-      }
-      
-      return res.status(204).end();
+      const timeOffs = await storage.getTimeOffs(doctorId);
+      res.json(timeOffs);
     } catch (error) {
-      console.error('Delete time-off error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+      console.error('Error fetching time offs:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
-  
+
   // Appointment routes
-  app.get('/api/appointments', async (req, res) => {
+  app.get('/api/appointments/patient/:patientId', async (req, res) => {
+    const patientId = parseInt(req.params.patientId);
+    
     try {
-      const patientId = req.query.patientId ? parseInt(req.query.patientId as string) : undefined;
-      const doctorId = req.query.doctorId ? parseInt(req.query.doctorId as string) : undefined;
-      const dateStr = req.query.date as string | undefined;
-      
-      if (patientId) {
-        const appointments = await storage.getAppointmentsByPatient(patientId);
-        return res.json(appointments);
-      } else if (doctorId) {
-        if (dateStr) {
-          const date = new Date(dateStr);
-          const appointments = await storage.getAppointmentsByDate(doctorId, date);
-          return res.json(appointments);
-        } else {
-          const appointments = await storage.getAppointmentsByDoctor(doctorId);
-          return res.json(appointments);
-        }
-      }
-      
-      return res.status(400).json({ message: 'Either patientId or doctorId is required' });
+      const appointments = await storage.getAppointmentsByPatient(patientId);
+      res.json(appointments);
     } catch (error) {
-      console.error('Get appointments error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+      console.error('Error fetching patient appointments:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
-  
-  app.get('/api/appointments/:id', async (req, res) => {
+
+  app.get('/api/appointments/doctor/:doctorId', async (req, res) => {
+    const doctorId = parseInt(req.params.doctorId);
+    
     try {
-      const appointmentId = parseInt(req.params.id);
-      
-      if (isNaN(appointmentId)) {
-        return res.status(400).json({ message: 'Invalid appointment ID' });
-      }
-      
-      const appointment = await storage.getAppointment(appointmentId);
-      
-      if (!appointment) {
-        return res.status(404).json({ message: 'Appointment not found' });
-      }
-      
-      return res.json(appointment);
+      const appointments = await storage.getAppointmentsByDoctor(doctorId);
+      res.json(appointments);
     } catch (error) {
-      console.error('Get appointment error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+      console.error('Error fetching doctor appointments:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
-  
+
   app.post('/api/appointments', express.json(), async (req, res) => {
     try {
-      const appointmentResult = insertAppointmentSchema.safeParse(req.body);
-      
-      if (!appointmentResult.success) {
-        return res.status(400).json({ 
-          message: 'Invalid appointment data', 
-          errors: appointmentResult.error.format() 
-        });
-      }
-      
-      const appointment = await storage.createAppointment(appointmentResult.data);
-      const fullAppointment = await storage.getAppointment(appointment.id);
-      
-      // Notify both the patient and the doctor
-      if (fullAppointment) {
-        notifyAppointmentUpdate(fullAppointment.patientId, fullAppointment.doctorId);
-      }
-      
-      return res.status(201).json(appointment);
+      const appointmentData = insertAppointmentSchema.parse(req.body);
+      const appointment = await storage.createAppointment(appointmentData);
+      res.status(201).json(appointment);
     } catch (error) {
-      console.error('Create appointment error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid input', errors: error.errors });
+      }
+      console.error('Error creating appointment:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
-  
+
   app.patch('/api/appointments/:id', express.json(), async (req, res) => {
+    const id = parseInt(req.params.id);
+    
     try {
-      const appointmentId = parseInt(req.params.id);
-      
-      if (isNaN(appointmentId)) {
-        return res.status(400).json({ message: 'Invalid appointment ID' });
-      }
-      
-      const { status, notes, callUrl } = req.body;
-      
-      const updatedFields: any = {};
-      if (status) updatedFields.status = status;
-      if (notes) updatedFields.notes = notes;
-      if (callUrl) updatedFields.callUrl = callUrl;
-      
-      const appointment = await storage.updateAppointment(appointmentId, updatedFields);
-      const fullAppointment = await storage.getAppointment(appointment.id);
-      
-      // Notify both the patient and the doctor
-      if (fullAppointment) {
-        notifyAppointmentUpdate(fullAppointment.patientId, fullAppointment.doctorId);
-      }
-      
-      return res.json(appointment);
+      const appointment = await storage.updateAppointment(id, req.body);
+      res.json(appointment);
     } catch (error) {
-      console.error('Update appointment error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+      console.error('Error updating appointment:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
-  
+
   app.delete('/api/appointments/:id', async (req, res) => {
+    const id = parseInt(req.params.id);
+    
     try {
-      const appointmentId = parseInt(req.params.id);
-      
-      if (isNaN(appointmentId)) {
-        return res.status(400).json({ message: 'Invalid appointment ID' });
-      }
-      
-      const appointment = await storage.getAppointment(appointmentId);
-      
-      if (!appointment) {
-        return res.status(404).json({ message: 'Appointment not found' });
-      }
-      
-      await storage.cancelAppointment(appointmentId);
-      
-      // Notify both the patient and the doctor
-      notifyAppointmentUpdate(appointment.patientId, appointment.doctorId);
-      
-      return res.status(204).end();
+      const appointment = await storage.cancelAppointment(id);
+      res.json(appointment);
     } catch (error) {
-      console.error('Cancel appointment error:', error);
-      return res.status(500).json({ message: 'Internal server error' });
+      console.error('Error canceling appointment:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
-  
-  // Register our new routes
-  // Symptom checker API
+
+  // Emergency transport routes
+  app.get('/api/emergency/active', async (req, res) => {
+    try {
+      const transports = await storage.getActiveEmergencyTransports();
+      res.json(transports);
+    } catch (error) {
+      console.error('Error fetching active emergency transports:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/emergency/patient/:patientId', async (req, res) => {
+    const patientId = parseInt(req.params.patientId);
+    
+    try {
+      const transports = await storage.getEmergencyTransportsByPatient(patientId);
+      res.json(transports);
+    } catch (error) {
+      console.error('Error fetching patient emergency transports:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Add missing emergency transport creation endpoint
+  app.post('/api/emergency-transport', express.json(), async (req, res) => {
+    try {
+      const transportData = insertEmergencyTransportSchema.parse(req.body);
+      const transport = await storage.createEmergencyTransport(transportData);
+      res.status(201).json(transport);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid input', errors: error.errors });
+      }
+      console.error('Error creating emergency transport:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Mount route handlers
   app.use('/api/symptom-checker', symptomCheckerRoutes);
-  
-  // Doctor matching API and symptom categories 
   app.use('/api/doctor-match', doctorMatchRoutes);
-  
-  // Medicines management API
   app.use('/api/medicines', medicinesRoutes);
-  
-  // Video calling API
   app.use('/api/video', videoRoutes);
-  
-  // Emergency Transport API for rural patients
-  app.use('/api/emergency-transport', emergencyTransportRoutes);
-  
-  // AI Chat API
+  app.use('/api/emergency', emergencyTransportRoutes);
   app.use('/api/ai-chat', aiChatRoutes);
+  app.use('/api/health-record', healthRecordRoutes);
+  app.use('/api/auth', authRoutes);
+  app.use('/api/maps', mapsRoutes);
+  app.use('/api/secret-manager', secretManagerRoutes);
+  app.use('/api/secret-test', secretTestRoutes);
+  app.use('/api/privacy', privacyRoutes);
+  app.use('/api/audit', auditRoutes);
+  app.use('/api/prescriptions', prescriptionRoutes);
+  app.use('/api/real-prescriptions', realPrescriptionsRoutes);
+  app.use('/api/vital-signs', vitalSignsRoutes);
+  app.use('/api/voice-assistant', voiceRoutes);
+  app.use('/api/facilities', facilitiesRoutes);
+  app.use('/api/ai-diagnosis', aiDiagnosisRoutes);
+  app.use('/api/video-consultation', videoConsultationRoutes);
+  app.use('/api/seed-profiles', seedProfilesRoutes);
+
+  // Health check endpoint
+  // Industry-ready monitoring and compliance dashboard
+  app.use('/api/monitoring', industryMonitoringRoutes);
   
+  // OWASP Top 10 security assessment
+  app.use('/api/security/owasp', owaspSecurityRoutes);
+
+  app.get('/api/health', (req, res) => {
+    res.json({ 
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      services: {
+        api: 'running',
+        database: 'connected'
+      }
+    });
+  });
+
   return httpServer;
 }

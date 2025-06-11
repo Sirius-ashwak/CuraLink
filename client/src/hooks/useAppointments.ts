@@ -1,15 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
-import { useWebSocket } from "@/context/WebSocketContext";
+// WebSocket removed for better reliability in remote areas
 import { AppointmentWithUsers } from "@shared/schema";
 
 export function useAppointments() {
   const { user } = useAuth();
-  const { messages } = useWebSocket();
+  // Real-time updates removed for better reliability
   
-  const appointmentsQueryKey = user?.role === "doctor" && user?.doctorInfo
-    ? [`/api/appointments?doctorId=${user.doctorInfo.id}`]
-    : [`/api/appointments?patientId=${user?.id}`];
+  const appointmentsQueryKey = user?.role === "doctor" && user?.specialty
+    ? [`/api/appointments/doctor/${user?.id}`]
+    : [`/api/appointments/patient/${user?.id}`];
   
   const { data = [], isLoading, refetch } = useQuery({
     queryKey: appointmentsQueryKey,
@@ -30,12 +30,7 @@ export function useAppointments() {
     }
   });
   
-  // Listen for WebSocket messages about appointments
-  const lastMessage = messages[messages.length - 1];
-  if (lastMessage && (lastMessage.type === "appointments" || lastMessage.type === "doctorData")) {
-    // Refetch appointments when we receive a WebSocket notification
-    refetch();
-  }
+  // Appointments are fetched via HTTP requests for better reliability
   
   // Filter to show only upcoming appointments
   const upcomingAppointments = (data as AppointmentWithUsers[]).filter(appointment => {

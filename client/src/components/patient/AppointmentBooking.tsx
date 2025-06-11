@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import DoctorSelection from "./DoctorSelection";
 import DateSelection from "./DateSelection";
 import TimeSelection from "./TimeSelection";
@@ -82,18 +81,22 @@ export default function AppointmentBooking() {
     const endTime = `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`;
     
     try {
-      await apiRequest("POST", "/api/appointments", {
-        patientId: user.id,
-        doctorId: selectedDoctor.id,
-        date: selectedDate,
-        startTime: selectedTime,
-        endTime: endTime,
-        status: "scheduled",
-        type: consultationType,
-        reason: reason,
+      await apiRequest({
+        url: "/api/appointments",
+        method: "POST",
+        data: {
+          patientId: user.id,
+          doctorId: selectedDoctor.id,
+          date: selectedDate,
+          startTime: selectedTime,
+          endTime: endTime,
+          status: "scheduled",
+          type: consultationType,
+          reason: reason,
+        }
       });
       
-      queryClient.invalidateQueries({ queryKey: ["/api/appointments"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/appointments/patient/${user.id}`] });
       
       toast({
         title: "Appointment Booked",

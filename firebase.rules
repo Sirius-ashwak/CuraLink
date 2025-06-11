@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User data - only accessible to the user themselves
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Doctor profiles - publicly readable for patient selection
+    match /doctors/{doctorId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || 
+         hasRole(request.auth.uid, 'admin'));
+    }
+    
+    // Patient records - STRICT ACCESS CONTROL
+    match /patients/{patientId} {
+      // Patients can only access their own records
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Doctors can only access patients they have active appointments with
+      allow read: if request.auth != null && 
+        hasActiveAppointmentRelation(request.auth.uid, patientId) &&
+        hasPatientConsent(patientId, request.auth.uid);
+      
+      // Emergency access with mandatory logging
+      allow read: if request.auth != null && 
+        hasEmergencyAccess(patientId) &&
+        hasRole(request.auth.uid, 'emergency_staff');
+    }
+    
+    // Appointments - access control by patient and doctor
+    match /appointments/{appointmentId} {
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.patientUserId || 
+         request.auth.uid == resource.data.doctorUserId);
+    }
+    
+    // Emergency transport - restricted to emergency staff and involved patient
+    match /emergency_transports/{transportId} {
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.patientUserId ||
+         hasRole(request.auth.uid, 'emergency_staff') ||
+         hasRole(request.auth.uid, 'doctor'));
+      
+      allow write: if request.auth != null && 
+        hasRole(request.auth.uid, 'emergency_staff');
+    }
+    
+    // Audit logs - read-only for compliance staff
+    match /audit_logs/{logId} {
+      allow read: if request.auth != null && 
+        hasRole(request.auth.uid, 'compliance_officer');
+      allow create: if request.auth != null; // All authenticated users can create logs
+    }
+    
+    // Patient consent records
+    match /patient_consents/{consentId} {
+      allow read, write: if request.auth != null && 
+        (request.auth.uid == resource.data.patientUserId ||
+         request.auth.uid == resource.data.doctorUserId);
+    }
+    
+    // HELPER FUNCTIONS
+    function hasRole(userId, role) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role == role;
+    }
+    
+    function hasActiveAppointmentRelation(doctorUserId, patientId) {
+      return exists(/databases/$(database)/documents/appointments/
+        $(doctorUserId + '_' + patientId)) &&
+        get(/databases/$(database)/documents/appointments/
+        $(doctorUserId + '_' + patientId)).data.status in ['scheduled', 'in_progress'];
+    }
+    
+    function hasPatientConsent(patientId, doctorUserId) {
+      return exists(/databases/$(database)/documents/patient_consents/
+        $(patientId + '_' + doctorUserId)) &&
+        get(/databases/$(database)/documents/patient_consents/
+        $(patientId + '_' + doctorUserId)).data.isActive == true;
+    }
+    
+    function hasEmergencyAccess(patientId) {
+      return exists(/databases/$(database)/documents/emergency_transports/
+        $(patientId)) &&
+        get(/databases/$(database)/documents/emergency_transports/
+        $(patientId)).data.status == 'active';
+    }
+  }
+}

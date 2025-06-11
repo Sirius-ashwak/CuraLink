@@ -59,6 +59,11 @@ export interface IStorage {
   cancelEmergencyTransport(id: number): Promise<EmergencyTransport>;
   assignDriverToEmergencyTransport(id: number, driverName: string, driverPhone: string, estimatedArrival: Date): Promise<EmergencyTransport>;
   completeEmergencyTransport(id: number): Promise<EmergencyTransport>;
+  
+  // Prescription operations
+  createPrescription(prescription: any): Promise<any>;
+  getPrescriptionsByPatient(patientId: number): Promise<any[]>;
+  getPrescriptionsByDoctor(doctorId: number): Promise<any[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -68,6 +73,7 @@ export class MemStorage implements IStorage {
   private timeOffs: Map<number, TimeOff>;
   private appointments: Map<number, Appointment>;
   private emergencyTransports: Map<number, EmergencyTransport>;
+  private prescriptions: Map<number, any>;
   
   private userIdCounter: number;
   private doctorIdCounter: number;
@@ -75,6 +81,7 @@ export class MemStorage implements IStorage {
   private timeOffIdCounter: number;
   private appointmentIdCounter: number;
   private emergencyTransportIdCounter: number;
+  private prescriptionIdCounter: number;
   
   constructor() {
     this.users = new Map();
@@ -83,6 +90,7 @@ export class MemStorage implements IStorage {
     this.timeOffs = new Map();
     this.appointments = new Map();
     this.emergencyTransports = new Map();
+    this.prescriptions = new Map();
     
     this.userIdCounter = 1;
     this.doctorIdCounter = 1;
@@ -90,6 +98,7 @@ export class MemStorage implements IStorage {
     this.timeOffIdCounter = 1;
     this.appointmentIdCounter = 1;
     this.emergencyTransportIdCounter = 1;
+    this.prescriptionIdCounter = 1;
     
     this.seedData();
   }
@@ -418,65 +427,72 @@ export class MemStorage implements IStorage {
   
   // Seed data for demo purposes
   private seedData() {
-    // Create sample users
-    const patientUser: User = {
-      id: this.userIdCounter++,
-      email: "john@example.com",
-      password: "password123",
-      firstName: "John",
-      lastName: "Doe",
-      role: "patient",
-      profile: { age: 43, gender: "male" },
-      createdAt: new Date()
-    };
-    this.users.set(patientUser.id, patientUser);
-    
-    const doctorUser1: User = {
-      id: this.userIdCounter++,
-      email: "sarah@example.com",
-      password: "password123",
-      firstName: "Sarah",
-      lastName: "Johnson",
-      role: "doctor",
-      specialty: "General Physician",
-      profile: { bio: "Board certified general physician with 10 years of experience." },
-      createdAt: new Date()
-    };
-    this.users.set(doctorUser1.id, doctorUser1);
-    
-    const doctorUser2: User = {
-      id: this.userIdCounter++,
-      email: "michael@example.com",
-      password: "password123",
-      firstName: "Michael",
-      lastName: "Rodriguez",
-      role: "doctor",
-      specialty: "General Physician",
-      profile: { bio: "Family medicine specialist with a focus on preventive care." },
-      createdAt: new Date()
-    };
-    this.users.set(doctorUser2.id, doctorUser2);
-    
-    // Create doctors
-    const doctor1: Doctor = {
-      id: this.doctorIdCounter++,
-      userId: doctorUser1.id,
-      specialty: "General Physician",
-      averageRating: 48,
-      reviewCount: 120,
-      isAvailable: true
-    };
-    this.doctors.set(doctor1.id, doctor1);
-    
-    const doctor2: Doctor = {
-      id: this.doctorIdCounter++,
-      userId: doctorUser2.id,
-      specialty: "General Physician",
-      averageRating: 46,
-      reviewCount: 85,
-      isAvailable: true
-    };
-    this.doctors.set(doctor2.id, doctor2);
+    // Create 10 patient profiles
+    const patients = [
+      { email: "sarah.johnson@email.com", firstName: "Sarah", lastName: "Johnson", age: 34, gender: "Female", bio: "Software engineer, active lifestyle, occasional migraines" },
+      { email: "michael.chen@email.com", firstName: "Michael", lastName: "Chen", age: 28, gender: "Male", bio: "Marketing professional, diabetes type 1, regular fitness routine" },
+      { email: "elena.rodriguez@email.com", firstName: "Elena", lastName: "Rodriguez", age: 45, gender: "Female", bio: "Teacher, hypertension, mother of two" },
+      { email: "david.thompson@email.com", firstName: "David", lastName: "Thompson", age: 52, gender: "Male", bio: "Construction worker, back pain issues, high cholesterol" },
+      { email: "lisa.williams@email.com", firstName: "Lisa", lastName: "Williams", age: 29, gender: "Female", bio: "Nurse, anxiety management, healthy lifestyle advocate" },
+      { email: "james.brown@email.com", firstName: "James", lastName: "Brown", age: 67, gender: "Male", bio: "Retired accountant, arthritis" },
+      { email: "maria.garcia@email.com", firstName: "Maria", lastName: "Garcia", age: 41, gender: "Female", bio: "Restaurant owner, migraines" },
+      { email: "robert.lee@email.com", firstName: "Robert", lastName: "Lee", age: 35, gender: "Male", bio: "Graphic designer, carpal tunnel" },
+      { email: "jennifer.davis@email.com", firstName: "Jennifer", lastName: "Davis", age: 50, gender: "Female", bio: "Legal assistant, stress management" },
+      { email: "kevin.wilson@email.com", firstName: "Kevin", lastName: "Wilson", age: 38, gender: "Male", bio: "IT specialist, back pain from desk work" }
+    ];
+
+    patients.forEach(patient => {
+      const patientUser: User = {
+        id: this.userIdCounter++,
+        email: patient.email,
+        password: "SecurePass123",
+        firstName: patient.firstName,
+        lastName: patient.lastName,
+        role: "patient",
+        profile: { age: patient.age, gender: patient.gender, bio: patient.bio, phone: `+1-555-010${this.userIdCounter}` },
+        createdAt: new Date()
+      };
+      this.users.set(patientUser.id, patientUser);
+    });
+
+    // Create 10 doctor profiles
+    const doctors = [
+      { email: "dr.smith@hospital.com", firstName: "John", lastName: "Smith", specialty: "Cardiology", bio: "Board-certified cardiologist with 15 years of experience", experience: 15 },
+      { email: "dr.anderson@hospital.com", firstName: "Emily", lastName: "Anderson", specialty: "Pediatrics", bio: "Pediatric specialist focusing on child development", experience: 12 },
+      { email: "dr.martinez@hospital.com", firstName: "Carlos", lastName: "Martinez", specialty: "Dermatology", bio: "Dermatologist specializing in skin cancer prevention", experience: 10 },
+      { email: "dr.kim@hospital.com", firstName: "Susan", lastName: "Kim", specialty: "Neurology", bio: "Neurologist with expertise in migraine treatment", experience: 18 },
+      { email: "dr.taylor@hospital.com", firstName: "Michael", lastName: "Taylor", specialty: "Orthopedics", bio: "Orthopedic surgeon specializing in sports medicine", experience: 14 },
+      { email: "dr.white@hospital.com", firstName: "Rachel", lastName: "White", specialty: "Psychiatry", bio: "Psychiatrist focusing on anxiety and depression", experience: 11 },
+      { email: "dr.johnson@hospital.com", firstName: "David", lastName: "Johnson", specialty: "General Practice", bio: "Family physician with comprehensive care approach", experience: 20 },
+      { email: "dr.brown@hospital.com", firstName: "Lisa", lastName: "Brown", specialty: "Endocrinology", bio: "Endocrinologist specializing in diabetes management", experience: 13 },
+      { email: "dr.davis@hospital.com", firstName: "Mark", lastName: "Davis", specialty: "Gastroenterology", bio: "GI specialist with focus on digestive health", experience: 16 },
+      { email: "dr.wilson@hospital.com", firstName: "Amanda", lastName: "Wilson", specialty: "Oncology", bio: "Oncologist dedicated to cancer treatment and research", experience: 17 }
+    ];
+
+    doctors.forEach(doctor => {
+      const doctorUser: User = {
+        id: this.userIdCounter++,
+        email: doctor.email,
+        password: "SecurePass123",
+        firstName: doctor.firstName,
+        lastName: doctor.lastName,
+        role: "doctor",
+        specialty: doctor.specialty,
+        profile: { bio: doctor.bio, phone: `+1-555-100${this.userIdCounter}`, experience: doctor.experience },
+        createdAt: new Date()
+      };
+      this.users.set(doctorUser.id, doctorUser);
+
+      const doctorProfile: Doctor = {
+        id: this.doctorIdCounter++,
+        userId: doctorUser.id,
+        specialty: doctor.specialty,
+        averageRating: Math.floor(Math.random() * 10) + 40,
+        reviewCount: Math.floor(Math.random() * 100) + 50,
+        isAvailable: true
+      };
+      this.doctors.set(doctorProfile.id, doctorProfile);
+    });
     
     // Create availabilities for doctors
     const weekdays = [1, 2, 3, 4, 5]; // Monday to Friday
@@ -560,6 +576,27 @@ export class MemStorage implements IStorage {
       assignedHospital: "County General Hospital"
     });
   }
+
+  // Prescription operations
+  async createPrescription(prescriptionData: any): Promise<any> {
+    const id = this.prescriptionIdCounter++;
+    const prescription = { ...prescriptionData, id };
+    this.prescriptions.set(id, prescription);
+    return prescription;
+  }
+
+  async getPrescriptionsByPatient(patientId: number): Promise<any[]> {
+    return Array.from(this.prescriptions.values()).filter(p => p.patientId === patientId);
+  }
+
+  async getPrescriptionsByDoctor(doctorId: number): Promise<any[]> {
+    return Array.from(this.prescriptions.values()).filter(p => p.doctorId === doctorId);
+  }
 }
 
-export const storage = new MemStorage();
+import { FirebaseStorage } from './FirebaseStorage';
+
+// Choose storage implementation
+const USE_FIREBASE = true; // Use Firebase for production-ready storage
+
+export const storage = USE_FIREBASE ? new FirebaseStorage() : new MemStorage();

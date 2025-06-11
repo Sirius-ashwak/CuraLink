@@ -1,15 +1,22 @@
 import { GoogleGenerativeAI, GenerativeModel, GenerationConfig } from '@google/generative-ai';
 
-// Initialize the Gemini API
-const apiKey = process.env.GEMINI_API_KEY || '';
+// Load environment variables
+import * as dotenv from 'dotenv';
+dotenv.config();
 
-if (!apiKey) {
-  console.error('GEMINI_API_KEY is not defined. AI features will not work.');
+// Initialize the Gemini API from environment variables only
+const apiKey = process.env.GEMINI_API_KEY;
+
+let genAI: GoogleGenerativeAI | null = null;
+
+if (!apiKey || apiKey === 'undefined') {
+  console.warn('GEMINI_API_KEY is not configured. AI features will be disabled.');
+  genAI = null;
 } else {
-  console.log('GEMINI_API_KEY is configured. AI features are available.');
+  console.log('GEMINI_API_KEY is configured correctly. AI features are available.');
+  console.log('Gemini API Key length:', apiKey.length);
+  genAI = new GoogleGenerativeAI(apiKey);
 }
-
-const genAI = new GoogleGenerativeAI(apiKey);
 
 // Model configuration
 const modelName = 'gemini-1.5-pro';  // Updated to the latest Gemini model
@@ -37,9 +44,14 @@ Avoid making definitive diagnoses or prescribing specific medications.
 `;
 
 export class GeminiService {
-  private model: GenerativeModel;
+  private model: GenerativeModel | null;
 
   constructor() {
+    if (!genAI) {
+      this.model = null;
+      return;
+    }
+    
     this.model = genAI.getGenerativeModel({ 
       model: modelName,
       generationConfig,
@@ -50,6 +62,10 @@ export class GeminiService {
    * Generate a response to a medical query
    */
   async getMedicalResponse(query: string, chatHistory: Array<{role: string, content: string}> = []): Promise<string> {
+    if (!this.model) {
+      return "AI features are currently unavailable. Please configure your GEMINI_API_KEY to enable intelligent health assistance.";
+    }
+    
     try {
       // Enhanced prompt that encourages structured responses
       const adjustedQuery = `${MEDICAL_SYSTEM_PROMPT}
@@ -121,6 +137,15 @@ User question: ${query}`;
     selfCare: string[];
     urgency: 'low' | 'medium' | 'high';
   }> {
+    if (!this.model) {
+      return {
+        recommendedAction: "AI symptom analysis is currently unavailable. Please consult with a healthcare professional for proper medical advice.",
+        possibleCauses: ["Unable to analyze - AI service not configured"],
+        selfCare: ["Consult a healthcare provider", "Monitor your symptoms"],
+        urgency: "medium"
+      };
+    }
+    
     try {
       const promptText = `
         I need a structured analysis of the following health symptoms:
@@ -230,6 +255,110 @@ User question: ${query}`;
         sideEffects: ["Information not available"],
         precautions: ["Follow your doctor's instructions"],
         alternatives: ["Consult with a healthcare provider"]
+      };
+    }
+  }
+
+  /**
+   * Process and transcribe voice data
+   * This method processes voice transcripts through Gemini for improved accuracy
+   */
+  async processVoiceTranscript(transcript: string): Promise<string> {
+    try {
+      const promptText = `
+        I need you to correct and improve this voice transcript for a medical assistant:
+        "${transcript}"
+        
+        Correct any obvious errors in the transcript.
+        If medical terms are misrecognized, fix them to their likely correct versions.
+        Return only the corrected transcript text without any additional explanation.
+      `;
+
+      const result = await this.model.generateContent(promptText);
+      const response = result.response.text();
+      
+      return response.trim();
+    } catch (error: any) {
+      console.error('Error processing voice transcript:', error);
+      // Return the original transcript if there's an error
+      return transcript;
+    }
+  }
+
+  /**
+   * Analyze an image and provide medical insights
+   * Takes a base64-encoded image and returns analysis
+   */
+  async analyzeImage(imageBase64: string, userDescription: string = ""): Promise<{
+    observations: string[];
+    possibleConditions: string[];
+    recommendations: string[];
+    furtherQuestions: string[];
+  }> {
+    try {
+      // For Gemini 1.5 Pro that supports multimodal inputs
+      // We need to create a model that accepts images
+      const visionModel = genAI.getGenerativeModel({ 
+        model: modelName, 
+        generationConfig,
+      });
+
+      const prompt = `
+        ${MEDICAL_SYSTEM_PROMPT}
+        
+        Analyze this medical image and provide insights.
+        ${userDescription ? `User description: ${userDescription}` : ''}
+        
+        Provide your response in the following JSON format:
+        {
+          "observations": ["List 3-4 visible observations from the image"],
+          "possibleConditions": ["List 2-3 potential conditions that might be related"],
+          "recommendations": ["List 2-3 recommended steps or actions"],
+          "furtherQuestions": ["List 2-3 questions you would ask to better assess the situation"]
+        }
+        
+        Only return the JSON with no additional text.
+      `;
+
+      // Remove the data URL prefix if present to get just the base64 data
+      const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+      
+      // Create the parts array with both the text prompt and the image
+      const parts = [
+        { text: prompt },
+        { inlineData: { data: base64Data, mimeType: "image/jpeg" } }
+      ];
+
+      const result = await visionModel.generateContent({ contents: [{ role: "user", parts }] });
+      const response = result.response.text();
+      
+      try {
+        // Handle responses that might be wrapped in markdown code blocks
+        let jsonStr = response.trim();
+        
+        // Check if the response is wrapped in markdown code block ```json ... ```
+        const codeBlockMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (codeBlockMatch && codeBlockMatch[1]) {
+          jsonStr = codeBlockMatch[1].trim();
+        }
+        
+        return JSON.parse(jsonStr);
+      } catch (parseError) {
+        console.error('Failed to parse AI image analysis as JSON:', parseError);
+        return {
+          observations: ["Unable to analyze the image clearly"],
+          possibleConditions: ["Image analysis inconclusive"],
+          recommendations: ["Consider taking a clearer image", "Consult with a healthcare provider"],
+          furtherQuestions: ["Can you describe what you're concerned about?", "How long have you noticed this?"]
+        };
+      }
+    } catch (error: any) {
+      console.error('Error analyzing image:', error);
+      return {
+        observations: ["Error processing the image"],
+        possibleConditions: ["Unable to analyze due to technical issues"],
+        recommendations: ["Try uploading a different image", "Consult with a healthcare provider directly"],
+        furtherQuestions: ["Can you describe your symptoms instead?"]
       };
     }
   }

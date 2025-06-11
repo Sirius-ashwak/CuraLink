@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { useWebSocket } from "@/context/WebSocketContext";
+// WebSocket removed for better reliability in remote areas
 
 export default function ConnectionStatus() {
-  const { connected } = useWebSocket();
+  // Always show as connected since we use reliable HTTP requests
   const [status, setStatus] = useState<"online" | "offline">("online");
   
   useEffect(() => {
-    setStatus(connected ? "online" : "offline");
+    // Use browser's online/offline detection instead of WebSocket
+    setStatus(navigator.onLine ? "online" : "offline");
     
     const handleOnline = () => setStatus("online");
     const handleOffline = () => setStatus("offline");
@@ -18,7 +19,7 @@ export default function ConnectionStatus() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [connected]);
+  }, []);
   
   return (
     <div className="relative connection-status">

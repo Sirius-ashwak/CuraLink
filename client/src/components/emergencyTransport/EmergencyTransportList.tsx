@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Ambulance, Clock, MapPin, Info, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { EmergencyTransportWithPatient } from '@shared/schema';
-import { queryClient } from '@/lib/queryClient';
+import queryClient from '@/lib/reactQueryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LoadingScreen } from '@/components/ui/loading-screen';
@@ -42,7 +42,14 @@ const MapView: React.FC<MapViewProps> = ({ transport }) => {
         }
       }
       
-      // If coordinates aren't available or invalid, try geolocation
+      // Always provide sensible fallback for demo purposes
+      // Using hospital coordinates in San Francisco as fallback location
+      const fallbackLocation = { lat: 37.7749, lng: -122.4194 };
+      setUserLocation(fallbackLocation);
+      setMapError("Using SF Medical Center as your location for demonstration purposes.");
+      setIsMapLoading(false);
+      
+      // Try geolocation in the background, will update the map if successful
       if (navigator.geolocation) {
         try {
           navigator.geolocation.getCurrentPosition(
@@ -51,28 +58,18 @@ const MapView: React.FC<MapViewProps> = ({ transport }) => {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
               });
-              setIsMapLoading(false);
+              setMapError(null); // Clear error once we have real location
             },
             (error) => {
               console.error('Error getting location:', error);
-              // Fall back to default location
-              setUserLocation(defaultLocation);
-              setMapError("Could not access your current location. Using default location.");
-              setIsMapLoading(false);
+              // Keep the fallback location that's already set
             },
-            { timeout: 5000, enableHighAccuracy: true }
+            { timeout: 10000, enableHighAccuracy: true }
           );
         } catch (error) {
           console.error('Geolocation error:', error);
-          setUserLocation(defaultLocation);
-          setMapError("Error accessing location. Using default location.");
-          setIsMapLoading(false);
+          // Keep the fallback location that's already set
         }
-      } else {
-        // Geolocation not supported
-        setUserLocation(defaultLocation);
-        setMapError("Geolocation not supported by your browser. Using default location.");
-        setIsMapLoading(false);
       }
     };
 
@@ -128,7 +125,7 @@ const MapView: React.FC<MapViewProps> = ({ transport }) => {
         </div>
       )}
       <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-        <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""}>
+        <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_CLOUD_API_KEY || ""}>
           <GoogleMap
             center={userLocation || defaultLocation}
             zoom={14}
@@ -169,6 +166,20 @@ export default function EmergencyTransportList() {
   const { data: transportRequests, isLoading, error } = useQuery<EmergencyTransportWithPatient[]>({
     queryKey: ['/api/emergency-transport', user?.id],
     enabled: !!user?.id,
+    queryFn: async () => {
+      // For patients, fetch their specific requests
+      if (user?.role === 'patient') {
+        const res = await fetch(`/api/emergency-transport/patient/${user.id}`);
+        if (!res.ok) throw new Error('Failed to load transport requests');
+        return res.json();
+      } 
+      // For doctors or admins, fetch all active requests
+      else {
+        const res = await fetch('/api/emergency-transport');
+        if (!res.ok) throw new Error('Failed to load transport requests');
+        return res.json();
+      }
+    }
   });
 
   const cancelTransport = async (id: number) => {

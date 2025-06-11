@@ -55,13 +55,10 @@ export default function VideoConsultation({
           }, { merge: true });
           
           // Update appointment status in our database
-          await apiRequest(`/api/appointments/${appointmentId}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ 
-              status: 'in-progress',
-              callUrl: `/video-call/${appointmentId}`
-            }),
-          } as any);
+          await apiRequest('PATCH', `/api/appointments/${appointmentId}`, { 
+            status: 'in-progress',
+            callUrl: `/video-call/${appointmentId}`
+          });
         } else {
           // Patient joins the room
           await setDoc(docRef, {
@@ -155,10 +152,7 @@ export default function VideoConsultation({
       }, { merge: true });
       
       // Update appointment status
-      await apiRequest(`/api/appointments/${appointmentId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'completed' }),
-      } as any);
+      await apiRequest('PATCH', `/api/appointments/${appointmentId}`, { status: 'completed' });
       
       // Notify user
       toast({

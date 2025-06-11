@@ -6,6 +6,7 @@ import {
   UserSearch, 
   CalendarDays, 
   Ambulance, 
+  Shield,
   MoreVertical, 
   ArrowRight,
   X
@@ -45,6 +46,16 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
   };
 
   const handleTabChange = (tabName: string) => {
+    // Handle external navigation for emergency transport
+    if (tabName === 'emergency-transport-page') {
+      window.location.href = '/emergency-transport';
+      return;
+    }
+    // Handle external navigation for industry dashboard
+    if (tabName === 'industry-dashboard') {
+      window.location.href = '/industry-dashboard';
+      return;
+    }
     onTabChange(tabName);
     setIsMenuOpen(false);
   };
@@ -85,6 +96,12 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
       label: 'Emergency Transport', 
       icon: <Ambulance className="h-4.5 w-4.5" />,
       colorClass: 'text-rose-400'
+    },
+    { 
+      id: 'industry-dashboard', 
+      label: 'Industry Dashboard', 
+      icon: <Shield className="h-4.5 w-4.5" />,
+      colorClass: 'text-emerald-400'
     }
   ];
 

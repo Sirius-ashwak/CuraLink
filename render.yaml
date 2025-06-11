@@ -1,17 +1,55 @@
 services:
   - type: web
-    name: curalink
-    env: node
-    buildCommand: npm install && npm run build
-    startCommand: node build/server/index.js
+    name: curalink-telehealth
+    runtime: node
+    plan: starter # or standard/pro for production
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    
+    # Environment variables (set these in Render dashboard)
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 5000
+        
+      # Firebase Configuration (add in Render dashboard)
+      - key: VITE_FIREBASE_API_KEY
+        sync: false
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        sync: false
+      - key: VITE_FIREBASE_PROJECT_ID
+        sync: false
+      - key: VITE_FIREBASE_STORAGE_BUCKET
+        sync: false
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        sync: false
+      - key: VITE_FIREBASE_APP_ID
+        sync: false
+        
+      # Google Cloud Configuration
+      - key: GOOGLE_CLOUD_PROJECT_ID
+        sync: false
+      - key: GOOGLE_CLOUD_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLOUD_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CLOUD_API_KEY
+        sync: false
+        
+      # AI Services
       - key: GEMINI_API_KEY
         sync: false
+        
+      # Twilio (Video Calls)
       - key: TWILIO_ACCOUNT_SID
         sync: false
-      - key: TWILIO_API_KEY
+      - key: TWILIO_AUTH_TOKEN
         sync: false
-      - key: TWILIO_API_SECRET
+        
+      # Google Maps
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
+      - key: VITE_GOOGLE_MAPS_API_KEY
         sync: false
