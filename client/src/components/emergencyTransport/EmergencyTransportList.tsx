@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Ambulance, Clock, MapPin, Info, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { EmergencyTransportWithPatient } from '@shared/schema';
-import queryClient from '@/lib/reactQueryClient';
+import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { LoadingScreen } from '@/components/ui/loading-screen';
@@ -22,9 +21,15 @@ const MapView: React.FC<MapViewProps> = ({ transport }) => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isMapLoading, setIsMapLoading] = useState(true);
   const [mapError, setMapError] = useState<string | null>(null);
+  const mapRef = React.useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [directionsRenderer, setDirectionsRenderer] = useState<google.maps.DirectionsRenderer | null>(null);
 
   // Default location (San Francisco) for fallback
-  const defaultLocation = { lat: 37.7749, lng: -122.4194 };
+  const defaultLocation = {
+    lat: 37.7749,
+    lng: -122.4194
+  };
 
   useEffect(() => {
     // Try to parse pickup coordinates first if available
@@ -106,6 +111,134 @@ const MapView: React.FC<MapViewProps> = ({ transport }) => {
     };
   }, [transport]);
 
+  // Initialize Google Maps
+  useEffect(() => {
+    if (isMapLoading || !userLocation || !mapRef.current) return;
+    
+    // Check if Google Maps API is loaded
+    if (!window.google || !window.google.maps) {
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      if (!apiKey) {
+        console.error('Google Maps API key is missing');
+        setMapError("Google Maps API key is missing. Map cannot be displayed.");
+        return;
+      }
+      
+      // Load Google Maps API
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeMap;
+      document.head.appendChild(script);
+    } else {
+      initializeMap();
+    }
+    
+    function initializeMap() {
+      // Create map
+      const newMap = new google.maps.Map(mapRef.current!, {
+        center: userLocation,
+        zoom: 13,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+      });
+      
+      // Create directions renderer
+      const newDirectionsRenderer = new google.maps.DirectionsRenderer({
+        map: newMap,
+        suppressMarkers: true,
+        polylineOptions: {
+          strokeColor: '#4285F4',
+          strokeWeight: 5,
+        },
+      });
+      
+      setMap(newMap);
+      setDirectionsRenderer(newDirectionsRenderer);
+      
+      // Add user marker
+      new google.maps.Marker({
+        position: userLocation,
+        map: newMap,
+        title: 'Your Location',
+        icon: {
+          url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+          labelOrigin: new google.maps.Point(16, -10),
+        },
+        label: {
+          text: 'You',
+          color: '#FF0000',
+          fontWeight: 'bold',
+        },
+      });
+      
+      // Add destination marker if we have coordinates
+      if (transport.destination) {
+        // For demo purposes, create a destination point
+        const destinationLocation = {
+          lat: userLocation.lat + 0.02,
+          lng: userLocation.lng + 0.01
+        };
+        
+        new google.maps.Marker({
+          position: destinationLocation,
+          map: newMap,
+          title: 'Hospital',
+          icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+            labelOrigin: new google.maps.Point(16, -10),
+          },
+          label: {
+            text: 'Hospital',
+            color: '#0000FF',
+            fontWeight: 'bold',
+          },
+        });
+        
+        // Calculate route
+        const directionsService = new google.maps.DirectionsService();
+        directionsService.route(
+          {
+            origin: userLocation,
+            destination: destinationLocation,
+            travelMode: google.maps.TravelMode.DRIVING,
+          },
+          (result, status) => {
+            if (status === google.maps.DirectionsStatus.OK && result) {
+              newDirectionsRenderer.setDirections(result);
+            } else {
+              console.error('Directions request failed due to ' + status);
+            }
+          }
+        );
+      }
+    }
+  }, [isMapLoading, userLocation, transport.destination]);
+
+  // Update driver marker when location changes
+  useEffect(() => {
+    if (!map || !driverLocation) return;
+    
+    // Add or update driver marker
+    new google.maps.Marker({
+      position: driverLocation,
+      map,
+      title: 'Ambulance',
+      icon: {
+        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        scale: 5,
+        fillColor: '#FF5555',
+        fillOpacity: 1,
+        strokeWeight: 2,
+        strokeColor: '#FFFFFF',
+        rotation: 0,
+      },
+    });
+  }, [map, driverLocation]);
+
   if (isMapLoading) return (
     <LoadingScreen
       type="minimal"
@@ -124,35 +257,10 @@ const MapView: React.FC<MapViewProps> = ({ transport }) => {
           {mapError}
         </div>
       )}
-      <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-        <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_CLOUD_API_KEY || ""}>
-          <GoogleMap
-            center={userLocation || defaultLocation}
-            zoom={14}
-            mapContainerStyle={{ width: '100%', height: '300px' }}
-            options={{
-              styles: [
-                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-              ]
-            }}
-          >
-            {userLocation && (
-              <Marker
-                position={userLocation}
-                title="Your Location"
-              />
-            )}
-            {driverLocation && (
-              <Marker
-                position={driverLocation}
-                title="Ambulance Location"
-              />
-            )}
-          </GoogleMap>
-        </LoadScript>
-      </div>
+      <div 
+        ref={mapRef} 
+        className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 h-[300px] w-full"
+      ></div>
     </div>
   );
 };
@@ -198,7 +306,7 @@ export default function EmergencyTransportList() {
       }
 
       // Update the data
-      queryClient.invalidateQueries({ queryKey: ['/api/emergency-transport'] });
+      apiRequest('/api/emergency-transport', { method: 'GET' });
 
       toast({
         title: 'Transport Canceled',
@@ -217,15 +325,15 @@ export default function EmergencyTransportList() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'requested':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">Requested</Badge>;
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800">Requested</Badge>;
       case 'assigned':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300">Driver Assigned</Badge>;
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">Driver Assigned</Badge>;
       case 'in_progress':
-        return <Badge variant="outline" className="bg-indigo-100 text-indigo-800 border-indigo-300">In Progress</Badge>;
+        return <Badge variant="outline" className="bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800">In Progress</Badge>;
       case 'completed':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">Completed</Badge>;
+        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800">Completed</Badge>;
       case 'canceled':
-        return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">Canceled</Badge>;
+        return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">Canceled</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

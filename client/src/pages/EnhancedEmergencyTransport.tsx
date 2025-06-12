@@ -2,19 +2,22 @@ import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import EnhancedEmergencyForm from '@/components/EmergencyTransport/EnhancedEmergencyForm';
-import NearbyFacilitiesMap from '@/components/EmergencyTransport/NearbyFacilitiesMap';
+import EmergencyTransportForm from '@/components/emergencyTransport/EmergencyTransportForm';
+import EmergencyTransportList from '@/components/emergencyTransport/EmergencyTransportList';
+import NearbyFacilitiesMap from '@/components/emergencyTransport/NearbyFacilitiesMap';
 import { ArrowLeft, CheckCircle, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 
 const EnhancedEmergencyTransport: React.FC = () => {
   const [, navigate] = useLocation();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('request');
   const [destination, setDestination] = useState('');
   const [transportRequested, setTransportRequested] = useState(false);
 
-  // Mock user ID - would normally come from auth context
-  const patientId = '1';
+  // Get user ID from auth context
+  const patientId = user?.id?.toString() || '1';
 
   const handleSelectFacility = (facilityName: string, facilityAddress: string) => {
     setDestination(`${facilityName}, ${facilityAddress}`);
@@ -82,10 +85,7 @@ const EnhancedEmergencyTransport: React.FC = () => {
               <CardTitle>Request Details</CardTitle>
             </CardHeader>
             <CardContent>
-              <EnhancedEmergencyForm 
-                onTransportRequested={handleTransportRequested} 
-                patientId={patientId} 
-              />
+              <EmergencyTransportForm />
               
               {destination && (
                 <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-100 flex items-start">
@@ -128,6 +128,10 @@ const EnhancedEmergencyTransport: React.FC = () => {
           </div>
         </TabsContent>
       </Tabs>
+      
+      <div className="mt-6">
+        <EmergencyTransportList />
+      </div>
       
       <div className="mt-6 text-sm text-gray-500 text-center">
         <p>
