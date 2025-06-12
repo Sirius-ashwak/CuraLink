@@ -41,6 +41,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   // Apply theme class to document when theme changes
   useEffect(() => {
     const root = window.document.documentElement;
+    const body = window.document.body;
     
     // Add a transition class first for smooth theme switching
     root.classList.add('theme-transition');
@@ -50,9 +51,13 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
       if (theme === 'dark') {
         root.classList.add('dark');
         root.classList.remove('light');
+        body.classList.add('dark');
+        body.classList.remove('light');
       } else {
         root.classList.add('light');
         root.classList.remove('dark');
+        body.classList.add('light');
+        body.classList.remove('dark');
       }
 
       // Remove the transition class after the switch is complete

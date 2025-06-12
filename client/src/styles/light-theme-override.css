@@ -28,9 +28,9 @@
 }
 
 /* General background and text colors */
-html, 
-body, 
-#root {
+html.light, 
+body.light, 
+.light #root {
   background-color: hsl(210, 40%, 98%) !important;
   color: hsl(222, 47%, 11%) !important;
 }
@@ -231,4 +231,62 @@ body,
   background-color: white !important;
   color: hsl(222, 47%, 11%) !important;
   border: 1px solid hsl(214.3, 31.8%, 91.4%) !important;
+}
+
+/* Patient dashboard specific overrides */
+.light .min-h-screen.bg-gradient-to-b.from-gray-950 {
+  background: linear-gradient(to bottom, #f8fafc, #f1f5f9) !important;
+}
+
+.light .bg-gradient-to-b.from-gray-900.via-gray-900.to-gray-950 {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.light .text-white {
+  color: #1e293b !important;
+}
+
+.light .text-gray-400 {
+  color: #64748b !important;
+}
+
+/* Fix emergency transport form */
+.light .bg-gradient-to-b.from-gray-800.to-gray-900 {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Fix appointment cards */
+.light .rounded-xl.shadow-lg.p-5.border.border-indigo-900\/30.bg-gradient-to-b.from-gray-900.via-gray-900.to-gray-950 {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Fix AI chat component */
+.light .h-\[650px\] {
+  background-color: white !important;
+}
+
+.light .bg-gradient-to-b.from-gray-900.via-gray-900.to-gray-950.border.border-indigo-900\/30 {
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.light .bg-gradient-to-r.from-indigo-900\/40.via-indigo-800\/30.to-indigo-900\/40 {
+  background: #f1f5f9 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.light .bg-clip-text.text-transparent.bg-gradient-to-r.from-indigo-100.to-blue-200 {
+  background-image: none !important;
+  color: #1e40af !important;
+  -webkit-text-fill-color: #1e40af !important;
+}
+
+/* Fix emergency transport form */
+.light .w-full.max-w-md.mx-auto.shadow-lg {
+  background-color: white !important;
+  border: 1px solid #e2e8f0 !important;
 }
