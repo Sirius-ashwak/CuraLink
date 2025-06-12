@@ -32,6 +32,16 @@
     --border: 0 0% 20%;
     --input: 0 0% 20%;
     --ring: 240 4.9% 83.9%;
+    
+    /* Sidebar variables */
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 240 4.9% 83.9%;
   }
   
   .light {
@@ -54,6 +64,16 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
+    
+    /* Sidebar variables */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 210 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 221.2 83.2% 53.3%;
   }
 }
 
@@ -110,17 +130,4 @@
 /* Font size adjustments */
 html {
   font-size: 16px; /* Default - will be overridden by JS */
-}
-
-/* Light theme specific overrides */
-.light .calendar-day.available {
-  @apply cursor-pointer hover:bg-blue-100 hover:border-blue-300 text-gray-800;
-}
-
-.light .calendar-day.unavailable {
-  @apply text-gray-400;
-}
-
-.light .calendar-day.selected {
-  @apply bg-blue-500 text-white;
 }

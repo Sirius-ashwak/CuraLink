@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
+import React, { useState, useCallback, useEffect } from 'react';
 
+// Map container styles
 const containerStyle = {
   width: '100%',
-  height: '300px'
+  height: '300px',
+  borderRadius: '8px',
+  border: '1px solid #e2e8f0',
+  overflow: 'hidden'
 };
 
 // Default center (San Francisco)
@@ -12,11 +15,16 @@ const defaultCenter = {
   lng: -122.4194
 };
 
+interface Location {
+  lat: number;
+  lng: number;
+}
+
 interface EmergencyTransportMapProps {
   transportId?: string;
-  patientLocation?: { lat: number; lng: number };
-  destinationLocation?: { lat: number; lng: number };
-  onLocationUpdate?: (location: { lat: number; lng: number }) => void;
+  patientLocation?: Location;
+  destinationLocation?: Location;
+  onLocationUpdate?: (location: Location) => void;
   height?: string;
 }
 
@@ -27,34 +35,17 @@ const EmergencyTransportMap: React.FC<EmergencyTransportMapProps> = ({
   onLocationUpdate,
   height = '300px'
 }) => {
-  const [center, setCenter] = useState<{ lat: number; lng: number }>(patientLocation || defaultCenter);
-  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [center, setCenter] = useState<Location>(patientLocation || defaultCenter);
+  const [driverLocation, setDriverLocation] = useState<Location | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
 
   // Get Google Maps API key from environment
   const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
-  // Initialize map
-  const onLoad = () => {
-    setIsMapLoaded(true);
-  };
-
-  // Handle map errors
-  const onError = () => {
-    setMapError("Error loading Google Maps. Please check your API key.");
-  };
-
-  // Update center when patient location changes
-  useEffect(() => {
-    if (patientLocation) {
-      setCenter(patientLocation);
-    }
-  }, [patientLocation]);
-
   // Simulate driver movement (in a real app, this would come from a real-time database)
   useEffect(() => {
-    if (!transportId || !isMapLoaded || !patientLocation) return;
+    if (!transportId || !patientLocation) return;
 
     // Simulate driver location updates
     const interval = setInterval(() => {
@@ -73,7 +64,14 @@ const EmergencyTransportMap: React.FC<EmergencyTransportMapProps> = ({
     }, 5000);
     
     return () => clearInterval(interval);
-  }, [transportId, isMapLoaded, patientLocation, onLocationUpdate]);
+  }, [transportId, patientLocation, onLocationUpdate]);
+
+  // Update center when patient location changes
+  useEffect(() => {
+    if (patientLocation) {
+      setCenter(patientLocation);
+    }
+  }, [patientLocation]);
 
   if (mapError) {
     return (
@@ -84,68 +82,57 @@ const EmergencyTransportMap: React.FC<EmergencyTransportMapProps> = ({
   }
 
   return (
-    <div style={{ height }}>
-      <LoadScript
-        googleMapsApiKey={googleMapsApiKey}
-        onError={onError}
-      >
-        <GoogleMap
-          mapContainerStyle={{ ...containerStyle, height }}
-          center={center}
-          zoom={14}
-          onLoad={onLoad}
-        >
-          {/* Patient location marker */}
-          {patientLocation && (
-            <Marker
-              position={patientLocation}
-              icon={{
-                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
-                labelOrigin: new google.maps.Point(16, -10),
-              }}
-              label={{
-                text: 'Patient',
-                color: '#FF0000',
-                fontWeight: 'bold',
-              }}
-            />
-          )}
-          
-          {/* Destination location marker */}
-          {destinationLocation && (
-            <Marker
-              position={destinationLocation}
-              icon={{
-                url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
-                labelOrigin: new google.maps.Point(16, -10),
-              }}
-              label={{
-                text: 'Hospital',
-                color: '#0000FF',
-                fontWeight: 'bold',
-              }}
-            />
-          )}
-          
-          {/* Driver location marker */}
+    <div style={{ height, width: '100%' }}>
+      <div style={{ 
+        ...containerStyle, 
+        height, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        backgroundColor: '#f1f5f9',
+        color: '#64748b',
+        fontSize: '14px',
+        textAlign: 'center',
+        padding: '20px'
+      }}>
+        <div>
+          <p className="mb-2">Map visualization available in full version</p>
+          <p className="text-xs">
+            {patientLocation && destinationLocation ? 
+              `Transport route from ${patientLocation.lat.toFixed(4)}, ${patientLocation.lng.toFixed(4)} to destination` : 
+              'Location data will be displayed here'}
+          </p>
           {driverLocation && (
-            <Marker
-              position={driverLocation}
-              icon={{
-                url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
-                labelOrigin: new google.maps.Point(16, -10),
-              }}
-              label={{
-                text: 'Ambulance',
-                color: '#008800',
-                fontWeight: 'bold',
-              }}
-            />
+            <p className="text-xs mt-2 text-green-600">
+              Driver is currently {calculateDistance(
+                patientLocation?.lat || 0, 
+                patientLocation?.lng || 0, 
+                driverLocation.lat, 
+                driverLocation.lng
+              )} away
+            </p>
           )}
-        </GoogleMap>
-      </LoadScript>
+        </div>
+      </div>
     </div>
   );
 };
+
+// Helper function to calculate distance between two points
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): string {
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c; // Distance in kilometers
+  
+  return distance < 1 ? 
+    `${Math.round(distance * 1000)}m` : 
+    `${distance.toFixed(1)}km`;
+}
 
 export default EmergencyTransportMap;
