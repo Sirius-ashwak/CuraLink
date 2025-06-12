@@ -20,7 +20,6 @@ export const LightThemeProvider: React.FC<LightThemeProviderProps> = ({
   // Force light theme if needed or ensure proper light theme application
   useEffect(() => {
     const root = window.document.documentElement;
-    const body = window.document.body;
     
     // Either follow the forceLight prop or respect the theme context
     if (forceLight && theme === 'dark') {
@@ -38,8 +37,8 @@ export const LightThemeProvider: React.FC<LightThemeProviderProps> = ({
       root.setAttribute('data-theme', 'light');
       
       // Apply to body as well for extra selectors
-      body.classList.add('light');
-      body.classList.remove('dark');
+      document.body.classList.add('light');
+      document.body.classList.remove('dark');
     }
     
     return () => {
