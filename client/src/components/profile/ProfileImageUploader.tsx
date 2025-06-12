@@ -63,7 +63,11 @@ export default function ProfileImageUploader({ onImageUploaded, className }: Pro
       reader.onload = async (event) => {
         try {
           if (!event.target?.result) throw new Error("Failed to read file");
-          if (!storage) throw new Error("Firebase Storage is not initialized");
+          
+          // Check if Firebase Storage is initialized
+          if (!storage) {
+            throw new Error("Firebase Storage is not available. Using local storage fallback.");
+          }
           
           const imageData = event.target.result as string;
           
@@ -99,11 +103,48 @@ export default function ProfileImageUploader({ onImageUploaded, className }: Pro
           });
         } catch (error) {
           console.error('Error uploading image:', error);
-          toast({
-            title: "Upload failed",
-            description: error instanceof Error ? error.message : "Failed to upload image",
-            variant: "destructive"
-          });
+          
+          // Fallback to local storage if Firebase fails
+          if (error instanceof Error && error.message.includes("Firebase Storage is not available")) {
+            // Store image in localStorage as fallback
+            try {
+              const imageData = event.target?.result as string;
+              localStorage.setItem(`profile_image_${user.id}`, imageData);
+              
+              // Update user profile with data URL directly
+              if (setUser && user) {
+                setUser({
+                  ...user,
+                  profile: {
+                    ...user.profile,
+                    avatar: imageData
+                  }
+                });
+              }
+              
+              // Call callback if provided
+              if (onImageUploaded) {
+                onImageUploaded(imageData);
+              }
+              
+              toast({
+                title: "Profile image updated (local only)",
+                description: "Your profile image has been saved locally",
+              });
+            } catch (localError) {
+              toast({
+                title: "Upload failed",
+                description: "Failed to save image even locally",
+                variant: "destructive"
+              });
+            }
+          } else {
+            toast({
+              title: "Upload failed",
+              description: error instanceof Error ? error.message : "Failed to upload image",
+              variant: "destructive"
+            });
+          }
         } finally {
           setIsUploading(false);
         }
