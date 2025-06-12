@@ -28,9 +28,9 @@
 }
 
 /* General background and text colors */
-html, 
-body, 
-#root {
+html.light, 
+body.light, 
+.light #root {
   background-color: hsl(210, 40%, 98%) !important;
   color: hsl(222, 47%, 11%) !important;
 }
@@ -292,5 +292,55 @@ body,
 
 .light [role="option"][aria-selected="true"] {
   background-color: hsl(210, 40%, 96.1%) !important;
+  color: hsl(221.2, 83.2%, 53.3%) !important;
+}
+
+/* Login/Register specific overrides */
+.light .fixed.inset-0.bg-black {
+  background-color: hsl(210, 40%, 98%) !important;
+}
+
+.light .text-white {
+  color: hsl(222, 47%, 11%) !important;
+}
+
+.light .text-gray-400 {
+  color: hsl(215, 16%, 47%) !important;
+}
+
+/* Fix login/register form background */
+.light .bg-gray-900 {
+  background-color: white !important;
+}
+
+.light .border-gray-800 {
+  border-color: hsl(214.3, 31.8%, 91.4%) !important;
+}
+
+/* Fix login/register form inputs */
+.light .bg-gray-800 {
+  background-color: white !important;
+}
+
+.light .border-gray-700 {
+  border-color: hsl(214.3, 31.8%, 91.4%) !important;
+}
+
+.light .text-gray-300 {
+  color: hsl(222, 47%, 11%) !important;
+}
+
+/* Fix login/register form buttons */
+.light .bg-blue-600 {
+  background-color: hsl(221.2, 83.2%, 53.3%) !important;
+}
+
+.light .hover\:bg-blue-700:hover {
+  background-color: hsl(221.2, 83.2%, 45%) !important;
+}
+
+/* Fix app name in login/register */
+.light .text-3xl.font-bold.text-white,
+.light .text-2xl.font-bold.text-white {
   color: hsl(221.2, 83.2%, 53.3%) !important;
 }

@@ -97,7 +97,7 @@ export default function LoginForm() {
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-blue-800 shadow-md mb-4">
           <Heart className="w-8 h-8 text-white" strokeWidth={2.5} />
         </div>
-        <h1 className="text-3xl font-bold text-white">AI Health Bridge</h1>
+        <h1 className="text-3xl font-bold text-white">Curalink</h1>
         <p className="text-gray-400 mt-3 text-base">Connecting communities to healthcare</p>
       </div>
       

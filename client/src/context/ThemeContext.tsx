@@ -27,14 +27,19 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   useEffect(() => {
     // Check if we need to apply the theme on first render
     const root = window.document.documentElement;
+    const body = window.document.body;
     const initialTheme = localStorage.getItem('theme') as Theme || 'dark';
     
     if (initialTheme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
+      body.classList.add('dark');
+      body.classList.remove('light');
     } else {
       root.classList.add('light');
       root.classList.remove('dark');
+      body.classList.add('light');
+      body.classList.remove('dark');
     }
   }, []);
 

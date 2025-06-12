@@ -50,7 +50,6 @@ export default function RegisterForm() {
   });
 
   const onSubmit = async (data: RegisterFormValues) => {
-    setIsLoading(true);
     try {
       // Create user with Firebase Authentication
       const firebaseUser = await registerWithFirebase({
@@ -82,7 +81,7 @@ export default function RegisterForm() {
 
       toast({
         title: "Account created successfully!",
-        description: `Welcome to AI Health Bridge, ${data.firstName}!`,
+        description: `Welcome to Curalink, ${data.firstName}!`,
       });
 
       // Redirect to dashboard
@@ -105,7 +104,7 @@ export default function RegisterForm() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <Heart className="h-8 w-8 text-blue-500 mr-2" />
-            <h1 className="text-2xl font-bold text-white">AI Health Bridge</h1>
+            <h1 className="text-2xl font-bold text-white">Curalink</h1>
           </div>
           <p className="text-gray-300 text-lg">Create your account</p>
         </div>
@@ -131,12 +130,13 @@ export default function RegisterForm() {
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">First Name</FormLabel>
+                        <FormLabel htmlFor="firstName" className="text-gray-300">First Name</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
+                            id="firstName"
                             placeholder="John" 
                             {...field} 
-                            className="bg-slate-700 border-slate-600 text-white placeholder-gray-400"
+                            className="bg-slate-700 border-slate-600 text-white placeholder:text-gray-400"
                           />
                         </FormControl>
                         <FormMessage />
@@ -148,12 +148,13 @@ export default function RegisterForm() {
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Last Name</FormLabel>
+                        <FormLabel htmlFor="lastName" className="text-gray-300">Last Name</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
+                            id="lastName"
                             placeholder="Doe" 
                             {...field} 
-                            className="bg-slate-700 border-slate-600 text-white placeholder-gray-400"
+                            className="bg-slate-700 border-slate-600 text-white placeholder:text-gray-400"
                           />
                         </FormControl>
                         <FormMessage />
@@ -167,13 +168,14 @@ export default function RegisterForm() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-300">Email</FormLabel>
+                      <FormLabel htmlFor="email" className="text-gray-300">Email</FormLabel>
                       <FormControl>
-                        <Input 
+                        <Input
+                          id="email"
                           type="email" 
                           placeholder="john.doe@example.com" 
                           {...field} 
-                          className="bg-slate-700 border-slate-600 text-white placeholder-gray-400"
+                          className="bg-slate-700 border-slate-600 text-white placeholder:text-gray-400"
                         />
                       </FormControl>
                       <FormMessage />
@@ -186,13 +188,14 @@ export default function RegisterForm() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-300">Password</FormLabel>
+                      <FormLabel htmlFor="password" className="text-gray-300">Password</FormLabel>
                       <FormControl>
-                        <Input 
+                        <Input
+                          id="password"
                           type="password" 
                           placeholder="••••••••" 
                           {...field} 
-                          className="bg-slate-700 border-slate-600 text-white placeholder-gray-400"
+                          className="bg-slate-700 border-slate-600 text-white placeholder:text-gray-400"
                         />
                       </FormControl>
                       <FormMessage />
@@ -206,8 +209,11 @@ export default function RegisterForm() {
                     name="specialty"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-300">Medical Specialty</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormLabel htmlFor="specialty" className="text-gray-300">Medical Specialty</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
                               <SelectValue placeholder="Select your specialty" />
@@ -230,7 +236,7 @@ export default function RegisterForm() {
                   />
                 )}
 
-                <div className="bg-slate-700 rounded-lg p-4 mt-4">
+                <div className="bg-slate-700 rounded-lg p-4 border border-slate-600">
                   <p className="text-sm text-gray-300">
                     {role === "patient" 
                       ? "Patient account ready! You can add more profile details after registration."
