@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 
 import { ThemeProvider } from "./context/ThemeContext";
 import { SettingsProvider } from "./context/SettingsContext";
+import { TranslationProvider } from "./context/TranslationContext";
 import { LightThemeProvider } from "./components/light-theme/LightThemeProvider";
 import ForceLight from "./components/light-theme/ForceLight";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -63,10 +64,12 @@ function App() {
     <ErrorBoundary>
       <SettingsProvider>
         <ThemeProvider>
-          <AuthProvider>
-            <Router />
-            <Toaster />
-          </AuthProvider>
+          <TranslationProvider>
+            <AuthProvider>
+              <Router />
+              <Toaster />
+            </AuthProvider>
+          </TranslationProvider>
         </ThemeProvider>
       </SettingsProvider>
     </ErrorBoundary>
