@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../../hooks/useAuth";
-import { useAppointments } from "../../hooks/useAppointments";
+import { useAuth } from "@/hooks/useAuth";
+import { useAppointments } from "@/hooks/useAppointments";
 import { useLocation } from "wouter";
 import AppointmentCard from "./AppointmentCard";
 import AppointmentBooking from "./AppointmentBooking";
@@ -20,7 +20,7 @@ import { CalendarDays, Video, Bot, Pill, UserSearch, Ambulance } from "lucide-re
 export default function PatientDashboard() {
   const { user } = useAuth();
   const { appointments, isLoading } = useAppointments();
-  // WebSocket removed for better reliability
+  // WebSocket removed for better reliability in remote areas
   const [, setLocation] = useLocation();
   const [showNotification, setShowNotification] = useState(false);
   const [notification, setNotification] = useState({ title: "", message: "" });
@@ -422,7 +422,7 @@ export default function PatientDashboard() {
           message={notification.message}
           onClose={() => setShowNotification(false)}
           type={notification.title.includes("Emergency") ? "destructive" : 
-                notification.title.includes("Appointment") ? "success" :
+                notification.title.includes("Appointment") ? "success" : 
                 notification.title.includes("Medicine") ? "warning" :
                 "default"}
         />
