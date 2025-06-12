@@ -28,9 +28,9 @@
 }
 
 /* General background and text colors */
-html, 
-body, 
-#root {
+html.light, 
+body.light, 
+.light #root {
   background-color: hsl(210, 40%, 98%) !important;
   color: hsl(222, 47%, 11%) !important;
 }
@@ -293,4 +293,130 @@ body,
 .light [role="option"][aria-selected="true"] {
   background-color: hsl(210, 40%, 96.1%) !important;
   color: hsl(221.2, 83.2%, 53.3%) !important;
+}
+
+/* Dashboard-specific overrides */
+.light .bg-gradient-to-b.from-gray-800.to-gray-900,
+.light .bg-gradient-to-b.from-gray-900.via-gray-900.to-gray-950,
+.light .bg-gradient-to-b.from-gray-950.via-gray-950.to-gray-900 {
+  background: white !important;
+  border-color: hsl(214.3, 31.8%, 91.4%) !important;
+}
+
+.light .bg-gradient-to-r.from-indigo-900\/40.via-indigo-800\/30.to-indigo-900\/40,
+.light .bg-gradient-to-r.from-blue-900\/40.via-blue-800\/30.to-blue-900\/40,
+.light .bg-gradient-to-r.from-purple-900\/40.via-purple-800\/30.to-purple-900\/40,
+.light .bg-gradient-to-r.from-green-900\/40.via-green-800\/30.to-green-900\/40,
+.light .bg-gradient-to-r.from-rose-900\/40.via-rose-800\/30.to-rose-900\/40 {
+  background: hsl(210, 40%, 96.1%) !important;
+  border-bottom: 1px solid hsl(214.3, 31.8%, 91.4%) !important;
+}
+
+/* Fix text colors in dashboard cards */
+.light .text-white,
+.light .text-gray-100,
+.light .text-gray-200,
+.light .text-gray-300 {
+  color: hsl(222, 47%, 11%) !important;
+}
+
+.light .text-gray-400,
+.light .text-gray-500 {
+  color: hsl(215, 16%, 47%) !important;
+}
+
+/* Fix background colors in dashboard */
+.light .bg-gray-800,
+.light .bg-gray-900,
+.light .bg-black {
+  background-color: white !important;
+}
+
+.light .bg-gray-700 {
+  background-color: hsl(210, 40%, 96.1%) !important;
+}
+
+/* Fix border colors */
+.light .border-gray-800,
+.light .border-gray-700,
+.light .border-gray-600 {
+  border-color: hsl(214.3, 31.8%, 91.4%) !important;
+}
+
+/* Fix gradient backgrounds */
+.light .bg-gradient-to-b,
+.light .bg-gradient-to-r,
+.light .bg-gradient-to-br {
+  background: white !important;
+}
+
+/* Fix patient dashboard cards */
+.light .group\/sidebar-wrapper {
+  background-color: hsl(210, 40%, 98%) !important;
+}
+
+.light .group\/menu-item {
+  color: hsl(222, 47%, 11%) !important;
+}
+
+/* Fix symptom checker in light mode */
+.light .bg-gradient-to-b.from-gray-950.via-gray-950.to-gray-900 {
+  background: hsl(210, 40%, 98%) !important;
+}
+
+.light .bg-gradient-to-b.from-gray-900.via-gray-900.to-gray-950 {
+  background: white !important;
+}
+
+.light .bg-gradient-to-r.from-indigo-900\/40.via-blue-900\/30.to-indigo-900\/40 {
+  background: hsl(210, 40%, 96.1%) !important;
+}
+
+.light .bg-gradient-to-r.from-indigo-200.to-blue-200,
+.light .bg-gradient-to-r.from-indigo-100.to-blue-200 {
+  color: hsl(221.2, 83.2%, 53.3%) !important;
+}
+
+.light .bg-clip-text.text-transparent.bg-gradient-to-r.from-indigo-200.to-blue-200,
+.light .bg-clip-text.text-transparent.bg-gradient-to-r.from-indigo-100.to-blue-200 {
+  color: hsl(221.2, 83.2%, 53.3%) !important;
+  background-clip: unset !important;
+  -webkit-background-clip: unset !important;
+  background-image: none !important;
+}
+
+/* Fix appointment cards */
+.light .rounded-xl.shadow-lg.p-5.border.border-indigo-900\/30.bg-gradient-to-b.from-gray-900.via-gray-900.to-gray-950 {
+  background: white !important;
+  border-color: hsl(214.3, 31.8%, 91.4%) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Fix text in appointment cards */
+.light .bg-clip-text.text-transparent.bg-gradient-to-r.from-indigo-200.to-blue-200 {
+  color: hsl(221.2, 83.2%, 53.3%) !important;
+  background-clip: unset !important;
+  -webkit-background-clip: unset !important;
+  background-image: none !important;
+}
+
+.light .text-indigo-300\/80,
+.light .text-indigo-400\/80,
+.light .text-indigo-400 {
+  color: hsl(221.2, 83.2%, 53.3%) !important;
+}
+
+/* Fix buttons in light mode */
+.light .bg-gradient-to-br.from-indigo-600.to-indigo-700 {
+  background: hsl(221.2, 83.2%, 53.3%) !important;
+}
+
+.light .bg-rose-900\/20.text-rose-400 {
+  background-color: rgba(244, 63, 94, 0.1) !important;
+  color: rgb(244, 63, 94) !important;
+}
+
+/* Fix AI chat component */
+.light .min-h-screen.bg-gradient-to-b.from-gray-950.via-gray-950.to-gray-900 {
+  background: hsl(210, 40%, 98%) !important;
 }
