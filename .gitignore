@@ -14,7 +14,9 @@ vite.config.ts.*
 # Google Cloud credentials
 service-account-key.json
 gcloud-key.json
-*-credentials.json
+# Exclude the template credentials file from being ignored
+!google-cloud-credentials.json
+# But ignore all other credential files
 *-key.json
 *-secret.json
 

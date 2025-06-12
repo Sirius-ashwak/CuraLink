@@ -1,7 +1,7 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertAppointmentSchema, insertEmergencyTransportSchema } from "@shared/schema";
+import { insertUserSchema, insertAppointmentSchema, insertEmergencyTransportSchema } from "../shared/schema";
 import { z } from "zod";
 
 // Import our route handlers

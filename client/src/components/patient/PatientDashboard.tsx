@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useAppointments } from "@/hooks/useAppointments";
+import { useAuth } from "../../hooks/useAuth";
+import { useAppointments } from "../../hooks/useAppointments";
 import { useLocation } from "wouter";
 import AppointmentCard from "./AppointmentCard";
 import AppointmentBooking from "./AppointmentBooking";
@@ -8,16 +8,14 @@ import NotificationToast from "../notifications/NotificationToast";
 import SymptomChecker from "../chatbot/SymptomChecker";
 import DoctorMatcher from "../telehealth/DoctorMatcher";
 import MedicineTracker from "../medicines/MedicineTracker";
-import EmergencyTransportForm from "../emergencyTransport/EmergencyTransportForm";
-import EmergencyTransportList from "../emergencyTransport/EmergencyTransportList";
+import EmergencyTransportList from "../EmergencyTransport/EmergencyTransportList";
 import EnhancedEmergencyForm from "../EmergencyTransport/EnhancedEmergencyForm";
 import NearbyFacilitiesMap from "../EmergencyTransport/NearbyFacilitiesMap";
 import SideNavigation from "../layout/SideNavigation";
-import { LoadingScreen } from "@/components/ui/loading-screen";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoadingScreen } from "../../components/ui/loading-screen";
+import { Tabs, TabsContent } from "../../components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { CalendarDays, Video, Bot, Pill, UserSearch, Ambulance } from "lucide-react";
-import { AppointmentWithUsers } from "@shared/schema";
 
 export default function PatientDashboard() {
   const { user } = useAuth();
@@ -401,7 +399,7 @@ export default function PatientDashboard() {
                         Nearby Facilities
                       </h3>
                       <NearbyFacilitiesMap 
-                        onSelectFacility={(name, address) => {
+                        onSelectFacility={() => {
                           // This will auto-fill the destination in the form
                         }}
                       />

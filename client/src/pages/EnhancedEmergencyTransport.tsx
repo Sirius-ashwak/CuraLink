@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import EmergencyTransportForm from '@/components/emergencyTransport/EmergencyTransportForm';
-import EmergencyTransportList from '@/components/emergencyTransport/EmergencyTransportList';
-import NearbyFacilitiesMap from '@/components/emergencyTransport/NearbyFacilitiesMap';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import EmergencyTransportForm from '../components/EmergencyTransport/EmergencyTransportForm';
+import EmergencyTransportList from '../components/EmergencyTransport/EmergencyTransportList';
+import NearbyFacilitiesMap from '../components/EmergencyTransport/NearbyFacilitiesMap';
 import { ArrowLeft, CheckCircle, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
+import { Button } from '../components/ui/button';
+import { useAuth } from '../hooks/useAuth';
 
 const EnhancedEmergencyTransport: React.FC = () => {
   const [, navigate] = useLocation();
