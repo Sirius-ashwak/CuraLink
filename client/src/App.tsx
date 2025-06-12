@@ -27,6 +27,7 @@ import Appointments from "@/pages/appointments";
 import ComprehensiveSettings from "@/pages/ComprehensiveSettings";
 import SymptomChecker from "@/pages/SymptomChecker";
 import IndustryDashboard from "@/pages/IndustryDashboard";
+import TranslationDemo from "@/pages/TranslationDemo";
 
 function Router() {
   return (
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/appointments" component={Appointments} />
       <Route path="/symptom-checker" component={SymptomChecker} />
       <Route path="/industry-dashboard" component={IndustryDashboard} />
+      <Route path="/translation" component={TranslationDemo} />
       <Route component={NotFound} />
     </Switch>
   );

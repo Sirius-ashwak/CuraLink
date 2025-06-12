@@ -12,9 +12,20 @@ vite.config.ts.*
 .env.staging
 
 # Google Cloud credentials
-*.json
 service-account-key.json
 gcloud-key.json
+# Exclude the template credentials file from being ignored
+!google-cloud-credentials.json
+# But ignore all other credential files
+*-key.json
+*-secret.json
+
+# Don't ignore these important config files
+!package.json
+!package-lock.json
+!tsconfig.json
+!tsconfig.*.json
+!theme.json
 
 # Deployment scripts with secrets
 setup-secrets.sh

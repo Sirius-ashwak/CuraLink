@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import EmergencyTransportMap from '../maps/EmergencyTransportMap';
-import { firestore } from '../../lib/googleCloud';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot, Timestamp } from 'firebase/firestore';
+import EmergencyTransportMap from './EmergencyTransportMap';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Clock, MapPin, User, Phone } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface Location {
   lat: number;
@@ -34,115 +36,74 @@ const TransportTracking: React.FC<TransportTrackingProps> = ({ transportId }) =>
   const [etaMinutes, setEtaMinutes] = useState<number | null>(null);
   
   useEffect(() => {
-    if (!firestore) {
-      setError('Firestore is not configured.');
-      setLoading(false);
-      return;
-    }
-    
-    const transportRef = doc(firestore, 'emergencyTransports', transportId);
-    
-    // Set up real-time listener for transport updates
-    const unsubscribe = onSnapshot(transportRef, (docSnapshot) => {
-      if (!docSnapshot.exists()) {
-        setError('Transport request not found');
-        setLoading(false);
-        return;
-      }
-      
-      const data = docSnapshot.data();
-      
-      // Convert Firestore timestamps to JS Dates
-      let estimatedArrival = null;
-      if (data.estimatedArrival) {
-        estimatedArrival = data.estimatedArrival instanceof Timestamp 
-          ? data.estimatedArrival.toDate() 
-          : new Date(data.estimatedArrival);
+    // Simulate fetching transport details
+    const fetchTransportDetails = async () => {
+      try {
+        // In a real app, this would be a real API call
+        // For demo purposes, we'll simulate a response
+        setTimeout(() => {
+          const mockTransport: TransportDetails = {
+            id: transportId,
+            patientId: 1,
+            patientName: "John Doe",
+            pickupLocation: { lat: 37.7749, lng: -122.4194 },
+            destination: { lat: 37.7833, lng: -122.4167 },
+            vehicleType: "ambulance",
+            status: "in_progress",
+            driverName: "Michael Wilson",
+            driverPhone: "(555) 123-4567",
+            estimatedArrival: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes from now
+            requestDate: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
+            notes: "Patient has history of heart problems"
+          };
           
-        // Calculate ETA in minutes
-        const now = new Date();
-        const diffMs = estimatedArrival.getTime() - now.getTime();
-        setEtaMinutes(Math.round(diffMs / 60000)); // Convert ms to minutes
+          setTransport(mockTransport);
+          
+          // Calculate ETA in minutes
+          if (mockTransport.estimatedArrival) {
+            const diffMs = mockTransport.estimatedArrival.getTime() - Date.now();
+            setEtaMinutes(Math.round(diffMs / 60000)); // Convert ms to minutes
+          }
+          
+          setLoading(false);
+        }, 1000);
+      } catch (err) {
+        console.error("Error fetching transport data: ", err);
+        setError('Failed to load transport data');
+        setLoading(false);
       }
-      
-      const requestDate = data.requestDate instanceof Timestamp 
-        ? data.requestDate.toDate() 
-        : new Date(data.requestDate);
-      
-      // Convert string locations to Location objects if necessary
-      let pickupLocation = data.pickupLocation;
-      let destination = data.destination;
-      
-      if (typeof pickupLocation === 'string') {
-        try {
-          // Try to parse from string format (latitude,longitude)
-          const [lat, lng] = data.pickupLocation.split(',').map(Number);
-          pickupLocation = { lat, lng };
-        } catch (e) {
-          console.error('Error parsing pickup location:', e);
-          pickupLocation = { lat: 0, lng: 0 };
-        }
-      }
-      
-      if (typeof destination === 'string') {
-        try {
-          const [lat, lng] = data.destination.split(',').map(Number);
-          destination = { lat, lng };
-        } catch (e) {
-          console.error('Error parsing destination:', e);
-          destination = { lat: 0, lng: 0 };
-        }
-      }
-      
-      setTransport({
-        id: docSnapshot.id,
-        patientId: data.patientId,
-        patientName: data.patientName || 'Unknown Patient',
-        pickupLocation,
-        destination,
-        vehicleType: data.vehicleType || 'ambulance',
-        status: data.status || 'requested',
-        driverName: data.driverName || 'Not assigned',
-        driverPhone: data.driverPhone || 'Not assigned',
-        estimatedArrival,
-        requestDate,
-        notes: data.notes || ''
-      });
-      
-      setLoading(false);
-    }, (err) => {
-      console.error("Error getting transport data: ", err);
-      setError('Failed to load transport data');
-      setLoading(false);
-    });
+    };
     
-    return () => unsubscribe();
+    fetchTransportDetails();
+    
+    // Simulate real-time updates
+    const updateInterval = setInterval(() => {
+      if (etaMinutes !== null && etaMinutes > 0) {
+        setEtaMinutes(prev => prev !== null ? prev - 1 : null);
+      }
+    }, 60000); // Update every minute
+    
+    return () => clearInterval(updateInterval);
   }, [transportId]);
 
   // Handle location updates from the map
-  const handleLocationUpdate = async (location: Location) => {
-    if (!transport || !firestore) return;
+  const handleLocationUpdate = (location: Location) => {
+    if (!transport) return;
     
-    try {
-      // Update the estimated arrival time based on the new location
-      const transportRef = doc(firestore, 'emergencyTransports', transportId);
-      
-      // In a real app, you would calculate this based on the distance and speed
-      // Here we'll just set it to 5-15 minutes from now as an example
-      const estimatedMinutes = Math.floor(Math.random() * 10) + 5;
-      const estimatedArrival = new Date();
-      estimatedArrival.setMinutes(estimatedArrival.getMinutes() + estimatedMinutes);
-      
-      await updateDoc(transportRef, {
-        estimatedArrival,
-        currentLocation: location,
-        status: 'in_progress'
-      });
-      
-      setEtaMinutes(estimatedMinutes);
-    } catch (error) {
-      console.error('Error updating location', error);
-    }
+    // In a real app, this would update the database
+    // For demo purposes, we'll just update the local state
+    
+    // Calculate new ETA based on the new location
+    const estimatedMinutes = Math.floor(Math.random() * 10) + 5;
+    const estimatedArrival = new Date();
+    estimatedArrival.setMinutes(estimatedArrival.getMinutes() + estimatedMinutes);
+    
+    setTransport(prev => prev ? {
+      ...prev,
+      estimatedArrival
+    } : null);
+    
+    setEtaMinutes(estimatedMinutes);
   };
 
   if (loading) {
@@ -158,22 +119,23 @@ const TransportTracking: React.FC<TransportTrackingProps> = ({ transportId }) =>
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="p-6">
-        <h2 className="text-2xl font-bold mb-4">Emergency Transport Tracking</h2>
-        
+    <Card className="overflow-hidden">
+      <CardHeader className="bg-blue-50 dark:bg-blue-900/20 border-b">
+        <CardTitle className="flex items-center gap-2">
+          <span className="bg-blue-100 dark:bg-blue-800 p-1.5 rounded-full">
+            <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+          </span>
+          Emergency Transport Tracking
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
             <div className="mb-4">
               <span className="text-gray-500 font-medium">Status:</span>
-              <span className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                transport.status === 'completed' ? 'bg-green-100 text-green-800' : 
-                transport.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                transport.status === 'assigned' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
+              <Badge className="ml-2 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                 {transport.status.replace('_', ' ').toUpperCase()}
-              </span>
+              </Badge>
             </div>
             
             <div className="mb-4">
@@ -229,8 +191,8 @@ const TransportTracking: React.FC<TransportTrackingProps> = ({ transportId }) =>
             />
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -20,6 +20,10 @@ export interface RegisterData {
 // Register new user with Firebase Authentication
 export const registerWithFirebase = async (userData: RegisterData): Promise<FirebaseUser> => {
   try {
+    if (!auth) {
+      throw new Error('Firebase Auth is not initialized');
+    }
+    
     const userCredential = await createUserWithEmailAndPassword(
       auth, 
       userData.email, 
@@ -42,6 +46,10 @@ export const registerWithFirebase = async (userData: RegisterData): Promise<Fire
 // Sign in existing user
 export const signInWithFirebase = async (email: string, password: string): Promise<FirebaseUser> => {
   try {
+    if (!auth) {
+      throw new Error('Firebase Auth is not initialized');
+    }
+    
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     console.log('✅ Firebase sign-in successful:', userCredential.user.uid);
     return userCredential.user;
@@ -54,6 +62,10 @@ export const signInWithFirebase = async (email: string, password: string): Promi
 // Sign out user
 export const signOutFirebase = async (): Promise<void> => {
   try {
+    if (!auth) {
+      throw new Error('Firebase Auth is not initialized');
+    }
+    
     await signOut(auth);
     console.log('✅ Firebase sign-out successful');
   } catch (error) {
@@ -64,5 +76,5 @@ export const signOutFirebase = async (): Promise<void> => {
 
 // Get current user
 export const getCurrentFirebaseUser = (): FirebaseUser | null => {
-  return auth.currentUser;
+  return auth?.currentUser || null;
 };

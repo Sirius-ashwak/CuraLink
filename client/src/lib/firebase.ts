@@ -12,13 +12,67 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const auth = getAuth(app);
+// Log Firebase configuration for debugging (without sensitive values)
+console.log('Firebase configuration:', {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ? '✓ Set' : '✗ Not set',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ? '✓ Set' : '✗ Not set',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ? '✓ Set' : '✗ Not set',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ? '✓ Set' : '✗ Not set',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ? '✓ Set' : '✗ Not set',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID ? '✓ Set' : '✗ Not set'
+});
+
+// Initialize Firebase with error handling
+let app;
+let db;
+let storage;
+let auth;
+
+try {
+  // Check if Firebase is already initialized
+  if (!app) {
+    console.log('Initializing Firebase with project:', import.meta.env.VITE_FIREBASE_PROJECT_ID);
+    console.log('Storage bucket:', import.meta.env.VITE_FIREBASE_STORAGE_BUCKET);
+    
+    app = initializeApp(firebaseConfig);
+    console.log('✅ Firebase app initialized successfully');
+    
+    // Initialize Firestore
+    try {
+      db = getFirestore(app);
+      console.log('✅ Firestore initialized successfully');
+    } catch (firestoreError) {
+      console.error('❌ Failed to initialize Firestore:', firestoreError);
+      db = null;
+    }
+    
+    // Initialize Storage
+    try {
+      storage = getStorage(app);
+      console.log('✅ Firebase Storage initialized successfully');
+    } catch (storageError) {
+      console.error('❌ Failed to initialize Firebase Storage:', storageError);
+      storage = null;
+    }
+    
+    // Initialize Auth
+    try {
+      auth = getAuth(app);
+      console.log('✅ Firebase Auth initialized successfully');
+    } catch (authError) {
+      console.error('❌ Failed to initialize Firebase Auth:', authError);
+      auth = null;
+    }
+  }
+} catch (error) {
+  console.error('❌ Error initializing Firebase:', error);
+  // Create fallback objects to prevent app crashes
+  app = null;
+  db = null;
+  storage = null;
+  auth = null;
+}
 
 export { app, db, storage, auth };

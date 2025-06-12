@@ -232,3 +232,65 @@ body,
   color: hsl(222, 47%, 11%) !important;
   border: 1px solid hsl(214.3, 31.8%, 91.4%) !important;
 }
+
+/* Navigation menu specific overrides */
+.light [data-sidebar="sidebar"] {
+  background-color: white !important;
+  color: hsl(222, 47%, 11%) !important;
+  border-right: 1px solid hsl(214.3, 31.8%, 91.4%) !important;
+}
+
+.light [data-sidebar="menu-button"] {
+  color: hsl(222, 47%, 11%) !important;
+}
+
+.light [data-sidebar="menu-button"]:hover {
+  background-color: hsl(210, 40%, 96.1%) !important;
+  color: hsl(221.2, 83.2%, 53.3%) !important;
+}
+
+.light [data-sidebar="menu-button"][data-active="true"] {
+  background-color: hsl(210, 40%, 96.1%) !important;
+  color: hsl(221.2, 83.2%, 53.3%) !important;
+}
+
+.light [data-sidebar="group-label"] {
+  color: hsl(215, 16%, 47%) !important;
+}
+
+.light [data-sidebar="separator"] {
+  background-color: hsl(214.3, 31.8%, 91.4%) !important;
+}
+
+/* Fix tabs in light theme */
+.light [role="tablist"] {
+  background-color: hsl(210, 40%, 96.1%) !important;
+}
+
+.light [role="tab"] {
+  color: hsl(222, 47%, 11%) !important;
+}
+
+.light [role="tab"][data-state="active"] {
+  background-color: white !important;
+  color: hsl(221.2, 83.2%, 53.3%) !important;
+}
+
+/* Fix select dropdown in light theme */
+.light [role="listbox"] {
+  background-color: white !important;
+  border-color: hsl(214.3, 31.8%, 91.4%) !important;
+}
+
+.light [role="option"] {
+  color: hsl(222, 47%, 11%) !important;
+}
+
+.light [role="option"]:hover {
+  background-color: hsl(210, 40%, 96.1%) !important;
+}
+
+.light [role="option"][aria-selected="true"] {
+  background-color: hsl(210, 40%, 96.1%) !important;
+  color: hsl(221.2, 83.2%, 53.3%) !important;
+}
