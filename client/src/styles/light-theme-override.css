@@ -290,3 +290,119 @@ body.light,
   background-color: white !important;
   border: 1px solid #e2e8f0 !important;
 }
+
+/* Fix navigation menu in light theme */
+.light .group\/sidebar-wrapper {
+  background-color: #f8fafc !important;
+  color: #1e293b !important;
+}
+
+.light .peer-data-\[variant=inset\]:min-h-\[calc\(100svh-theme\(spacing\.4\)\)\] {
+  background-color: white !important;
+}
+
+/* Fix side navigation menu */
+.light .absolute.inset-0.w-full.h-full {
+  background: linear-gradient(to bottom, #f8fafc, #f1f5f9) !important;
+}
+
+.light .fixed.inset-y-0.right-0.w-72.bg-gradient-to-b.from-gray-900\/95.via-gray-900\/95.to-gray-950\/95 {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95)) !important;
+  border-left: 1px solid rgba(226, 232, 240, 0.5) !important;
+}
+
+.light .py-4.px-5.border-b.border-indigo-900\/30.bg-gradient-to-r.from-indigo-900\/20.via-gray-900\/40.to-gray-900\/20 {
+  background: linear-gradient(to right, rgba(224, 231, 255, 0.2), rgba(248, 250, 252, 0.4)) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5) !important;
+}
+
+.light .text-sm.font-medium.bg-clip-text.text-transparent.bg-gradient-to-r.from-indigo-200.to-blue-200 {
+  color: #1e40af !important;
+  -webkit-text-fill-color: #1e40af !important;
+  background-image: none !important;
+}
+
+.light .flex.items-center.px-4.py-3.rounded-xl.cursor-pointer.transition-all.duration-200 {
+  color: #1e293b !important;
+}
+
+.light .peer-data-\[state=collapsed\]:peer-data-\[variant=inset\]:ml-2 {
+  background-color: white !important;
+}
+
+/* Fix navigation menu items */
+.light .flex.flex-col.gap-2.p-2 {
+  color: #1e293b !important;
+}
+
+.light .relative.flex.w-full.min-w-0.flex-col.p-2 {
+  color: #1e293b !important;
+}
+
+.light .duration-200.flex.h-8.shrink-0.items-center.rounded-md.px-2.text-xs.font-medium.text-sidebar-foreground\/70 {
+  color: #64748b !important;
+}
+
+.light .flex.w-full.min-w-0.flex-col.gap-1 {
+  color: #1e293b !important;
+}
+
+.light .group\/menu-item.relative {
+  color: #1e293b !important;
+}
+
+.light .peer\/menu-button.flex.w-full.items-center.gap-2.overflow-hidden.rounded-md.p-2.text-left.text-sm {
+  color: #1e293b !important;
+}
+
+.light .peer\/menu-button.flex.w-full.items-center.gap-2.overflow-hidden.rounded-md.p-2.text-left.text-sm:hover {
+  background-color: #f1f5f9 !important;
+}
+
+.light .data-\[active=true\]:bg-sidebar-accent.data-\[active=true\]:font-medium.data-\[active=true\]:text-sidebar-accent-foreground {
+  background-color: #dbeafe !important;
+  color: #1e40af !important;
+}
+
+/* Fix navigation menu icons */
+.light .flex.items-center.justify-center.w-9.h-9.rounded-lg.mr-3.transition-all.duration-200 {
+  background-color: #f1f5f9 !important;
+}
+
+.light .data-\[active=true\]:bg-sidebar-accent.data-\[active=true\]:font-medium.data-\[active=true\]:text-sidebar-accent-foreground .flex.items-center.justify-center.w-9.h-9.rounded-lg.mr-3.transition-all.duration-200 {
+  background-color: #dbeafe !important;
+}
+
+/* Fix navigation menu text */
+.light .font-medium.text-sm.bg-clip-text.text-transparent.bg-gradient-to-r.from-indigo-100.to-blue-200 {
+  color: #1e40af !important;
+  -webkit-text-fill-color: #1e40af !important;
+  background-image: none !important;
+}
+
+.light .text-sm {
+  color: #1e293b !important;
+}
+
+/* Fix navigation menu footer */
+.light .mt-10.p-5.bg-gradient-to-br.from-indigo-900\/20.via-indigo-950\/20.to-gray-900\/20.border.border-indigo-800\/30.rounded-xl.shadow-inner {
+  background: linear-gradient(to bottom right, rgba(224, 231, 255, 0.2), rgba(248, 250, 252, 0.2)) !important;
+  border: 1px solid rgba(226, 232, 240, 0.5) !important;
+}
+
+.light .text-xs.text-indigo-300\/70.mt-3.leading-relaxed {
+  color: #4b5563 !important;
+}
+
+/* Fix navigation menu trigger button */
+.light .h-9.w-9.rounded-full.border-indigo-700\/30.text-indigo-300.hover\:text-white.hover\:bg-indigo-800\/50.hover\:border-indigo-600\/50 {
+  border-color: rgba(226, 232, 240, 0.8) !important;
+  color: #1e40af !important;
+  background-color: white !important;
+}
+
+.light .h-9.w-9.rounded-full.border-indigo-700\/30.text-indigo-300.hover\:text-white.hover\:bg-indigo-800\/50.hover\:border-indigo-600\/50:hover {
+  background-color: #dbeafe !important;
+  border-color: #93c5fd !important;
+  color: #1e40af !important;
+}
