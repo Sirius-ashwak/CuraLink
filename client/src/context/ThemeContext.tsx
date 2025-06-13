@@ -53,11 +53,53 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
         root.classList.remove('light');
         body.classList.add('dark');
         body.classList.remove('light');
+        
+        // Reset any light theme overrides
+        root.style.removeProperty('--background');
+        root.style.removeProperty('--foreground');
+        root.style.removeProperty('--card');
+        root.style.removeProperty('--card-foreground');
+        root.style.removeProperty('--popover');
+        root.style.removeProperty('--popover-foreground');
+        root.style.removeProperty('--primary');
+        root.style.removeProperty('--primary-foreground');
+        root.style.removeProperty('--secondary');
+        root.style.removeProperty('--secondary-foreground');
+        root.style.removeProperty('--muted');
+        root.style.removeProperty('--muted-foreground');
+        root.style.removeProperty('--accent');
+        root.style.removeProperty('--accent-foreground');
+        root.style.removeProperty('--destructive');
+        root.style.removeProperty('--destructive-foreground');
+        root.style.removeProperty('--border');
+        root.style.removeProperty('--input');
+        root.style.removeProperty('--ring');
       } else {
         root.classList.add('light');
         root.classList.remove('dark');
         body.classList.add('light');
         body.classList.remove('dark');
+        
+        // Set light theme CSS variables directly
+        root.style.setProperty('--background', '210 40% 98%');
+        root.style.setProperty('--foreground', '222 47% 11%');
+        root.style.setProperty('--card', '0 0% 100%');
+        root.style.setProperty('--card-foreground', '222 47% 11%');
+        root.style.setProperty('--popover', '0 0% 100%');
+        root.style.setProperty('--popover-foreground', '222 47% 11%');
+        root.style.setProperty('--primary', '210 100% 50%');
+        root.style.setProperty('--primary-foreground', '0 0% 100%');
+        root.style.setProperty('--secondary', '210 40% 96.1%');
+        root.style.setProperty('--secondary-foreground', '222 47% 11%');
+        root.style.setProperty('--muted', '210 40% 96.1%');
+        root.style.setProperty('--muted-foreground', '215 16% 47%');
+        root.style.setProperty('--accent', '210 40% 96.1%');
+        root.style.setProperty('--accent-foreground', '222 47% 11%');
+        root.style.setProperty('--destructive', '0 84.2% 60.2%');
+        root.style.setProperty('--destructive-foreground', '210 40% 98%');
+        root.style.setProperty('--border', '214.3 31.8% 91.4%');
+        root.style.setProperty('--input', '214.3 31.8% 91.4%');
+        root.style.setProperty('--ring', '221.2 83.2% 53.3%');
       }
 
       // Remove the transition class after the switch is complete
