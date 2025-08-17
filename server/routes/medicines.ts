@@ -39,7 +39,7 @@ const stockAdjustmentSchema = z.object({
   adjustment: z.number().int()
 });
 
-// Seed some initial data
+// Seed comprehensive demo data
 const seedMedicines = () => {
   const userId = 1; // Sample user ID
   
@@ -51,7 +51,8 @@ const seedMedicines = () => {
     const medicineWithDefaults = {
       reorderLevel: 10,
       category: "General",
-      inStock: true,
+      inStock: data.quantity > 0,
+      lowStock: data.quantity <= (data.reorderLevel || 10),
       notes: "",
       supplier: "",
       ...data,
@@ -67,79 +68,403 @@ const seedMedicines = () => {
     
     return id;
   };
-  
-  // Add some sample medicines
+
+  // Clear existing medicines first
+  medicines.clear();
+  medicineIdCounter = 1;
+  // Clear existing medicines first
+  medicines.clear();
+  medicineIdCounter = 1;
+
+  // Pain Relief & Anti-inflammatory
   addMedicine({
     name: "Acetaminophen",
     dosage: "500mg",
-    quantity: 20,
-    expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString(),
-    prescriptionRequired: false,
-    category: "Pain Relief",
-    reorderLevel: 15,
-    notes: "For fever and pain relief. Take as directed."
-  });
-  
-  addMedicine({
-    name: "Ibuprofen",
-    dosage: "200mg",
-    quantity: 30,
-    expiryDate: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString(),
+    quantity: 48,
+    expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
     prescriptionRequired: false,
     category: "Pain Relief",
     reorderLevel: 20,
-    notes: "Anti-inflammatory, take with food."
+    notes: "For fever and pain relief. Maximum 4g per day."
   });
-  
+
   addMedicine({
-    name: "Amoxicillin",
-    dosage: "250mg",
-    quantity: 14,
-    expiryDate: new Date(new Date().setMonth(new Date().getMonth() + 2)).toISOString(),
-    prescriptionRequired: true,
-    category: "Antibiotics",
-    reorderLevel: 10,
-    notes: "Complete the full course as prescribed."
-  });
-  
-  addMedicine({
-    name: "Lisinopril",
-    dosage: "10mg",
-    quantity: 3,
-    expiryDate: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString(),
-    prescriptionRequired: true,
-    category: "Blood Pressure",
-    reorderLevel: 5,
-    notes: "Take at the same time each day."
-  });
-  
-  // Add a nearly expired medicine
-  addMedicine({
-    name: "Aspirin",
-    dosage: "81mg",
-    quantity: 45,
-    expiryDate: new Date(new Date().setDate(new Date().getDate() + 20)).toISOString(),
+    name: "Ibuprofen",
+    dosage: "400mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000).toISOString(),
     prescriptionRequired: false,
     category: "Pain Relief",
     reorderLevel: 15,
-    notes: "Low-dose, take with water."
+    notes: "Anti-inflammatory. Take with food to avoid stomach upset."
   });
-  
-  // Add a low stock medicine
+
+  addMedicine({
+    name: "Aspirin",
+    dosage: "81mg",
+    quantity: 5, // Low stock
+    expiryDate: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString(), // Expiring soon
+    prescriptionRequired: false,
+    category: "Pain Relief",
+    reorderLevel: 15,
+    notes: "Low-dose aspirin for heart protection. Take with water."
+  });
+
+  addMedicine({
+    name: "Naproxen",
+    dosage: "220mg",
+    quantity: 20,
+    expiryDate: new Date(Date.now() + 18 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: false,
+    category: "Pain Relief",
+    reorderLevel: 10,
+    notes: "Long-acting pain relief. Take with food."
+  });
+
+  // Antibiotics
+  addMedicine({
+    name: "Amoxicillin",
+    dosage: "500mg",
+    quantity: 21,
+    expiryDate: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Antibiotics",
+    reorderLevel: 15,
+    notes: "Complete full course. Take every 8 hours with or without food."
+  });
+
+  addMedicine({
+    name: "Azithromycin",
+    dosage: "250mg",
+    quantity: 6,
+    expiryDate: new Date(Date.now() + 12 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Antibiotics",
+    reorderLevel: 10,
+    notes: "Z-pack antibiotic. Take once daily for 5 days."
+  });
+
+  addMedicine({
+    name: "Ciprofloxacin",
+    dosage: "500mg",
+    quantity: 14,
+    expiryDate: new Date(Date.now() + 15 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Antibiotics",
+    reorderLevel: 10,
+    notes: "Broad-spectrum antibiotic. Avoid dairy products within 2 hours."
+  });
+
+  // Diabetes Medications
   addMedicine({
     name: "Metformin",
     dosage: "500mg",
-    quantity: 2,
-    expiryDate: new Date(new Date().setMonth(new Date().getMonth() + 8)).toISOString(),
+    quantity: 90,
+    expiryDate: new Date(Date.now() + 24 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Diabetes",
+    reorderLevel: 30,
+    notes: "Take with meals to reduce GI upset. Monitor kidney function."
+  });
+
+  addMedicine({
+    name: "Insulin Glargine",
+    dosage: "100 units/mL",
+    quantity: 2, // Low stock
+    expiryDate: new Date(Date.now() + 3 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Diabetes",
+    reorderLevel: 3,
+    notes: "Long-acting insulin. Store in refrigerator. Inject once daily at same time."
+  });
+
+  addMedicine({
+    name: "Glipizide",
+    dosage: "5mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 18 * 30 * 24 * 60 * 60 * 1000).toISOString(),
     prescriptionRequired: true,
     category: "Diabetes",
     reorderLevel: 15,
-    notes: "Take with meals to reduce stomach upset."
+    notes: "Take 30 minutes before meals. Monitor blood sugar levels."
   });
+
+  // Blood Pressure Medications
+  addMedicine({
+    name: "Lisinopril",
+    dosage: "10mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 20 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Blood Pressure",
+    reorderLevel: 15,
+    notes: "ACE inhibitor. Take at same time daily. Monitor for dry cough."
+  });
+
+  addMedicine({
+    name: "Amlodipine",
+    dosage: "5mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 22 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Blood Pressure",
+    reorderLevel: 15,
+    notes: "Calcium channel blocker. May cause ankle swelling."
+  });
+
+  addMedicine({
+    name: "Losartan",
+    dosage: "50mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 18 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Blood Pressure",
+    reorderLevel: 15,
+    notes: "ARB medication. Good alternative to ACE inhibitors."
+  });
+
+  // Cholesterol Medications
+  addMedicine({
+    name: "Atorvastatin",
+    dosage: "20mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 15 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Cholesterol",
+    reorderLevel: 15,
+    notes: "Take in evening. Monitor liver function. Avoid grapefruit juice."
+  });
+
+  addMedicine({
+    name: "Simvastatin",
+    dosage: "40mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 16 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Cholesterol",
+    reorderLevel: 15,
+    notes: "Statin medication. Take in evening with dinner."
+  });
+
+  // Gastric Medications
+  addMedicine({
+    name: "Omeprazole",
+    dosage: "20mg",
+    quantity: 28,
+    expiryDate: new Date(Date.now() + 24 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: false,
+    category: "Gastric",
+    reorderLevel: 14,
+    notes: "Proton pump inhibitor. Take before breakfast on empty stomach."
+  });
+
+  addMedicine({
+    name: "Ranitidine",
+    dosage: "150mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 12 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: false,
+    category: "Gastric",
+    reorderLevel: 15,
+    notes: "H2 blocker for acid reduction. Take with or without food."
+  });
+
+  // Vitamins & Supplements
+  addMedicine({
+    name: "Vitamin D3",
+    dosage: "1000 IU",
+    quantity: 60,
+    expiryDate: new Date(Date.now() + 36 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: false,
+    category: "Vitamins",
+    reorderLevel: 30,
+    notes: "Take with fat-containing meal for better absorption."
+  });
+
+  addMedicine({
+    name: "Vitamin B12",
+    dosage: "1000mcg",
+    quantity: 100,
+    expiryDate: new Date(Date.now() + 30 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: false,
+    category: "Vitamins",
+    reorderLevel: 50,
+    notes: "For energy and nerve function. Sublingual tablets dissolve under tongue."
+  });
+
+  addMedicine({
+    name: "Multivitamin",
+    dosage: "1 tablet",
+    quantity: 100,
+    expiryDate: new Date(Date.now() + 24 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: false,
+    category: "Vitamins",
+    reorderLevel: 30,
+    notes: "Daily multivitamin. Take with breakfast for best absorption."
+  });
+
+  // Respiratory Medications
+  addMedicine({
+    name: "Albuterol Inhaler",
+    dosage: "90mcg/spray",
+    quantity: 1, // Low stock
+    expiryDate: new Date(Date.now() + 12 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Respiratory",
+    reorderLevel: 2,
+    notes: "Rescue inhaler for asthma. Shake well before use. 2 puffs as needed."
+  });
+
+  addMedicine({
+    name: "Montelukast",
+    dosage: "10mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 18 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Respiratory",
+    reorderLevel: 15,
+    notes: "Asthma prevention medication. Take in the evening."
+  });
+
+  // Antihistamines
+  addMedicine({
+    name: "Cetirizine",
+    dosage: "10mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 36 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: false,
+    category: "Antihistamines",
+    reorderLevel: 15,
+    notes: "For allergies. Non-drowsy formula. Take once daily."
+  });
+
+  addMedicine({
+    name: "Loratadine",
+    dosage: "10mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 30 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: false,
+    category: "Antihistamines",
+    reorderLevel: 15,
+    notes: "24-hour allergy relief. Take once daily with or without food."
+  });
+
+  // Thyroid Medications
+  addMedicine({
+    name: "Levothyroxine",
+    dosage: "75mcg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 24 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Thyroid",
+    reorderLevel: 15,
+    notes: "Take on empty stomach, 30-60 minutes before breakfast. No coffee for 1 hour."
+  });
+
+  // Sleep & Anxiety
+  addMedicine({
+    name: "Melatonin",
+    dosage: "3mg",
+    quantity: 60,
+    expiryDate: new Date(Date.now() + 24 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: false,
+    category: "Sleep Aid",
+    reorderLevel: 30,
+    notes: "Natural sleep aid. Take 30 minutes before bedtime."
+  });
+
+  // Neurological
+  addMedicine({
+    name: "Gabapentin",
+    dosage: "300mg",
+    quantity: 90,
+    expiryDate: new Date(Date.now() + 18 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Neurological",
+    reorderLevel: 30,
+    notes: "For nerve pain. May cause dizziness. Take with food."
+  });
+
+  // Blood Thinners
+  addMedicine({
+    name: "Warfarin",
+    dosage: "5mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 24 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Blood Thinners",
+    reorderLevel: 15,
+    notes: "Monitor INR levels regularly. Consistent vitamin K intake. Same time daily."
+  });
+
+  // Diuretics
+  addMedicine({
+    name: "Furosemide",
+    dosage: "40mg",
+    quantity: 30,
+    expiryDate: new Date(Date.now() + 12 * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    prescriptionRequired: true,
+    category: "Diuretics",
+    reorderLevel: 10,
+    notes: "Water pill. Take in morning. May cause frequent urination and dizziness."
+  });
+
+  // Expired medicines for testing
+  addMedicine({
+    name: "Expired Cough Syrup",
+    dosage: "10mL",
+    quantity: 1,
+    expiryDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(), // 2 months ago
+    prescriptionRequired: false,
+    category: "Cough & Cold",
+    reorderLevel: 5,
+    notes: "EXPIRED - Dispose safely at pharmacy. Do not use."
+  });
+
+  addMedicine({
+    name: "Old Antibiotic",
+    dosage: "250mg",
+    quantity: 8,
+    expiryDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 1 month ago
+    prescriptionRequired: true,
+    category: "Antibiotics",
+    reorderLevel: 10,
+    notes: "EXPIRED - Return to pharmacy for proper disposal. Effectiveness reduced."
+  });
+
+  console.log(`🌱 Seeded ${medicines.size} demo medicines to database`);
+  
+  const allCategories = Array.from(medicines.values()).map(m => m.category);
+  const uniqueCategories = Array.from(new Set(allCategories));
+  console.log(`📋 Medicine categories added:`, uniqueCategories);
 };
 
 // Seed data on module load
+console.log('🚀 Starting medicine seeding...');
 seedMedicines();
+console.log('✅ Medicine seeding completed');
+
+/**
+ * GET /api/medicines/health
+ * Health check endpoint for medicines API
+ */
+router.get("/health", (req: Request, res: Response) => {
+  try {
+    const totalMedicines = medicines.size;
+    const allCategories = Array.from(medicines.values()).map(m => m.category);
+    const categories = Array.from(new Set(allCategories));
+    
+    res.status(200).json({ 
+      status: "healthy",
+      totalMedicines,
+      categories,
+      message: `Medicines API is working. ${totalMedicines} medicines available in ${categories.length} categories.`
+    });
+  } catch (error) {
+    console.error("Health check error:", error);
+    res.status(500).json({ error: "Health check failed" });
+  }
+});
 
 /**
  * GET /api/medicines
@@ -151,14 +476,23 @@ router.get("/", (req: Request, res: Response) => {
     // For demo purposes, we'll use user ID 1
     const userId = 1;
     
+    // Debug: Log total medicines count
+    console.log(`📊 Total medicines in database: ${medicines.size}`);
+    
+    // Debug: Log all medicines
+    const allMedicines = Array.from(medicines.values());
+    console.log(`🔍 All medicines:`, allMedicines.map(m => `${m.name} (userId: ${m.userId})`));
+    
     // Filter medicines for this user and add stock status
-    const userMedicines = Array.from(medicines.values())
+    const userMedicines = allMedicines
       .filter(medicine => medicine.userId === userId)
       .map(medicine => ({
         ...medicine,
         inStock: medicine.quantity > 0,
         lowStock: medicine.quantity <= (medicine.reorderLevel || 10)
       }));
+    
+    console.log(`👤 User ${userId} medicines count: ${userMedicines.length}`);
     
     res.status(200).json(userMedicines);
   } catch (error) {
@@ -505,6 +839,84 @@ router.delete("/:id", (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error deleting medicine:", error);
     res.status(500).json({ error: "Failed to delete medicine" });
+  }
+});
+
+/**
+ * POST /api/medicines/seed
+ * Bulk seed medicines for demo purposes
+ */
+router.post("/seed", (req: Request, res: Response) => {
+  try {
+    const { medicines: seedMedicines } = req.body;
+    
+    if (!Array.isArray(seedMedicines)) {
+      return res.status(400).json({ error: "Expected an array of medicines" });
+    }
+    
+    const userId = 1; // Demo user ID
+    let addedCount = 0;
+    
+    seedMedicines.forEach((medicineData: any) => {
+      try {
+        // Validate each medicine
+        const validatedData = medicineSchema.parse(medicineData);
+        
+        const id = medicineIdCounter++;
+        const now = new Date().toISOString();
+        
+        const newMedicine = {
+          id,
+          ...validatedData,
+          lowStock: validatedData.quantity <= (validatedData.reorderLevel || 10),
+          inStock: validatedData.quantity > 0,
+          userId,
+          createdAt: now,
+          updatedAt: now
+        };
+        
+        medicines.set(id, newMedicine);
+        addedCount++;
+        
+      } catch (error) {
+        console.error(`Failed to add medicine ${medicineData.name}:`, error);
+      }
+    });
+    
+    log(`Bulk seeded ${addedCount} medicines`, "medicines");
+    
+    res.status(201).json({ 
+      message: `Successfully added ${addedCount} medicines`, 
+      added: addedCount,
+      total: medicines.size
+    });
+    
+  } catch (error) {
+    console.error("Error bulk seeding medicines:", error);
+    res.status(500).json({ error: "Failed to seed medicines" });
+  }
+});
+
+/**
+ * POST /api/medicines/clear
+ * Clear all medicines (for demo purposes)
+ */
+router.post("/clear", (req: Request, res: Response) => {
+  try {
+    const beforeCount = medicines.size;
+    medicines.clear();
+    medicineIdCounter = 1;
+    
+    log(`Cleared all medicines (${beforeCount} removed)`, "medicines");
+    
+    res.status(200).json({ 
+      message: `Cleared ${beforeCount} medicines`,
+      removed: beforeCount
+    });
+    
+  } catch (error) {
+    console.error("Error clearing medicines:", error);
+    res.status(500).json({ error: "Failed to clear medicines" });
   }
 });
 

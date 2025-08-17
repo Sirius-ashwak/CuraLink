@@ -1,0 +1,565 @@
+import { 
+  User, 
+  InsertUser, 
+  Doctor, 
+  InsertDoctor, 
+  Availability, 
+  InsertAvailability, 
+  TimeOff, 
+  InsertTimeOff, 
+  Appointment, 
+  InsertAppointment,
+  DoctorWithUserInfo,
+  AppointmentWithUsers,
+  EmergencyTransport,
+  InsertEmergencyTransport,
+  EmergencyTransportWithPatient
+} from "@shared/schema";
+
+// Define the status types to avoid casting
+type EmergencyTransportStatus = "requested" | "assigned" | "in_progress" | "completed" | "canceled";
+type AppointmentStatus = "scheduled" | "confirmed" | "canceled" | "completed";
+type AppointmentType = "video" | "audio";
+type EmergencyTransportUrgency = "low" | "medium" | "high" | "critical";
+type EmergencyTransportVehicleType = "ambulance" | "wheelchair_van" | "medical_car" | "helicopter";
+
+export interface IStorage {
+  // User operations
+  getUser(id: number): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  
+  // Doctor operations
+  getDoctor(id: number): Promise<Doctor | undefined>;
+  getDoctorByUserId(userId: number): Promise<Doctor | undefined>;
+  getDoctors(): Promise<DoctorWithUserInfo[]>;
+  getDoctorsBySpecialty(specialty: string): Promise<DoctorWithUserInfo[]>;
+  createDoctor(doctor: InsertDoctor): Promise<Doctor>;
+  updateDoctorAvailability(id: number, isAvailable: boolean): Promise<Doctor>;
+  
+  // Availability operations
+  getAvailability(doctorId: number): Promise<Availability[]>;
+  createAvailability(availability: InsertAvailability): Promise<Availability>;
+  updateAvailability(id: number, availability: Partial<Availability>): Promise<Availability>;
+  deleteAvailability(id: number): Promise<boolean>;
+  
+  // TimeOff operations
+  getTimeOffs(doctorId: number): Promise<TimeOff[]>;
+  createTimeOff(timeOff: InsertTimeOff): Promise<TimeOff>;
+  deleteTimeOff(id: number): Promise<boolean>;
+  
+  // Appointment operations
+  getAppointment(id: number): Promise<AppointmentWithUsers | undefined>;
+  getAppointmentsByPatient(patientId: number): Promise<AppointmentWithUsers[]>;
+  getAppointmentsByDoctor(doctorId: number): Promise<AppointmentWithUsers[]>;
+  getAppointmentsByDate(doctorId: number, date: Date): Promise<AppointmentWithUsers[]>;
+  createAppointment(appointment: InsertAppointment): Promise<Appointment>;
+  updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment>;
+  cancelAppointment(id: number): Promise<Appointment>;
+  
+  // Emergency Transport operations
+  getEmergencyTransport(id: number): Promise<EmergencyTransportWithPatient | undefined>;
+  getEmergencyTransportsByPatient(patientId: number): Promise<EmergencyTransportWithPatient[]>;
+  getActiveEmergencyTransports(): Promise<EmergencyTransportWithPatient[]>;
+  createEmergencyTransport(transport: InsertEmergencyTransport): Promise<EmergencyTransport>;
+  updateEmergencyTransport(id: number, transport: Partial<EmergencyTransport>): Promise<EmergencyTransport>;
+  cancelEmergencyTransport(id: number): Promise<EmergencyTransport>;
+  assignDriverToEmergencyTransport(id: number, driverName: string, driverPhone: string, estimatedArrival: Date): Promise<EmergencyTransport>;
+  completeEmergencyTransport(id: number): Promise<EmergencyTransport>;
+  
+  // Prescription operations
+  createPrescription(prescription: any): Promise<any>;
+  getPrescriptionsByPatient(patientId: number): Promise<any[]>;
+  getPrescriptionsByDoctor(doctorId: number): Promise<any[]>;
+}
+
+export class MemStorage implements IStorage {
+  private users: Map<number, User>;
+  private doctors: Map<number, Doctor>;
+  private availabilities: Map<number, Availability>;
+  private timeOffs: Map<number, TimeOff>;
+  private appointments: Map<number, Appointment>;
+  private emergencyTransports: Map<number, EmergencyTransport>;
+  private prescriptions: Map<number, any>;
+  
+  private userIdCounter: number;
+  private doctorIdCounter: number;
+  private availabilityIdCounter: number;
+  private timeOffIdCounter: number;
+  private appointmentIdCounter: number;
+  private emergencyTransportIdCounter: number;
+  private prescriptionIdCounter: number;
+  
+  constructor() {
+    this.users = new Map();
+    this.doctors = new Map();
+    this.availabilities = new Map();
+    this.timeOffs = new Map();
+    this.appointments = new Map();
+    this.emergencyTransports = new Map();
+    this.prescriptions = new Map();
+    
+    this.userIdCounter = 1;
+    this.doctorIdCounter = 1;
+    this.availabilityIdCounter = 1;
+    this.timeOffIdCounter = 1;
+    this.appointmentIdCounter = 1;
+    this.emergencyTransportIdCounter = 1;
+    this.prescriptionIdCounter = 1;
+    
+    // Add some sample data
+    this.initializeSampleData();
+  }
+  
+  private initializeSampleData() {
+    // Sample users
+    const patientUser: User = {
+      id: this.userIdCounter++,
+      email: "patient@example.com",
+      password: "$2b$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG", // password: 'password'
+      firstName: "John",
+      lastName: "Doe",
+      role: "patient",
+      profile: {
+        age: 35,
+        gender: "male",
+        phone: "555-123-4567"
+      },
+      createdAt: new Date()
+    };
+    
+    const doctorUser: User = {
+      id: this.userIdCounter++,
+      email: "doctor@example.com",
+      password: "$2b$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG", // password: 'password'
+      firstName: "Jane",
+      lastName: "Smith",
+      role: "doctor",
+      specialty: "Cardiology",
+      profile: {
+        age: 42,
+        gender: "female",
+        bio: "Experienced cardiologist with 15 years of practice",
+        phone: "555-987-6543"
+      },
+      createdAt: new Date()
+    };
+    
+    this.users.set(patientUser.id, patientUser);
+    this.users.set(doctorUser.id, doctorUser);
+    
+    // Sample doctor
+    const doctor: Doctor = {
+      id: this.doctorIdCounter++,
+      userId: doctorUser.id,
+      specialty: "Cardiology",
+      averageRating: 4,
+      reviewCount: 15,
+      isAvailable: true
+    };
+    
+    this.doctors.set(doctor.id, doctor);
+    
+    // Sample availability
+    const availability: Availability = {
+      id: this.availabilityIdCounter++,
+      doctorId: doctor.id,
+      dayOfWeek: 1, // Monday
+      startTime: "09:00",
+      endTime: "17:00",
+      isAvailable: true
+    };
+    
+    this.availabilities.set(availability.id, availability);
+    
+    // Sample emergency transport
+    const emergencyTransport: EmergencyTransport = {
+      id: this.emergencyTransportIdCounter++,
+      patientId: patientUser.id,
+      requestDate: new Date(),
+      pickupLocation: "123 Main St, Anytown, USA",
+      pickupCoordinates: "37.7749,-122.4194",
+      destination: "General Hospital",
+      destinationCoordinates: "37.7833,-122.4167",
+      reason: "Chest pain",
+      urgency: "high",
+      status: "requested",
+      vehicleType: "ambulance",
+      notes: "Patient has history of heart problems",
+      assignedHospital: "General Hospital",
+      driverName: undefined,
+      driverPhone: undefined,
+      estimatedArrival: undefined,
+      assignedTime: undefined
+    };
+    
+    this.emergencyTransports.set(emergencyTransport.id, emergencyTransport);
+  }
+  
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
+  }
+  
+  async createUser(user: InsertUser): Promise<User> {
+    const id = this.userIdCounter++;
+    const newUser: User = {
+      id,
+      ...user,
+      createdAt: new Date()
+    };
+    this.users.set(id, newUser);
+    return newUser;
+  }
+  
+  // Doctor operations
+  async getDoctor(id: number): Promise<Doctor | undefined> {
+    return this.doctors.get(id);
+  }
+  
+  async getDoctorByUserId(userId: number): Promise<Doctor | undefined> {
+    return Array.from(this.doctors.values()).find(doctor => doctor.userId === userId);
+  }
+  
+  async getDoctors(): Promise<DoctorWithUserInfo[]> {
+    return Array.from(this.doctors.values()).map(doctor => {
+      const user = this.users.get(doctor.userId)!;
+      return { ...doctor, user };
+    });
+  }
+  
+  async getDoctorsBySpecialty(specialty: string): Promise<DoctorWithUserInfo[]> {
+    return Array.from(this.doctors.values())
+      .filter(doctor => doctor.specialty === specialty)
+      .map(doctor => {
+        const user = this.users.get(doctor.userId)!;
+        return { ...doctor, user };
+      });
+  }
+  
+  async createDoctor(doctor: InsertDoctor): Promise<Doctor> {
+    const id = this.doctorIdCounter++;
+    const newDoctor: Doctor = {
+      id,
+      ...doctor,
+      reviewCount: 0,
+      averageRating: undefined
+    };
+    this.doctors.set(id, newDoctor);
+    return newDoctor;
+  }
+  
+  async updateDoctorAvailability(id: number, isAvailable: boolean): Promise<Doctor> {
+    const doctor = this.doctors.get(id);
+    if (!doctor) throw new Error("Doctor not found");
+    
+    const updatedDoctor = { ...doctor, isAvailable };
+    this.doctors.set(id, updatedDoctor);
+    return updatedDoctor;
+  }
+  
+  // Availability operations
+  async getAvailability(doctorId: number): Promise<Availability[]> {
+    return Array.from(this.availabilities.values())
+      .filter(availability => availability.doctorId === doctorId);
+  }
+  
+  async createAvailability(availability: InsertAvailability): Promise<Availability> {
+    const id = this.availabilityIdCounter++;
+    const newAvailability: Availability = {
+      id,
+      ...availability
+    };
+    this.availabilities.set(id, newAvailability);
+    return newAvailability;
+  }
+  
+  async updateAvailability(id: number, availability: Partial<Availability>): Promise<Availability> {
+    const existingAvailability = this.availabilities.get(id);
+    if (!existingAvailability) throw new Error("Availability not found");
+    
+    const updatedAvailability = { ...existingAvailability, ...availability };
+    this.availabilities.set(id, updatedAvailability);
+    return updatedAvailability;
+  }
+  
+  async deleteAvailability(id: number): Promise<boolean> {
+    return this.availabilities.delete(id);
+  }
+  
+  // TimeOff operations
+  async getTimeOffs(doctorId: number): Promise<TimeOff[]> {
+    return Array.from(this.timeOffs.values())
+      .filter(timeOff => timeOff.doctorId === doctorId);
+  }
+  
+  async createTimeOff(timeOff: InsertTimeOff): Promise<TimeOff> {
+    const id = this.timeOffIdCounter++;
+    const newTimeOff: TimeOff = {
+      id,
+      ...timeOff
+    };
+    this.timeOffs.set(id, newTimeOff);
+    return newTimeOff;
+  }
+  
+  async deleteTimeOff(id: number): Promise<boolean> {
+    return this.timeOffs.delete(id);
+  }
+  
+  // Appointment operations
+  async getAppointment(id: number): Promise<AppointmentWithUsers | undefined> {
+    const appointment = this.appointments.get(id);
+    if (!appointment) return undefined;
+    
+    const patient = this.users.get(appointment.patientId)!;
+    const doctor = this.doctors.get(appointment.doctorId)!;
+    const doctorUser = this.users.get(doctor.userId)!;
+    
+    return {
+      ...appointment,
+      patient,
+      doctor: {
+        ...doctor,
+        user: doctorUser
+      }
+    };
+  }
+  
+  async getAppointmentsByPatient(patientId: number): Promise<AppointmentWithUsers[]> {
+    return Array.from(this.appointments.values())
+      .filter(appointment => appointment.patientId === patientId)
+      .map(appointment => {
+        const patient = this.users.get(appointment.patientId)!;
+        const doctor = this.doctors.get(appointment.doctorId)!;
+        const doctorUser = this.users.get(doctor.userId)!;
+        
+        return {
+          ...appointment,
+          patient,
+          doctor: {
+            ...doctor,
+            user: doctorUser
+          }
+        };
+      });
+  }
+  
+  async getAppointmentsByDoctor(doctorId: number): Promise<AppointmentWithUsers[]> {
+    return Array.from(this.appointments.values())
+      .filter(appointment => appointment.doctorId === doctorId)
+      .map(appointment => {
+        const patient = this.users.get(appointment.patientId)!;
+        const doctor = this.doctors.get(appointment.doctorId)!;
+        const doctorUser = this.users.get(doctor.userId)!;
+        
+        return {
+          ...appointment,
+          patient,
+          doctor: {
+            ...doctor,
+            user: doctorUser
+          }
+        };
+      });
+  }
+  
+  async getAppointmentsByDate(doctorId: number, date: Date): Promise<AppointmentWithUsers[]> {
+    const dateString = date.toISOString().split('T')[0];
+    
+    return Array.from(this.appointments.values())
+      .filter(appointment => {
+        const appointmentDate = new Date(appointment.date).toISOString().split('T')[0];
+        return appointment.doctorId === doctorId && appointmentDate === dateString;
+      })
+      .map(appointment => {
+        const patient = this.users.get(appointment.patientId)!;
+        const doctor = this.doctors.get(appointment.doctorId)!;
+        const doctorUser = this.users.get(doctor.userId)!;
+        
+        return {
+          ...appointment,
+          patient,
+          doctor: {
+            ...doctor,
+            user: doctorUser
+          }
+        };
+      });
+  }
+  
+  async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
+    const id = this.appointmentIdCounter++;
+    const newAppointment: Appointment = {
+      id,
+      ...appointment,
+      status: "scheduled",
+      type: appointment.type || "video",
+      callUrl: appointment.callUrl || null
+    };
+    this.appointments.set(id, newAppointment);
+    return newAppointment;
+  }
+  
+  async updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment> {
+    const existingAppointment = this.appointments.get(id);
+    if (!existingAppointment) throw new Error("Appointment not found");
+    
+    const updatedAppointment = { ...existingAppointment, ...appointment };
+    this.appointments.set(id, updatedAppointment);
+    return updatedAppointment;
+  }
+  
+  async cancelAppointment(id: number): Promise<Appointment> {
+    const appointment = this.appointments.get(id);
+    if (!appointment) throw new Error("Appointment not found");
+    
+    const updatedAppointment: Appointment = { 
+      ...appointment, 
+      status: "canceled" 
+    };
+    this.appointments.set(id, updatedAppointment);
+    return updatedAppointment;
+  }
+  
+  // Emergency Transport operations
+  async getEmergencyTransport(id: number): Promise<EmergencyTransportWithPatient | undefined> {
+    const transport = this.emergencyTransports.get(id);
+    if (!transport) return undefined;
+    
+    const patient = this.users.get(transport.patientId)!;
+    
+    return {
+      ...transport,
+      patient
+    };
+  }
+  
+  async getEmergencyTransportsByPatient(patientId: number): Promise<EmergencyTransportWithPatient[]> {
+    return Array.from(this.emergencyTransports.values())
+      .filter(transport => transport.patientId === patientId)
+      .map(transport => {
+        const patient = this.users.get(transport.patientId)!;
+        
+        return {
+          ...transport,
+          patient
+        };
+      });
+  }
+  
+  async getActiveEmergencyTransports(): Promise<EmergencyTransportWithPatient[]> {
+    const activeStatuses: EmergencyTransportStatus[] = ["requested", "assigned", "in_progress"];
+    
+    return Array.from(this.emergencyTransports.values())
+      .filter(transport => activeStatuses.includes(transport.status as EmergencyTransportStatus))
+      .map(transport => {
+        const patient = this.users.get(transport.patientId)!;
+        
+        return {
+          ...transport,
+          patient
+        };
+      });
+  }
+  
+  async createEmergencyTransport(transport: InsertEmergencyTransport): Promise<EmergencyTransport> {
+    const id = this.emergencyTransportIdCounter++;
+    const newTransport: EmergencyTransport = {
+      id,
+      ...transport,
+      requestDate: new Date(),
+      status: "requested",
+      driverName: undefined,
+      driverPhone: undefined,
+      estimatedArrival: undefined,
+      assignedTime: undefined
+    };
+    this.emergencyTransports.set(id, newTransport);
+    return newTransport;
+  }
+  
+  async updateEmergencyTransport(id: number, transport: Partial<EmergencyTransport>): Promise<EmergencyTransport> {
+    const existingTransport = this.emergencyTransports.get(id);
+    if (!existingTransport) throw new Error("Emergency transport not found");
+    
+    const updatedTransport = { ...existingTransport, ...transport };
+    this.emergencyTransports.set(id, updatedTransport);
+    return updatedTransport;
+  }
+  
+  async cancelEmergencyTransport(id: number): Promise<EmergencyTransport> {
+    const transport = this.emergencyTransports.get(id);
+    if (!transport) throw new Error("Emergency transport not found");
+    
+    const updatedTransport: EmergencyTransport = { 
+      ...transport, 
+      status: "canceled"
+    };
+    this.emergencyTransports.set(id, updatedTransport);
+    return updatedTransport;
+  }
+  
+  async assignDriverToEmergencyTransport(
+    id: number, 
+    driverName: string, 
+    driverPhone: string, 
+    estimatedArrival: Date
+  ): Promise<EmergencyTransport> {
+    const transport = this.emergencyTransports.get(id);
+    if (!transport) throw new Error("Emergency transport not found");
+    
+    const updatedTransport: EmergencyTransport = { 
+      ...transport, 
+      status: "assigned", 
+      driverName, 
+      driverPhone,
+      estimatedArrival,
+      assignedTime: new Date() // Set the assigned time to now
+    };
+    this.emergencyTransports.set(id, updatedTransport);
+    return updatedTransport;
+  }
+  
+  async completeEmergencyTransport(id: number): Promise<EmergencyTransport> {
+    const transport = this.emergencyTransports.get(id);
+    if (!transport) throw new Error("Emergency transport not found");
+    
+    const updatedTransport: EmergencyTransport = { 
+      ...transport, 
+      status: "completed" 
+    };
+    this.emergencyTransports.set(id, updatedTransport);
+    return updatedTransport;
+  }
+  
+  // Prescription operations
+  async createPrescription(prescription: any): Promise<any> {
+    const id = this.prescriptionIdCounter++;
+    const newPrescription = { id, ...prescription };
+    this.prescriptions.set(id, newPrescription);
+    return newPrescription;
+  }
+  
+  async getPrescriptionsByPatient(patientId: number): Promise<any[]> {
+    return Array.from(this.prescriptions.values())
+      .filter(prescription => prescription.patientId === patientId);
+  }
+  
+  async getPrescriptionsByDoctor(doctorId: number): Promise<any[]> {
+    return Array.from(this.prescriptions.values())
+      .filter(prescription => prescription.doctorId === doctorId);
+  }
+}
+
+// Firebase Storage implementation
+import { FirebaseStorage } from './FirebaseStorage';
+
+// Choose storage implementation
+const USE_FIREBASE = true; // Use Firebase for production-ready storage
+
+export const storage = USE_FIREBASE ? new FirebaseStorage() : new MemStorage();

@@ -10,6 +10,13 @@ import type {
   Appointment, InsertAppointment, AppointmentWithUsers,
   EmergencyTransport, InsertEmergencyTransport, EmergencyTransportWithPatient
 } from '@shared/schema';
+
+// Define the status types to avoid casting
+type EmergencyTransportStatus = "requested" | "assigned" | "in_progress" | "completed" | "canceled";
+type AppointmentStatus = "scheduled" | "confirmed" | "canceled" | "completed";
+type AppointmentType = "video" | "audio";
+type EmergencyTransportUrgency = "low" | "medium" | "high" | "critical";
+type EmergencyTransportVehicleType = "ambulance" | "wheelchair_van" | "medical_car" | "helicopter";
 import { v4 as uuidv4 } from 'uuid';
 import * as dotenv from 'dotenv';
 
@@ -68,13 +75,21 @@ export class FirebaseStorage implements IStorage {
 
   async createUser(userData: InsertUser): Promise<User> {
     try {
-      const docRef = await addDoc(collection(db, 'users'), {
+      // Prepare user data with proper null values for optional fields
+      const userDataToSave = {
         ...userData,
+        specialty: userData.specialty || null,
+        profile: userData.profile || null,
         createdAt: new Date()
-      });
+      };
+      
+      const docRef = await addDoc(collection(db, 'users'), userDataToSave);
       
       const id = parseInt(docRef.id) || Date.now();
-      return { id, ...userData, createdAt: new Date() } as User;
+      return { 
+        id, 
+        ...userDataToSave 
+      } as User;
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
@@ -278,9 +293,10 @@ export class FirebaseStorage implements IStorage {
 
   async getActiveEmergencyTransports(): Promise<EmergencyTransportWithPatient[]> {
     try {
+      const activeStatuses: EmergencyTransportStatus[] = ["requested", "assigned", "in_progress"];
       const q = query(
         collection(db, 'emergencyTransport'),
-        where('status', 'in', ['pending', 'assigned', 'en_route'])
+        where('status', 'in', activeStatuses)
       );
       const querySnapshot = await getDocs(q);
       const transports: EmergencyTransportWithPatient[] = [];
@@ -299,17 +315,26 @@ export class FirebaseStorage implements IStorage {
 
   async createEmergencyTransport(transportData: InsertEmergencyTransport): Promise<EmergencyTransport> {
     try {
-      const docRef = await addDoc(collection(db, 'emergencyTransport'), {
+      const transportToCreate = {
         ...transportData,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
+        requestDate: new Date(),
+        status: "requested" as EmergencyTransportStatus,
+        driverName: null,
+        driverPhone: null,
+        estimatedArrival: null,
+        assignedTime: null,
+        notes: transportData.notes || null,
+        pickupCoordinates: transportData.pickupCoordinates || null,
+        destinationCoordinates: transportData.destinationCoordinates || null,
+        assignedHospital: transportData.assignedHospital || null
+      };
+      
+      const docRef = await addDoc(collection(db, 'emergencyTransport'), transportToCreate);
       const id = parseInt(docRef.id) || Date.now();
+      
       return { 
         id, 
-        ...transportData, 
-        createdAt: new Date(), 
-        updatedAt: new Date() 
+        ...transportToCreate
       } as EmergencyTransport;
     } catch (error) {
       console.error('Error creating emergency transport:', error);
@@ -331,7 +356,7 @@ export class FirebaseStorage implements IStorage {
   }
 
   async cancelEmergencyTransport(id: number): Promise<EmergencyTransport> {
-    return this.updateEmergencyTransport(id, { status: 'cancelled' });
+    return this.updateEmergencyTransport(id, { status: 'canceled' as EmergencyTransportStatus });
   }
 
   async assignDriverToEmergencyTransport(
@@ -341,14 +366,56 @@ export class FirebaseStorage implements IStorage {
     estimatedArrival: Date
   ): Promise<EmergencyTransport> {
     return this.updateEmergencyTransport(id, {
-      status: 'assigned',
+      status: 'assigned' as EmergencyTransportStatus,
       driverName,
       driverPhone,
-      estimatedArrival
+      estimatedArrival,
+      assignedTime: new Date() // Set the assigned time to now
     });
   }
 
   async completeEmergencyTransport(id: number): Promise<EmergencyTransport> {
-    return this.updateEmergencyTransport(id, { status: 'completed' });
+    return this.updateEmergencyTransport(id, { status: 'completed' as EmergencyTransportStatus });
+  }
+
+  // Prescription operations
+  async createPrescription(prescription: any): Promise<any> {
+    try {
+      const prescriptionRef = await addDoc(collection(db, 'prescriptions'), prescription);
+      return { id: parseInt(prescriptionRef.id), ...prescription };
+    } catch (error) {
+      console.error('Error creating prescription:', error);
+      throw error;
+    }
+  }
+  
+  async getPrescriptionsByPatient(patientId: number): Promise<any[]> {
+    try {
+      const q = query(collection(db, 'prescriptions'), where('patientId', '==', patientId));
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: parseInt(doc.id),
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting patient prescriptions:', error);
+      return [];
+    }
+  }
+  
+  async getPrescriptionsByDoctor(doctorId: number): Promise<any[]> {
+    try {
+      const q = query(collection(db, 'prescriptions'), where('doctorId', '==', doctorId));
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: parseInt(doc.id),
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting doctor prescriptions:', error);
+      return [];
+    }
   }
 }

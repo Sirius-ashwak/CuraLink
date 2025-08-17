@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EnhancedEmergencyForm from '@/components/EmergencyTransport/EnhancedEmergencyForm';
 import NearbyFacilitiesMap from '@/components/EmergencyTransport/NearbyFacilitiesMap';
-import { ArrowLeft, CheckCircle, MapPin } from 'lucide-react';
+import EmergencyTransportMapboxDemo from '@/components/emergencyTransport/EmergencyTransportMapboxDemo';
+import ProfessionalEmergencyMap from '@/components/maps/ProfessionalEmergencyMap';
+import { ArrowLeft, CheckCircle, MapPin, Map, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const EnhancedEmergencyTransport: React.FC = () => {
@@ -71,10 +73,15 @@ const EnhancedEmergencyTransport: React.FC = () => {
       </div>
       
       <Tabs defaultValue="request" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="request">Request Transport</TabsTrigger>
-          <TabsTrigger value="facilities">Nearby Facilities</TabsTrigger>
-        </TabsList>
+                  <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="request">Request</TabsTrigger>
+            <TabsTrigger value="facilities">Facilities</TabsTrigger>
+            <TabsTrigger value="demo">Demo Map</TabsTrigger>
+            <TabsTrigger value="dispatch">
+              <Radio className="w-4 h-4 mr-2" />
+              Dispatch
+            </TabsTrigger>
+          </TabsList>
         
         <TabsContent value="request">
           <Card>
@@ -111,6 +118,42 @@ const EnhancedEmergencyTransport: React.FC = () => {
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="demo">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Map className="h-5 w-5" />
+                Live Emergency Transport Tracking
+              </CardTitle>
+              <p className="text-sm text-gray-600">
+                Real-time vehicle tracking powered by Mapbox
+              </p>
+            </CardHeader>
+            <CardContent>
+              <EmergencyTransportMapboxDemo />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="dispatch">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Radio className="w-5 h-5" />
+                Emergency Dispatch Center
+              </CardTitle>
+              <p className="text-sm text-gray-600">
+                Professional emergency dispatch interface with real-time tracking
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[600px] w-full">
+                <ProfessionalEmergencyMap />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

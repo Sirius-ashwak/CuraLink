@@ -16,6 +16,13 @@ import {
   EmergencyTransportWithPatient
 } from "@shared/schema";
 
+// Define the status types to avoid casting
+type EmergencyTransportStatus = "requested" | "assigned" | "in_progress" | "completed" | "canceled";
+type AppointmentStatus = "scheduled" | "confirmed" | "canceled" | "completed";
+type AppointmentType = "video" | "audio";
+type EmergencyTransportUrgency = "low" | "medium" | "high" | "critical";
+type EmergencyTransportVehicleType = "ambulance" | "wheelchair_van" | "medical_car" | "helicopter";
+
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
@@ -114,7 +121,29 @@ export class MemStorage implements IStorage {
   
   async createUser(userData: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
-    const user: User = { ...userData, id, createdAt: new Date() };
+    // Prepare user data with proper null values for optional fields
+    // Ensure profile fields have the correct types
+    const typedProfile = userData.profile ? {
+      age: userData.profile.age ? Number(userData.profile.age) : undefined,
+      gender: userData.profile.gender ? String(userData.profile.gender) : undefined,
+      bio: userData.profile.bio ? String(userData.profile.bio) : undefined,
+      avatar: userData.profile.avatar ? String(userData.profile.avatar) : undefined,
+      phone: userData.profile.phone ? String(userData.profile.phone) : undefined,
+      experience: userData.profile.experience ? Number(userData.profile.experience) : undefined
+    } : null;
+    
+    const userDataToSave = {
+      ...userData,
+      specialty: userData.specialty || null,
+      profile: typedProfile
+    };
+    
+    const user: User = { 
+      ...userDataToSave, 
+      id, 
+      createdAt: new Date() 
+    };
+    
     this.users.set(id, user);
     return user;
   }
@@ -141,7 +170,13 @@ export class MemStorage implements IStorage {
   
   async createDoctor(doctorData: InsertDoctor): Promise<Doctor> {
     const id = this.doctorIdCounter++;
-    const doctor: Doctor = { ...doctorData, id };
+    const doctor: Doctor = { 
+      ...doctorData, 
+      id,
+      averageRating: doctorData.averageRating ?? null,
+      reviewCount: doctorData.reviewCount ?? null,
+      isAvailable: doctorData.isAvailable ?? null
+    };
     this.doctors.set(id, doctor);
     return doctor;
   }
@@ -163,7 +198,11 @@ export class MemStorage implements IStorage {
   
   async createAvailability(availabilityData: InsertAvailability): Promise<Availability> {
     const id = this.availabilityIdCounter++;
-    const availability: Availability = { ...availabilityData, id };
+    const availability: Availability = { 
+      ...availabilityData, 
+      id,
+      isAvailable: availabilityData.isAvailable ?? null
+    };
     this.availabilities.set(id, availability);
     return availability;
   }
@@ -260,7 +299,15 @@ export class MemStorage implements IStorage {
   
   async createAppointment(appointmentData: InsertAppointment): Promise<Appointment> {
     const id = this.appointmentIdCounter++;
-    const appointment: Appointment = { ...appointmentData, id };
+    const appointment: Appointment = { 
+      ...appointmentData, 
+      id,
+      status: appointmentData.status || "scheduled",
+      type: appointmentData.type || "video",
+      reason: appointmentData.reason || null,
+      notes: appointmentData.notes || null,
+      callUrl: appointmentData.callUrl || null
+    };
     this.appointments.set(id, appointment);
     return appointment;
   }
@@ -269,7 +316,21 @@ export class MemStorage implements IStorage {
     const appointment = this.appointments.get(id);
     if (!appointment) throw new Error("Appointment not found");
     
-    const updatedAppointment = { ...appointment, ...partialAppointment };
+    // Ensure optional fields are properly handled
+    const sanitizedPartialAppointment = {
+      ...partialAppointment,
+      status: partialAppointment.status ?? appointment.status,
+      type: partialAppointment.type ?? appointment.type,
+      reason: partialAppointment.reason ?? appointment.reason,
+      notes: partialAppointment.notes ?? appointment.notes,
+      callUrl: partialAppointment.callUrl ?? appointment.callUrl
+    };
+    
+    const updatedAppointment = { 
+      ...appointment, 
+      ...sanitizedPartialAppointment, 
+      status: (sanitizedPartialAppointment.status ?? appointment.status) as AppointmentStatus 
+    };
     this.appointments.set(id, updatedAppointment);
     return updatedAppointment;
   }
@@ -278,7 +339,10 @@ export class MemStorage implements IStorage {
     const appointment = this.appointments.get(id);
     if (!appointment) throw new Error("Appointment not found");
     
-    const updatedAppointment = { ...appointment, status: "canceled" };
+    const updatedAppointment: Appointment = { 
+      ...appointment, 
+      status: "canceled" as AppointmentStatus 
+    };
     this.appointments.set(id, updatedAppointment);
     return updatedAppointment;
   }
@@ -310,10 +374,10 @@ export class MemStorage implements IStorage {
   }
   
   async getActiveEmergencyTransports(): Promise<EmergencyTransportWithPatient[]> {
-    const activeStatuses = ["requested", "assigned", "in_progress"];
+    const activeStatuses: EmergencyTransportStatus[] = ["requested", "assigned", "in_progress"];
     
     return Array.from(this.emergencyTransports.values())
-      .filter(transport => activeStatuses.includes(transport.status))
+      .filter(transport => activeStatuses.includes(transport.status as EmergencyTransportStatus))
       .map(transport => {
         const patient = this.users.get(transport.patientId)!;
         
@@ -330,10 +394,15 @@ export class MemStorage implements IStorage {
       ...transportData, 
       id, 
       requestDate: new Date(),
-      status: "requested",
+      status: "requested" as EmergencyTransportStatus,
       driverName: null,
       driverPhone: null,
-      estimatedArrival: null
+      estimatedArrival: null,
+      assignedTime: null,
+      pickupCoordinates: transportData.pickupCoordinates || null,
+      destinationCoordinates: transportData.destinationCoordinates || null,
+      notes: transportData.notes || null,
+      assignedHospital: transportData.assignedHospital || null
     };
     this.emergencyTransports.set(id, transport);
     return transport;
@@ -343,7 +412,16 @@ export class MemStorage implements IStorage {
     const transport = this.emergencyTransports.get(id);
     if (!transport) throw new Error("Emergency transport not found");
     
-    const updatedTransport = { ...transport, ...partialTransport };
+    // Ensure optional fields are properly handled
+    const sanitizedPartialTransport = {
+      ...partialTransport,
+      pickupCoordinates: partialTransport.pickupCoordinates ?? transport.pickupCoordinates,
+      destinationCoordinates: partialTransport.destinationCoordinates ?? transport.destinationCoordinates,
+      notes: partialTransport.notes ?? transport.notes,
+      assignedHospital: partialTransport.assignedHospital ?? transport.assignedHospital
+    };
+    
+    const updatedTransport = { ...transport, ...sanitizedPartialTransport };
     this.emergencyTransports.set(id, updatedTransport);
     return updatedTransport;
   }
@@ -366,14 +444,16 @@ export class MemStorage implements IStorage {
           pickupCoordinates: "37.7749,-122.4194",
           destination: "County General Hospital",
           reason: "Severe chest pain and difficulty breathing",
-          urgency: "high" as "low" | "medium" | "high" | "critical",
-          status: "canceled" as "requested" | "assigned" | "in_progress" | "completed" | "canceled",
-          vehicleType: "ambulance" as "ambulance" | "wheelchair_van" | "medical_car" | "helicopter",
+          urgency: "high" as EmergencyTransportUrgency,
+          status: "canceled" as EmergencyTransportStatus,
+          vehicleType: "ambulance" as EmergencyTransportVehicleType,
           driverName: null,
           driverPhone: null,
           estimatedArrival: null,
           notes: "Patient has history of heart problems",
-          assignedHospital: "County General Hospital"
+          assignedHospital: "County General Hospital",
+          destinationCoordinates: null,
+          assignedTime: null
         };
         
         // Update the transport in the map
@@ -387,7 +467,7 @@ export class MemStorage implements IStorage {
     // Regular flow for non-seed transports
     const updatedTransport = { 
       ...transport, 
-      status: "canceled" as "requested" | "assigned" | "in_progress" | "completed" | "canceled"
+      status: "canceled" as EmergencyTransportStatus
     };
     this.emergencyTransports.set(id, updatedTransport);
     return updatedTransport;
@@ -404,10 +484,11 @@ export class MemStorage implements IStorage {
     
     const updatedTransport = { 
       ...transport, 
-      status: "assigned" as "requested" | "assigned" | "in_progress" | "completed" | "canceled", 
+      status: "assigned" as EmergencyTransportStatus, 
       driverName, 
       driverPhone,
-      estimatedArrival
+      estimatedArrival,
+      assignedTime: new Date() // Set the assigned time to now
     };
     this.emergencyTransports.set(id, updatedTransport);
     return updatedTransport;
@@ -419,7 +500,7 @@ export class MemStorage implements IStorage {
     
     const updatedTransport = { 
       ...transport, 
-      status: "completed" as "requested" | "assigned" | "in_progress" | "completed" | "canceled"
+      status: "completed" as EmergencyTransportStatus
     };
     this.emergencyTransports.set(id, updatedTransport);
     return updatedTransport;
@@ -449,6 +530,7 @@ export class MemStorage implements IStorage {
         firstName: patient.firstName,
         lastName: patient.lastName,
         role: "patient",
+        specialty: null, // Add the required specialty field as null for patients
         profile: { age: patient.age, gender: patient.gender, bio: patient.bio, phone: `+1-555-010${this.userIdCounter}` },
         createdAt: new Date()
       };
@@ -495,11 +577,16 @@ export class MemStorage implements IStorage {
     });
     
     // Create availabilities for doctors
+    // Get the first two doctors from the collection
+    const doctorIds = Array.from(this.doctors.keys()).slice(0, 2);
+    const doctor1Id = doctorIds[0];
+    const doctor2Id = doctorIds[1];
+    
     const weekdays = [1, 2, 3, 4, 5]; // Monday to Friday
     weekdays.forEach(day => {
       this.availabilities.set(this.availabilityIdCounter++, {
         id: this.availabilityIdCounter,
-        doctorId: doctor1.id,
+        doctorId: doctor1Id,
         dayOfWeek: day,
         startTime: "09:00",
         endTime: "17:00",
@@ -508,7 +595,7 @@ export class MemStorage implements IStorage {
       
       this.availabilities.set(this.availabilityIdCounter++, {
         id: this.availabilityIdCounter,
-        doctorId: doctor2.id,
+        doctorId: doctor2Id,
         dayOfWeek: day,
         startTime: "10:00",
         endTime: "18:00",
@@ -516,7 +603,7 @@ export class MemStorage implements IStorage {
       });
     });
     
-    // Create time off for doctor1
+    // Create time off for the first doctor
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
@@ -524,11 +611,14 @@ export class MemStorage implements IStorage {
     const dayAfterTomorrow = new Date(tomorrow);
     dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 1);
     
+    // Get the first patient user id
+    const firstPatientUserId = Array.from(this.users.values()).find(u => u.role === "patient")?.id ?? 1;
+
     // Create sample appointments
     this.appointments.set(this.appointmentIdCounter++, {
       id: this.appointmentIdCounter,
-      patientId: patientUser.id,
-      doctorId: doctor1.id,
+      patientId: firstPatientUserId,
+      doctorId: doctor1Id,
       date: tomorrow,
       startTime: "10:00",
       endTime: "10:30",
@@ -545,8 +635,8 @@ export class MemStorage implements IStorage {
     
     this.appointments.set(this.appointmentIdCounter++, {
       id: this.appointmentIdCounter,
-      patientId: patientUser.id,
-      doctorId: doctor2.id,
+      patientId: firstPatientUserId,
+      doctorId: doctor2Id,
       date: friday,
       startTime: "14:30",
       endTime: "15:00",
@@ -560,7 +650,7 @@ export class MemStorage implements IStorage {
     // Create a sample emergency transport request
     this.emergencyTransports.set(this.emergencyTransportIdCounter++, {
       id: this.emergencyTransportIdCounter,
-      patientId: patientUser.id,
+      patientId: firstPatientUserId,
       requestDate: new Date(),
       pickupLocation: "123 Rural Road, Remote Village, 98765",
       pickupCoordinates: "37.7749,-122.4194",
@@ -573,7 +663,9 @@ export class MemStorage implements IStorage {
       driverPhone: null,
       estimatedArrival: null,
       notes: "Patient has history of heart problems",
-      assignedHospital: "County General Hospital"
+      assignedHospital: "County General Hospital",
+      destinationCoordinates: null,
+      assignedTime: null
     });
   }
 
@@ -597,6 +689,6 @@ export class MemStorage implements IStorage {
 import { FirebaseStorage } from './FirebaseStorage';
 
 // Choose storage implementation
-const USE_FIREBASE = true; // Use Firebase for production-ready storage
+const USE_FIREBASE = false; // Use Firebase for production-ready storage (set to false for development)
 
 export const storage = USE_FIREBASE ? new FirebaseStorage() : new MemStorage();

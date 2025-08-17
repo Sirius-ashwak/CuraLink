@@ -27,6 +27,8 @@ import Appointments from "@/pages/appointments";
 import ComprehensiveSettings from "@/pages/ComprehensiveSettings";
 import SymptomChecker from "@/pages/SymptomChecker";
 import IndustryDashboard from "@/pages/IndustryDashboard";
+import MapTest from "@/pages/MapTest";
+import MapboxEmergencyPage from "@/pages/MapboxEmergencyPage";
 
 function Router() {
   return (
@@ -48,6 +50,8 @@ function Router() {
       <Route path="/appointments" component={Appointments} />
       <Route path="/symptom-checker" component={SymptomChecker} />
       <Route path="/industry-dashboard" component={IndustryDashboard} />
+      <Route path="/map-test" component={MapTest} />
+      <Route path="/mapbox-emergency" component={MapboxEmergencyPage} />
       <Route component={NotFound} />
     </Switch>
   );

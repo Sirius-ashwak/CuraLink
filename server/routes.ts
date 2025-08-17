@@ -3,6 +3,15 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertAppointmentSchema, insertEmergencyTransportSchema } from "@shared/schema";
 import { z } from "zod";
+import { WebSocketServer } from 'ws';
+
+// Define a type for the global object with our WebSocket server
+declare global {
+  var wss: WebSocketServer | undefined;
+}
+
+// Export WebSocket server for use in other modules
+export let wss: WebSocketServer = global.wss || new WebSocketServer({ noServer: true });
 
 // Import our route handlers
 import symptomCheckerRoutes from "./routes/symptomChecker";
@@ -223,6 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/medicines', medicinesRoutes);
   app.use('/api/video', videoRoutes);
   app.use('/api/emergency', emergencyTransportRoutes);
+  app.use('/api/emergency-transport', emergencyTransportRoutes); // Add this line for the correct endpoint
   app.use('/api/ai-chat', aiChatRoutes);
   app.use('/api/health-record', healthRecordRoutes);
   app.use('/api/auth', authRoutes);

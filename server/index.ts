@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { createHttpsServer, startHttpsServer, sslCertificatesExist } from "./https";
 
 // Import industry-ready security and performance middleware
 import { 
@@ -129,6 +130,21 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Add HTTPS redirect middleware for production
+  if (process.env.NODE_ENV === 'production') {
+    app.use((req, res, next) => {
+      // Check if request is already secure or is a WebSocket upgrade request
+      if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+        next();
+      } else {
+        // Redirect to HTTPS with same host and path
+        const httpsPort = process.env.HTTPS_PORT || '5443';
+        const host = req.headers.host?.split(':')[0] || req.hostname;
+        res.redirect(`https://${host}:${httpsPort}${req.url}`);
+      }
+    });
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -151,7 +167,7 @@ app.use((req, res, next) => {
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = 5000;
+  const port = process.env.PORT || 5000;
   server.listen({
     port,
     host: "0.0.0.0",
@@ -159,4 +175,26 @@ app.use((req, res, next) => {
   }, () => {
     console.log(`HTTP server running on port ${port}`);
   });
+
+  // Set up HTTPS server if SSL certificates exist
+  try {
+    if (sslCertificatesExist()) {
+      const { httpsServer, wss } = createHttpsServer(app, server);
+      
+      // Export WebSocket server for use in other modules
+      global.wss = wss;
+      
+      // Start HTTPS server
+      startHttpsServer(httpsServer);
+      
+      console.log('HTTPS and WebSocket servers initialized successfully');
+    } else {
+      console.warn('SSL certificates not found. HTTPS server will not start.');
+      console.warn('The application will run in HTTP mode only, which is not secure for production.');
+      console.warn('Please generate SSL certificates to enable HTTPS.');
+    }
+  } catch (error) {
+    console.error('Failed to initialize HTTPS server:', error);
+    console.warn('The application will continue to run in HTTP mode only.');
+  }
 })();

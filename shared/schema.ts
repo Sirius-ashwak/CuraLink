@@ -16,6 +16,7 @@ export const users = pgTable("users", {
     bio?: string;
     avatar?: string;
     phone?: string;
+    experience?: number;
   }>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -67,6 +68,7 @@ export const emergencyTransport = pgTable("emergency_transport", {
   pickupLocation: text("pickup_location").notNull(),
   pickupCoordinates: text("pickup_coordinates"),
   destination: text("destination").notNull(),
+  destinationCoordinates: text("destination_coordinates"),
   reason: text("reason").notNull(),
   urgency: text("urgency", { enum: ["low", "medium", "high", "critical"] }).notNull(),
   status: text("status", { enum: ["requested", "assigned", "in_progress", "completed", "canceled"] }).notNull().default("requested"),
@@ -76,6 +78,7 @@ export const emergencyTransport = pgTable("emergency_transport", {
   driverPhone: varchar("driver_phone", { length: 20 }),
   notes: text("notes"),
   assignedHospital: text("assigned_hospital"),
+  assignedTime: timestamp("assigned_time"),
 });
 
 // Insert schemas

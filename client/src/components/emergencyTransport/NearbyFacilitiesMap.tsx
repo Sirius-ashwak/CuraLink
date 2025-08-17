@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, MapPin, Navigation } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import SimpleMap from '../maps/SimpleMap';
 
 interface NearbyFacilitiesMapProps {
   onSelectFacility: (facilityName: string, facilityAddress: string) => void;

@@ -4,8 +4,7 @@ service cloud.firestore {
     
     // Users collection - authenticated users can read/write their own data
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, write, create, update, delete: if request.auth != null;
     }
     
     // Doctors collection - publicly readable for patient selection
@@ -15,10 +14,9 @@ service cloud.firestore {
       allow update, delete: if request.auth != null && request.auth.uid == doctorId;
     }
     
-    // Patients collection - only readable by the patient themselves
+    // Patients collection - accessible for development
     match /patients/{patientId} {
-      allow read, write: if request.auth != null && request.auth.uid == patientId;
-      allow create: if request.auth != null && request.auth.uid == patientId;
+      allow read, write, create, update, delete: if request.auth != null;
     }
     
     // Appointments - accessible by patient and doctor involved
@@ -29,16 +27,9 @@ service cloud.firestore {
       allow create: if request.auth != null;
     }
     
-    // Emergency transport - accessible by patient and emergency staff
+    // Emergency transport - accessible by authenticated users for development
     match /emergencyTransport/{transportId} {
-      allow read: if request.auth != null && 
-        (request.auth.uid == resource.data.patientId ||
-         hasCustomClaim('role', 'emergency_staff') ||
-         hasCustomClaim('role', 'doctor'));
-      
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && 
-        hasCustomClaim('role', 'emergency_staff');
+      allow read, write, create, update, delete: if request.auth != null;
     }
     
     // Medical records - only accessible by patient and their assigned doctors
@@ -47,21 +38,6 @@ service cloud.firestore {
         (request.auth.uid == resource.data.patientId ||
          request.auth.uid == resource.data.doctorId);
       allow create: if request.auth != null;
-    }
-    
-    // Helper function to check custom claims
-    function hasCustomClaim(claim, value) {
-      return request.auth.token[claim] == value;
-    }
-    
-    // Helper function to check if user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    // Helper function to check if user owns the document
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
     }
   }
 }

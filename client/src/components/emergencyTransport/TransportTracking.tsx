@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import EmergencyTransportMap from '../maps/EmergencyTransportMap';
+import SimpleMap from '../maps/SimpleMap';
 import { firestore } from '../../lib/googleCloud';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot, Timestamp } from 'firebase/firestore';
 
@@ -37,6 +38,25 @@ const TransportTracking: React.FC<TransportTrackingProps> = ({ transportId }) =>
     if (!firestore) {
       setError('Firestore is not configured.');
       setLoading(false);
+      
+      // Create mock transport data for development
+      const mockTransport: TransportDetails = {
+        id: transportId,
+        patientId: 1,
+        patientName: 'Demo Patient',
+        pickupLocation: { lat: 37.7749, lng: -122.4194 }, // San Francisco
+        destination: { lat: 37.7833, lng: -122.4167 }, // Nearby location
+        vehicleType: 'ambulance',
+        status: 'in_progress',
+        driverName: 'Demo Driver',
+        driverPhone: '(555) 123-4567',
+        estimatedArrival: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes from now
+        requestDate: new Date(),
+        notes: 'This is a demo transport since Firestore is not configured.'
+      };
+      
+      setTransport(mockTransport);
+      setEtaMinutes(15);
       return;
     }
     
@@ -220,11 +240,12 @@ const TransportTracking: React.FC<TransportTrackingProps> = ({ transportId }) =>
           
           <div>
             <h3 className="text-lg font-semibold mb-3">Live Location Tracking</h3>
-            <EmergencyTransportMap
-              transportId={transport.id}
-              patientLocation={transport.pickupLocation}
-              destinationLocation={transport.destination}
-              onLocationUpdate={handleLocationUpdate}
+            <SimpleMap
+              center={transport.pickupLocation}
+              markers={[
+                transport.pickupLocation,
+                transport.destination
+              ].filter(Boolean)}
               height="350px"
             />
           </div>

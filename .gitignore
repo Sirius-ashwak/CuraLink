@@ -15,10 +15,17 @@ vite.config.ts.*
 *.json
 service-account-key.json
 gcloud-key.json
+google-cloud-credentials.json
+festive-freedom-*.json
 
 # Deployment scripts with secrets
 setup-secrets.sh
 deploy-to-gcloud.sh
+
+# Demo seeding scripts (temporary files)
+seed-demo-medicines.ps1
+seed-demo-medicines.bat
+scripts/seed-medicines.js
 
 # API keys and sensitive configs
 config/secrets.js

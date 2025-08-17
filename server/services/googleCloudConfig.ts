@@ -31,13 +31,13 @@ try {
 }
 
 // Initialize Google Cloud services
-let storage = null;
-let speechClient = null;
-let visionClient = null;
-let translationClient = null;
-let documentAIClient = null;
-let languageClient = null;
-let geminiModel = null;
+let storage: Storage | null = null;
+let speechClient: SpeechClient | null = null;
+let visionClient: ImageAnnotatorClient | null = null;
+let translationClient: TranslationServiceClient | null = null;
+let documentAIClient: DocumentProcessorServiceClient | null = null;
+let languageClient: LanguageServiceClient | null = null;
+let geminiModel: any = null;
 
 if (credentials) {
   // Initialize Google Cloud Storage

@@ -11,8 +11,7 @@ const __dirname = dirname(__filename);
 export default defineConfig({
   plugins: [
     react(),
-    runtimeErrorOverlay(),
-    themePlugin(),
+    ...(process.env.NODE_ENV !== "production" ? [runtimeErrorOverlay(), themePlugin()] : []),
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined
       ? [
@@ -33,5 +32,29 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
+    minify: true,
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: [
+            'react', 
+            'react-dom', 
+            'firebase', 
+            '@react-google-maps/api',
+            'lucide-react'
+          ],
+          ui: [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast',
+            'class-variance-authority',
+            'clsx',
+            'tailwind-merge'
+          ]
+        }
+      }
+    }
   },
 });

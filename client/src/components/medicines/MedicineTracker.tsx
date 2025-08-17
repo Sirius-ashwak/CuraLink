@@ -82,6 +82,10 @@ export default function MedicineTracker() {
     refetch
   } = useQuery({
     queryKey: ["/api/medicines"],
+    queryFn: () => apiRequest<Medicine[]>({
+      url: "/api/medicines",
+      method: "GET"
+    }),
     enabled: !!user,
   });
   
@@ -97,7 +101,7 @@ export default function MedicineTracker() {
   }, [isError, toast]);
   
   // Filter medicines based on search term
-  const filteredMedicines = medicines.filter((medicine: Medicine) => 
+  const filteredMedicines = (medicines as Medicine[]).filter((medicine: Medicine) => 
     medicine.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     medicine.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -148,14 +152,15 @@ export default function MedicineTracker() {
     e.preventDefault();
     
     try {
-      await apiRequest("/api/medicines", {
+      await apiRequest({
+        url: "/api/medicines",
         method: "POST",
-        body: JSON.stringify({
+        data: {
           ...formData,
           quantity: Number(formData.quantity),
           category: "Not specified", // Default category
           reorderLevel: 5, // Default reorder level
-        }),
+        },
       });
       
       toast({
@@ -187,7 +192,10 @@ export default function MedicineTracker() {
     setIsLoadingInfo(true);
     
     try {
-      const info = await apiRequest(`/api/medicines/${medicine.id}/info`);
+      const info = await apiRequest({
+        url: `/api/medicines/${medicine.id}/info`,
+        method: "GET",
+      });
       if (info) {
         setMedicineInfo(info);
       }
@@ -208,11 +216,12 @@ export default function MedicineTracker() {
     if (!selectedMedicine) return;
     
     try {
-      await apiRequest(`/api/medicines/${selectedMedicine.id}/adjust-stock`, {
+      await apiRequest({
+        url: `/api/medicines/${selectedMedicine.id}/adjust-stock`,
         method: "POST",
-        body: JSON.stringify({
+        data: {
           adjustment: Number(adjustQuantity),
-        }),
+        },
       });
       
       toast({
@@ -243,7 +252,8 @@ export default function MedicineTracker() {
     if (!selectedMedicine) return;
     
     try {
-      await apiRequest(`/api/medicines/${selectedMedicine.id}`, {
+      await apiRequest({
+        url: `/api/medicines/${selectedMedicine.id}`,
         method: "DELETE",
       });
       
@@ -268,6 +278,112 @@ export default function MedicineTracker() {
       });
     }
   };
+
+  // Handle adding demo medicines
+  const handleAddDemoMedicines = async () => {
+    const demoMedicines = [
+      {
+        name: "Aspirin",
+        dosage: "100mg",
+        quantity: 30,
+        expiryDate: format(new Date().setMonth(new Date().getMonth() + 18), "yyyy-MM-dd"),
+        prescriptionRequired: false,
+        category: "Pain Relief",
+        reorderLevel: 10,
+      },
+      {
+        name: "Amoxicillin",
+        dosage: "500mg",
+        quantity: 5,
+        expiryDate: format(new Date().setMonth(new Date().getMonth() + 6), "yyyy-MM-dd"),
+        prescriptionRequired: true,
+        category: "Antibiotic",
+        reorderLevel: 10,
+      },
+      {
+        name: "Paracetamol",
+        dosage: "500mg",
+        quantity: 15,
+        expiryDate: format(new Date().setMonth(new Date().getMonth() + 24), "yyyy-MM-dd"),
+        prescriptionRequired: false,
+        category: "Pain Relief",
+        reorderLevel: 5,
+      },
+      {
+        name: "Metformin",
+        dosage: "500mg",
+        quantity: 60,
+        expiryDate: format(new Date().setMonth(new Date().getMonth() + 12), "yyyy-MM-dd"),
+        prescriptionRequired: true,
+        category: "Diabetes",
+        reorderLevel: 15,
+      },
+      {
+        name: "Lisinopril",
+        dosage: "10mg",
+        quantity: 3,
+        expiryDate: format(new Date().setMonth(new Date().getMonth() + 3), "yyyy-MM-dd"),
+        prescriptionRequired: true,
+        category: "Blood Pressure",
+        reorderLevel: 10,
+      },
+      {
+        name: "Vitamin D3",
+        dosage: "1000 IU",
+        quantity: 45,
+        expiryDate: format(new Date().setMonth(new Date().getMonth() + 30), "yyyy-MM-dd"),
+        prescriptionRequired: false,
+        category: "Vitamin",
+        reorderLevel: 20,
+      },
+      {
+        name: "Omeprazole",
+        dosage: "20mg",
+        quantity: 8,
+        expiryDate: format(new Date().setDate(new Date().getDate() + 15), "yyyy-MM-dd"),
+        prescriptionRequired: false,
+        category: "Gastric",
+        reorderLevel: 5,
+      },
+      {
+        name: "Atorvastatin",
+        dosage: "20mg",
+        quantity: 25,
+        expiryDate: format(new Date().setMonth(new Date().getMonth() + 15), "yyyy-MM-dd"),
+        prescriptionRequired: true,
+        category: "Cholesterol",
+        reorderLevel: 10,
+      }
+    ];
+
+    try {
+      // Add each demo medicine
+      for (const medicine of demoMedicines) {
+        await apiRequest({
+          url: "/api/medicines",
+          method: "POST",
+          data: medicine,
+        });
+      }
+      
+      toast({
+        title: "Success",
+        description: `Added ${demoMedicines.length} demo medicines successfully!`,
+        variant: "default",
+      });
+      
+      // Refetch medicines
+      queryClient.invalidateQueries({ queryKey: ["/api/medicines"] });
+      
+    } catch (error) {
+      console.error("Failed to add demo medicines:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add demo medicines. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   
   return (
     <div className="p-4">
@@ -287,9 +403,18 @@ export default function MedicineTracker() {
               className="max-w-md"
             />
           </div>
-          <Button onClick={() => setShowAddDialog(true)}>
-            Add Medicine
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleAddDemoMedicines}
+              disabled={isLoading}
+            >
+              Add Demo Medicines
+            </Button>
+            <Button onClick={() => setShowAddDialog(true)}>
+              Add Medicine
+            </Button>
+          </div>
         </div>
         
         <TabsContent value="all">
@@ -322,7 +447,7 @@ export default function MedicineTracker() {
                       {isExpired(medicine.expiryDate) ? (
                         <Badge variant="destructive">Expired</Badge>
                       ) : isExpiringSoon(medicine.expiryDate) ? (
-                        <Badge variant="warning">Expiring Soon</Badge>
+                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Expiring Soon</Badge>
                       ) : isLowStock(medicine) ? (
                         <Badge variant="outline" className="bg-orange-100 text-orange-800 hover:bg-orange-100">Low Stock</Badge>
                       ) : (
@@ -369,9 +494,18 @@ export default function MedicineTracker() {
               <p className="text-text-secondary mb-4">
                 No medicines found. Add your first medicine to get started.
               </p>
-              <Button onClick={() => setShowAddDialog(true)}>
-                Add Medicine
-              </Button>
+              <div className="flex gap-2 justify-center">
+                <Button 
+                  variant="outline" 
+                  onClick={handleAddDemoMedicines}
+                  disabled={isLoading}
+                >
+                  Add Demo Medicines
+                </Button>
+                <Button onClick={() => setShowAddDialog(true)}>
+                  Add Medicine
+                </Button>
+              </div>
             </div>
           )}
         </TabsContent>
@@ -452,7 +586,7 @@ export default function MedicineTracker() {
                         {isExpired(medicine.expiryDate) ? (
                           <Badge variant="destructive">Expired</Badge>
                         ) : (
-                          <Badge variant="warning">Expiring Soon</Badge>
+                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Expiring Soon</Badge>
                         )}
                       </TableCell>
                       <TableCell>

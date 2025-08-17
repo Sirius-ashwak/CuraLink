@@ -2,7 +2,11 @@ import { Router, Request, Response } from "express";
 import { storage } from "../storage";
 import { insertEmergencyTransportSchema } from "@shared/schema";
 import { z } from "zod";
-// WebSocket removed for better reliability in remote areas
+import { wss } from "../routes";
+import { WebSocket } from 'ws';
+import { AuthenticatedWebSocket } from '../websocket-types';
+
+// WebSockets are now conditionally used based on connection quality
 
 const router = Router();
 
@@ -79,7 +83,43 @@ router.post("/", async (req: Request, res: Response) => {
     const transport = await storage.createEmergencyTransport(validationResult.data);
     
     // Emergency transport created successfully
-    // Doctors will receive updates through API polling for better reliability
+    // Try to send WebSocket notification if available, with fallback to API polling
+    try {
+      const patient = await storage.getUser(transport.patientId);
+      
+      // Check if WebSocket server is available and has connected clients
+      if (wss && wss.clients && wss.clients.size > 0) {
+        wss.clients.forEach((client) => {
+          // Cast to our authenticated WebSocket type
+          const authClient = client as AuthenticatedWebSocket;
+          
+          if (authClient.readyState === WebSocket.OPEN && authClient.role === 'doctor') {
+            authClient.send(JSON.stringify({
+              type: "newEmergencyTransport",
+              transportId: transport.id,
+              patientId: transport.patientId,
+              patientName: patient ? `${patient.firstName} ${patient.lastName}` : "Unknown Patient",
+              location: transport.pickupLocation,
+              urgency: transport.urgency,
+              reason: transport.reason,
+              timestamp: new Date().toISOString()
+            }));
+          }
+        });
+        
+        // Count doctor clients
+        const doctorCount = Array.from(wss.clients)
+          .filter((c) => (c as AuthenticatedWebSocket).role === 'doctor')
+          .length;
+          
+        console.log(`WebSocket notification sent to ${doctorCount} doctors`);
+      } else {
+        console.log('No WebSocket clients connected. Doctors will receive updates through API polling.');
+      }
+    } catch (wsError: unknown) {
+      console.error('Error sending WebSocket notification:', wsError);
+      console.log('Doctors will receive updates through API polling instead.');
+    }
     
     res.status(201).json(transport);
   } catch (error) {
@@ -254,30 +294,95 @@ router.get("/:id/location", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Emergency transport not found" });
     }
 
-    // This should be replaced with actual driver location tracking logic
-    // For now, returning simulated location near the pickup coordinates
-    if (transport.pickupCoordinates) {
+    // Check if we have a driver assigned and if they have a current location
+    if (transport.driverPhone && transport.status === 'assigned' || transport.status === 'in_progress') {
+      // In a real app, we would query a real-time database or location service
+      // For now, we'll simulate movement along a path from pickup to destination
+      
       try {
+        // Parse pickup coordinates
+        let pickupLat = 37.7749;
+        let pickupLng = -122.4194;
+        
+        if (transport.pickupCoordinates) {
+          const [lat, lng] = transport.pickupCoordinates.split(",").map(coord => parseFloat(coord.trim()));
+          if (!isNaN(lat) && !isNaN(lng)) {
+            pickupLat = lat;
+            pickupLng = lng;
+          }
+        }
+        
+        // Parse destination coordinates (hospital)
+        let destLat = 37.7833;
+        let destLng = -122.4167;
+        
+        if (transport.destinationCoordinates) {
+          const [lat, lng] = transport.destinationCoordinates.split(",").map((coord: string) => parseFloat(coord.trim()));
+          if (!isNaN(lat) && !isNaN(lng)) {
+            destLat = lat;
+            destLng = lng;
+          }
+        }
+        
+        // Calculate progress based on time elapsed since assignment
+        // This simulates the vehicle moving from pickup to destination
+        const assignedTime = transport.assignedTime ? new Date(transport.assignedTime) : new Date(transport.requestDate);
+        const now = new Date();
+        const elapsedMinutes = (now.getTime() - assignedTime.getTime()) / (1000 * 60);
+        
+        // Assume the trip takes 30 minutes
+        const progress = Math.min(elapsedMinutes / 30, 1);
+        
+        // Interpolate between pickup and destination based on progress
+        const currentLat = pickupLat + (destLat - pickupLat) * progress;
+        const currentLng = pickupLng + (destLng - pickupLng) * progress;
+        
+        // Add a small random variation to make movement look more realistic
+        const jitter = 0.0005; // Small GPS jitter
+        
+        return res.json({
+          location: {
+            lat: currentLat + (Math.random() - 0.5) * jitter,
+            lng: currentLng + (Math.random() - 0.5) * jitter
+          },
+          status: transport.status,
+          progress: Math.round(progress * 100),
+          estimatedArrival: transport.estimatedArrival
+        });
+      } catch (error) {
+        console.error("Error calculating transport location:", error);
+      }
+    }
+    
+    // Fallback to pickup location if no driver is assigned or there's an error
+    try {
+      if (transport.pickupCoordinates) {
         const [lat, lng] = transport.pickupCoordinates.split(",").map(coord => parseFloat(coord.trim()));
         if (!isNaN(lat) && !isNaN(lng)) {
           return res.json({
             location: {
-              lat: lat + (Math.random() - 0.5) * 0.01,
-              lng: lng + (Math.random() - 0.5) * 0.01
-            }
+              lat: lat,
+              lng: lng
+            },
+            status: transport.status,
+            progress: 0,
+            estimatedArrival: null
           });
         }
-      } catch (error) {
-        console.error("Error parsing pickup coordinates:", error);
       }
+    } catch (error) {
+      console.error("Error parsing pickup coordinates:", error);
     }
     
-    // Fallback to default location if coordinates are invalid or missing
+    // Final fallback to default location
     res.json({
       location: {
         lat: 37.7749,
         lng: -122.4194
-      }
+      },
+      status: transport.status,
+      progress: 0,
+      estimatedArrival: null
     });
   } catch (error) {
     console.error("Error fetching transport location:", error);

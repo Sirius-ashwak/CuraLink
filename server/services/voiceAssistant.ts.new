@@ -1,4 +1,4 @@
-import { speechClient, initializeGemini, geminiModel } from './googleCloudConfig';
+import { speechClient as googleSpeechClient, initializeGemini, geminiModel } from './googleCloudConfig';
 import { SpeechClient, protos } from '@google-cloud/speech';
 
 // Import types for Google Cloud Speech
@@ -6,7 +6,6 @@ type RecognizeRequest = protos.google.cloud.speech.v1.IRecognizeRequest;
 type RecognizeResponse = protos.google.cloud.speech.v1.IRecognizeResponse;
 type SpeechRecognitionResult = protos.google.cloud.speech.v1.ISpeechRecognitionResult;
 type SpeechRecognitionAlternative = protos.google.cloud.speech.v1.ISpeechRecognitionAlternative;
-type IBoolValue = protos.google.protobuf.IBoolValue;
 import * as fs from 'fs';
 import { Readable } from 'stream';
 
@@ -33,7 +32,7 @@ export class VoiceAssistantService {
 
   constructor() {
     this.gemini = initializeGemini();
-    this.speechClient = speechClient;
+    this.speechClient = googleSpeechClient;
     
     // Log initialization status
     if (!this.speechClient) {
@@ -65,8 +64,8 @@ export class VoiceAssistantService {
           model: 'medical_conversation',
           useEnhanced: true,
           enableAutomaticPunctuation: true,
-          enableSpokenPunctuation: { value: true } as IBoolValue,
-          enableSpokenEmojis: { value: false } as IBoolValue,
+          enableSpokenPunctuation: true,
+          enableSpokenEmojis: false,
         },
       };
 

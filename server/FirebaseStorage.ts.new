@@ -1,0 +1,586 @@
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, doc, addDoc, getDoc, getDocs, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import type { IStorage } from './storage';
+import type { 
+  User, InsertUser, 
+  Doctor, InsertDoctor, DoctorWithUserInfo,
+  Availability, InsertAvailability,
+  TimeOff, InsertTimeOff,
+  Appointment, InsertAppointment, AppointmentWithUsers,
+  EmergencyTransport, InsertEmergencyTransport, EmergencyTransportWithPatient
+} from '@shared/schema';
+import { v4 as uuidv4 } from 'uuid';
+import * as dotenv from 'dotenv';
+
+// Define the status types to avoid casting
+type EmergencyTransportStatus = "requested" | "assigned" | "in_progress" | "completed" | "canceled";
+type AppointmentStatus = "scheduled" | "confirmed" | "canceled" | "completed";
+type AppointmentType = "video" | "audio";
+type EmergencyTransportUrgency = "low" | "medium" | "high" | "critical";
+type EmergencyTransportVehicleType = "ambulance" | "wheelchair_van" | "medical_car" | "helicopter";
+
+// Load environment variables
+dotenv.config();
+
+// Firebase configuration from environment variables
+const firebaseConfig = {
+  apiKey: process.env.VITE_FIREBASE_API_KEY,
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.VITE_FIREBASE_APP_ID,
+  measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID
+};
+
+console.log('Firebase Storage bucket:', process.env.VITE_FIREBASE_STORAGE_BUCKET);
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+export class FirebaseStorage implements IStorage {
+  
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', id.toString()));
+      if (userDoc.exists()) {
+        return { id, ...userDoc.data() } as User;
+      }
+      return undefined;
+    } catch (error) {
+      console.error('Error getting user:', error);
+      return undefined;
+    }
+  }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    try {
+      const q = query(collection(db, 'users'), where('email', '==', email));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) return undefined;
+      
+      const userDoc = querySnapshot.docs[0];
+      return { id: parseInt(userDoc.id), ...userDoc.data() } as User;
+    } catch (error) {
+      console.error('Error getting user by email:', error);
+      return undefined;
+    }
+  }
+  
+  async createUser(user: InsertUser): Promise<User> {
+    try {
+      const userRef = await addDoc(collection(db, 'users'), {
+        ...user,
+        createdAt: new Date()
+      });
+      
+      return {
+        id: parseInt(userRef.id),
+        ...user,
+        createdAt: new Date()
+      } as User;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  }
+  
+  // Doctor operations
+  async getDoctor(id: number): Promise<Doctor | undefined> {
+    try {
+      const doctorDoc = await getDoc(doc(db, 'doctors', id.toString()));
+      if (doctorDoc.exists()) {
+        return { id, ...doctorDoc.data() } as Doctor;
+      }
+      return undefined;
+    } catch (error) {
+      console.error('Error getting doctor:', error);
+      return undefined;
+    }
+  }
+  
+  async getDoctorByUserId(userId: number): Promise<Doctor | undefined> {
+    try {
+      const q = query(collection(db, 'doctors'), where('userId', '==', userId));
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) return undefined;
+      
+      const doctorDoc = querySnapshot.docs[0];
+      return { id: parseInt(doctorDoc.id), ...doctorDoc.data() } as Doctor;
+    } catch (error) {
+      console.error('Error getting doctor by user ID:', error);
+      return undefined;
+    }
+  }
+  
+  async getDoctors(): Promise<DoctorWithUserInfo[]> {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'doctors'));
+      const doctors: DoctorWithUserInfo[] = [];
+      
+      for (const doctorDoc of querySnapshot.docs) {
+        const doctor = { id: parseInt(doctorDoc.id), ...doctorDoc.data() } as Doctor;
+        const user = await this.getUser(doctor.userId);
+        
+        if (user) {
+          doctors.push({ ...doctor, user });
+        }
+      }
+      
+      return doctors;
+    } catch (error) {
+      console.error('Error getting doctors:', error);
+      return [];
+    }
+  }
+  
+  async getDoctorsBySpecialty(specialty: string): Promise<DoctorWithUserInfo[]> {
+    try {
+      const q = query(collection(db, 'doctors'), where('specialty', '==', specialty));
+      const querySnapshot = await getDocs(q);
+      const doctors: DoctorWithUserInfo[] = [];
+      
+      for (const doctorDoc of querySnapshot.docs) {
+        const doctor = { id: parseInt(doctorDoc.id), ...doctorDoc.data() } as Doctor;
+        const user = await this.getUser(doctor.userId);
+        
+        if (user) {
+          doctors.push({ ...doctor, user });
+        }
+      }
+      
+      return doctors;
+    } catch (error) {
+      console.error('Error getting doctors by specialty:', error);
+      return [];
+    }
+  }
+  
+  async createDoctor(doctor: InsertDoctor): Promise<Doctor> {
+    try {
+      const doctorRef = await addDoc(collection(db, 'doctors'), {
+        ...doctor,
+        reviewCount: 0
+      });
+      
+      return {
+        id: parseInt(doctorRef.id),
+        ...doctor,
+        reviewCount: 0,
+        averageRating: undefined
+      } as Doctor;
+    } catch (error) {
+      console.error('Error creating doctor:', error);
+      throw error;
+    }
+  }
+  
+  async updateDoctorAvailability(id: number, isAvailable: boolean): Promise<Doctor> {
+    try {
+      const doctorRef = doc(db, 'doctors', id.toString());
+      await updateDoc(doctorRef, { isAvailable });
+      
+      const doctorDoc = await getDoc(doctorRef);
+      if (!doctorDoc.exists()) throw new Error('Doctor not found');
+      
+      return { id, ...doctorDoc.data() } as Doctor;
+    } catch (error) {
+      console.error('Error updating doctor availability:', error);
+      throw error;
+    }
+  }
+  
+  // Availability operations
+  async getAvailability(doctorId: number): Promise<Availability[]> {
+    try {
+      const q = query(collection(db, 'availability'), where('doctorId', '==', doctorId));
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: parseInt(doc.id),
+        ...doc.data()
+      })) as Availability[];
+    } catch (error) {
+      console.error('Error getting availability:', error);
+      return [];
+    }
+  }
+  
+  async createAvailability(availability: InsertAvailability): Promise<Availability> {
+    try {
+      const availabilityRef = await addDoc(collection(db, 'availability'), availability);
+      
+      return {
+        id: parseInt(availabilityRef.id),
+        ...availability
+      } as Availability;
+    } catch (error) {
+      console.error('Error creating availability:', error);
+      throw error;
+    }
+  }
+  
+  async updateAvailability(id: number, availability: Partial<Availability>): Promise<Availability> {
+    try {
+      const availabilityRef = doc(db, 'availability', id.toString());
+      await updateDoc(availabilityRef, availability);
+      
+      const availabilityDoc = await getDoc(availabilityRef);
+      if (!availabilityDoc.exists()) throw new Error('Availability not found');
+      
+      return { id, ...availabilityDoc.data() } as Availability;
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      throw error;
+    }
+  }
+  
+  async deleteAvailability(id: number): Promise<boolean> {
+    try {
+      await deleteDoc(doc(db, 'availability', id.toString()));
+      return true;
+    } catch (error) {
+      console.error('Error deleting availability:', error);
+      return false;
+    }
+  }
+  
+  // TimeOff operations
+  async getTimeOffs(doctorId: number): Promise<TimeOff[]> {
+    try {
+      const q = query(collection(db, 'timeOff'), where('doctorId', '==', doctorId));
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: parseInt(doc.id),
+        ...doc.data(),
+        startDate: doc.data().startDate.toDate(),
+        endDate: doc.data().endDate.toDate()
+      })) as TimeOff[];
+    } catch (error) {
+      console.error('Error getting time offs:', error);
+      return [];
+    }
+  }
+  
+  async createTimeOff(timeOff: InsertTimeOff): Promise<TimeOff> {
+    try {
+      const timeOffRef = await addDoc(collection(db, 'timeOff'), timeOff);
+      
+      return {
+        id: parseInt(timeOffRef.id),
+        ...timeOff
+      } as TimeOff;
+    } catch (error) {
+      console.error('Error creating time off:', error);
+      throw error;
+    }
+  }
+  
+  async deleteTimeOff(id: number): Promise<boolean> {
+    try {
+      await deleteDoc(doc(db, 'timeOff', id.toString()));
+      return true;
+    } catch (error) {
+      console.error('Error deleting time off:', error);
+      return false;
+    }
+  }
+  
+  // Appointment operations
+  async getAppointment(id: number): Promise<AppointmentWithUsers | undefined> {
+    try {
+      const appointmentDoc = await getDoc(doc(db, 'appointments', id.toString()));
+      if (!appointmentDoc.exists()) return undefined;
+      
+      const appointmentData = { id, ...appointmentDoc.data() } as Appointment;
+      const patient = await this.getUser(appointmentData.patientId);
+      const doctor = await this.getDoctor(appointmentData.doctorId);
+      
+      if (!patient || !doctor) return undefined;
+      
+      const doctorUser = await this.getUser(doctor.userId);
+      if (!doctorUser) return undefined;
+      
+      return {
+        ...appointmentData,
+        patient,
+        doctor: {
+          ...doctor,
+          user: doctorUser
+        }
+      };
+    } catch (error) {
+      console.error('Error getting appointment:', error);
+      return undefined;
+    }
+  }
+  
+  async getAppointmentsByPatient(patientId: number): Promise<AppointmentWithUsers[]> {
+    try {
+      const q = query(collection(db, 'appointments'), where('patientId', '==', patientId));
+      const querySnapshot = await getDocs(q);
+      const appointments: AppointmentWithUsers[] = [];
+      
+      for (const appointmentDoc of querySnapshot.docs) {
+        const appointment = await this.getAppointment(parseInt(appointmentDoc.id));
+        if (appointment) appointments.push(appointment);
+      }
+      
+      return appointments;
+    } catch (error) {
+      console.error('Error getting patient appointments:', error);
+      return [];
+    }
+  }
+  
+  async getAppointmentsByDoctor(doctorId: number): Promise<AppointmentWithUsers[]> {
+    try {
+      const q = query(collection(db, 'appointments'), where('doctorId', '==', doctorId));
+      const querySnapshot = await getDocs(q);
+      const appointments: AppointmentWithUsers[] = [];
+      
+      for (const appointmentDoc of querySnapshot.docs) {
+        const appointment = await this.getAppointment(parseInt(appointmentDoc.id));
+        if (appointment) appointments.push(appointment);
+      }
+      
+      return appointments;
+    } catch (error) {
+      console.error('Error getting doctor appointments:', error);
+      return [];
+    }
+  }
+  
+  async getAppointmentsByDate(doctorId: number, date: Date): Promise<AppointmentWithUsers[]> {
+    // This is a simplified implementation - in a real app, you'd need to handle date ranges properly
+    try {
+      const q = query(
+        collection(db, 'appointments'), 
+        where('doctorId', '==', doctorId),
+        where('date', '>=', new Date(date.setHours(0, 0, 0, 0))),
+        where('date', '<=', new Date(date.setHours(23, 59, 59, 999)))
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const appointments: AppointmentWithUsers[] = [];
+      
+      for (const appointmentDoc of querySnapshot.docs) {
+        const appointment = await this.getAppointment(parseInt(appointmentDoc.id));
+        if (appointment) appointments.push(appointment);
+      }
+      
+      return appointments;
+    } catch (error) {
+      console.error('Error getting appointments by date:', error);
+      return [];
+    }
+  }
+  
+  async createAppointment(appointment: InsertAppointment): Promise<Appointment> {
+    try {
+      const appointmentData = {
+        ...appointment,
+        status: "scheduled" as AppointmentStatus,
+        type: appointment.type || "video" as AppointmentType
+      };
+      
+      const appointmentRef = await addDoc(collection(db, 'appointments'), appointmentData);
+      
+      return {
+        id: parseInt(appointmentRef.id),
+        ...appointmentData
+      } as Appointment;
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      throw error;
+    }
+  }
+  
+  async updateAppointment(id: number, appointment: Partial<Appointment>): Promise<Appointment> {
+    try {
+      const appointmentRef = doc(db, 'appointments', id.toString());
+      await updateDoc(appointmentRef, appointment);
+      
+      const appointmentDoc = await getDoc(appointmentRef);
+      if (!appointmentDoc.exists()) throw new Error('Appointment not found');
+      
+      return { id, ...appointmentDoc.data() } as Appointment;
+    } catch (error) {
+      console.error('Error updating appointment:', error);
+      throw error;
+    }
+  }
+  
+  async cancelAppointment(id: number): Promise<Appointment> {
+    return this.updateAppointment(id, { status: 'canceled' as AppointmentStatus });
+  }
+  
+  // Emergency Transport operations
+  async getEmergencyTransport(id: number): Promise<EmergencyTransportWithPatient | undefined> {
+    try {
+      const transportDoc = await getDoc(doc(db, 'emergencyTransport', id.toString()));
+      if (!transportDoc.exists()) return undefined;
+      
+      const transportData = { id, ...transportDoc.data() } as EmergencyTransport;
+      const patient = await this.getUser(transportData.patientId);
+      
+      if (!patient) return undefined;
+      
+      return { ...transportData, patient };
+    } catch (error) {
+      console.error('Error getting emergency transport:', error);
+      return undefined;
+    }
+  }
+  
+  async getEmergencyTransportsByPatient(patientId: number): Promise<EmergencyTransportWithPatient[]> {
+    try {
+      const q = query(collection(db, 'emergencyTransport'), where('patientId', '==', patientId));
+      const querySnapshot = await getDocs(q);
+      const transports: EmergencyTransportWithPatient[] = [];
+      
+      for (const transportDoc of querySnapshot.docs) {
+        const transport = await this.getEmergencyTransport(parseInt(transportDoc.id));
+        if (transport) transports.push(transport);
+      }
+      
+      return transports;
+    } catch (error) {
+      console.error('Error getting patient emergency transports:', error);
+      return [];
+    }
+  }
+  
+  async getActiveEmergencyTransports(): Promise<EmergencyTransportWithPatient[]> {
+    try {
+      // Firebase doesn't support OR queries directly, so we need to do multiple queries
+      const activeStatuses: EmergencyTransportStatus[] = ["requested", "assigned", "in_progress"];
+      const transports: EmergencyTransportWithPatient[] = [];
+      
+      for (const status of activeStatuses) {
+        const q = query(collection(db, 'emergencyTransport'), where('status', '==', status));
+        const querySnapshot = await getDocs(q);
+        
+        for (const transportDoc of querySnapshot.docs) {
+          const transport = await this.getEmergencyTransport(parseInt(transportDoc.id));
+          if (transport) transports.push(transport);
+        }
+      }
+      
+      return transports;
+    } catch (error) {
+      console.error('Error getting active emergency transports:', error);
+      return [];
+    }
+  }
+  
+  async createEmergencyTransport(transport: InsertEmergencyTransport): Promise<EmergencyTransport> {
+    try {
+      const transportData = {
+        ...transport,
+        requestDate: new Date(),
+        status: "requested" as EmergencyTransportStatus
+      };
+      
+      const transportRef = await addDoc(collection(db, 'emergencyTransport'), transportData);
+      
+      return {
+        id: parseInt(transportRef.id),
+        ...transportData,
+        driverName: undefined,
+        driverPhone: undefined,
+        estimatedArrival: undefined,
+        assignedTime: undefined
+      } as EmergencyTransport;
+    } catch (error) {
+      console.error('Error creating emergency transport:', error);
+      throw error;
+    }
+  }
+  
+  async updateEmergencyTransport(id: number, transport: Partial<EmergencyTransport>): Promise<EmergencyTransport> {
+    try {
+      const transportRef = doc(db, 'emergencyTransport', id.toString());
+      await updateDoc(transportRef, transport);
+      
+      const transportDoc = await getDoc(transportRef);
+      if (!transportDoc.exists()) throw new Error('Emergency transport not found');
+      
+      return { id, ...transportDoc.data() } as EmergencyTransport;
+    } catch (error) {
+      console.error('Error updating emergency transport:', error);
+      throw error;
+    }
+  }
+  
+  async cancelEmergencyTransport(id: number): Promise<EmergencyTransport> {
+    return this.updateEmergencyTransport(id, { status: 'canceled' as EmergencyTransportStatus });
+  }
+  
+  async assignDriverToEmergencyTransport(
+    id: number, 
+    driverName: string, 
+    driverPhone: string, 
+    estimatedArrival: Date
+  ): Promise<EmergencyTransport> {
+    return this.updateEmergencyTransport(id, {
+      status: 'assigned' as EmergencyTransportStatus,
+      driverName,
+      driverPhone,
+      estimatedArrival,
+      assignedTime: new Date() // Set the assigned time to now
+    });
+  }
+  
+  async completeEmergencyTransport(id: number): Promise<EmergencyTransport> {
+    return this.updateEmergencyTransport(id, { status: 'completed' as EmergencyTransportStatus });
+  }
+  
+  // Prescription operations
+  async createPrescription(prescription: any): Promise<any> {
+    try {
+      const prescriptionRef = await addDoc(collection(db, 'prescriptions'), prescription);
+      return { id: parseInt(prescriptionRef.id), ...prescription };
+    } catch (error) {
+      console.error('Error creating prescription:', error);
+      throw error;
+    }
+  }
+  
+  async getPrescriptionsByPatient(patientId: number): Promise<any[]> {
+    try {
+      const q = query(collection(db, 'prescriptions'), where('patientId', '==', patientId));
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: parseInt(doc.id),
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting patient prescriptions:', error);
+      return [];
+    }
+  }
+  
+  async getPrescriptionsByDoctor(doctorId: number): Promise<any[]> {
+    try {
+      const q = query(collection(db, 'prescriptions'), where('doctorId', '==', doctorId));
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: parseInt(doc.id),
+        ...doc.data()
+      }));
+    } catch (error) {
+      console.error('Error getting doctor prescriptions:', error);
+      return [];
+    }
+  }
+}

@@ -125,32 +125,39 @@ const MapView: React.FC<MapViewProps> = ({ transport }) => {
         </div>
       )}
       <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-        <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_CLOUD_API_KEY || ""}>
-          <GoogleMap
-            center={userLocation || defaultLocation}
-            zoom={14}
-            mapContainerStyle={{ width: '100%', height: '300px' }}
-            options={{
-              styles: [
-                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-              ]
-            }}
-          >
-            {userLocation && (
-              <Marker
-                position={userLocation}
-                title="Your Location"
-              />
-            )}
-            {driverLocation && (
-              <Marker
-                position={driverLocation}
-                title="Ambulance Location"
-              />
-            )}
-          </GoogleMap>
+        <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ""} onError={() => setMapError("Failed to load Google Maps. Please check your API key.")}>
+          {mapError ? (
+            <div className="bg-red-50 dark:bg-red-900 p-4 text-red-800 dark:text-red-200 rounded-md">
+              {mapError}
+            </div>
+          ) : (
+            <GoogleMap
+              center={userLocation || defaultLocation}
+              zoom={14}
+              mapContainerStyle={{ width: '100%', height: '300px' }}
+              options={{
+                styles: [
+                  { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                  { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                  { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+                ]
+              }}
+              onLoad={() => setIsMapLoading(false)}
+            >
+              {userLocation && (
+                <Marker
+                  position={userLocation}
+                  title="Your Location"
+                />
+              )}
+              {driverLocation && (
+                <Marker
+                  position={driverLocation}
+                  title="Ambulance Location"
+                />
+              )}
+            </GoogleMap>
+          )}
         </LoadScript>
       </div>
     </div>

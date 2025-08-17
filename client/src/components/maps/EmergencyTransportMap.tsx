@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, DirectionsRenderer } from '@react-google-maps/api';
 import { firestore } from '../../lib/googleCloud';
-import { collection, onSnapshot, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, Timestamp, Firestore } from 'firebase/firestore';
+import FallbackMap from './FallbackMap';
 
 // Map container styles
 const containerStyle = {
@@ -54,9 +55,14 @@ const EmergencyTransportMap: React.FC<EmergencyTransportMapProps> = ({
   width = '100%',
   height = '500px'
 }) => {
-  // Load Google Maps API
+  // Get API key from environment variables
+  const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  
+  // Debug: Log API key status
+  console.log('Using Google Maps API Key:', googleMapsApiKey ? 'Loaded from environment' : 'Not found');
+  
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_CLOUD_API_KEY || '',
+    googleMapsApiKey,
     libraries: ['places']
   });
 
@@ -86,20 +92,46 @@ const EmergencyTransportMap: React.FC<EmergencyTransportMapProps> = ({
 
   // Fetch vehicles with real-time updates from Firestore
   useEffect(() => {
-    if (!firestore) return;
+    if (!firestore) {
+      console.warn('Firestore is not configured. Using mock vehicle data.');
+      
+      // Create mock vehicle data for development
+      const mockVehicles: TransportVehicle[] = [
+        {
+          id: 'mock-vehicle-1',
+          vehicleId: 'AMB-001',
+          driverName: 'John Smith',
+          driverPhone: '(555) 123-4567',
+          currentLocation: patientLocation ? { 
+            lat: patientLocation.lat - 0.01, 
+            lng: patientLocation.lng - 0.01 
+          } : defaultCenter,
+          destinationLocation: destinationLocation || defaultCenter,
+          status: 'in_progress',
+          patientId: transportId ? Number(transportId) : undefined,
+          estimatedArrival: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes from now
+          transportType: 'ambulance'
+        }
+      ];
+      
+      setVehicles(mockVehicles);
+      setSelectedVehicle(mockVehicles[0]);
+      return;
+    }
     
-    const vehiclesRef = collection(firestore, 'transportVehicles');
+    const db = firestore;
+    const vehiclesRef = collection(db, 'transportVehicles');
     
     const unsubscribe = onSnapshot(vehiclesRef, (snapshot) => {
       const vehicleData: TransportVehicle[] = [];
       
       snapshot.forEach((doc) => {
-        const data = doc.data() as TransportVehicle;
+        const data = doc.data() as Omit<TransportVehicle, 'id'>;
         // Convert any Firestore timestamps to Date objects
         if (data.estimatedArrival && data.estimatedArrival instanceof Timestamp) {
           data.estimatedArrival = data.estimatedArrival.toDate();
         }
-        vehicleData.push({ id: doc.id, ...data });
+        vehicleData.push({ ...data, id: doc.id });
       });
       
       setVehicles(vehicleData);
@@ -114,7 +146,7 @@ const EmergencyTransportMap: React.FC<EmergencyTransportMapProps> = ({
     });
     
     return () => unsubscribe();
-  }, [transportId, firestore]);
+  }, [transportId, firestore, patientLocation, destinationLocation]);
 
   // Get directions when we have a patient location and destination
   useEffect(() => {
@@ -158,10 +190,25 @@ const EmergencyTransportMap: React.FC<EmergencyTransportMapProps> = ({
         lng: path[currentIndex].lng()
       };
       
-      // Update Firestore with new location
-      const vehicleRef = doc(firestore, 'transportVehicles', selectedVehicle.id);
-      updateDoc(vehicleRef, { currentLocation: newLocation })
-        .catch(error => console.error('Error updating vehicle location', error));
+      // Update vehicle state locally
+      setVehicles(prevVehicles => 
+        prevVehicles.map(vehicle => 
+          vehicle.id === selectedVehicle.id 
+            ? { ...vehicle, currentLocation: newLocation } 
+            : vehicle
+        )
+      );
+      
+      // Update Firestore with new location if available
+      if (firestore) {
+        try {
+          const vehicleRef = doc(firestore, 'transportVehicles', selectedVehicle.id);
+          updateDoc(vehicleRef, { currentLocation: newLocation })
+            .catch(error => console.error('Error updating vehicle location', error));
+        } catch (error) {
+          console.warn('Could not update Firestore (mock mode):', error);
+        }
+      }
       
       // Call the callback if provided
       if (onLocationUpdate) {
@@ -212,14 +259,53 @@ const EmergencyTransportMap: React.FC<EmergencyTransportMapProps> = ({
     }
   };
 
-  // Show loading message if Maps API is still loading
+  // Use fallback map if Google Maps API key is missing
+  if (!googleMapsApiKey) {
+    console.warn('Google Maps API key is missing. Using fallback map component.');
+    return (
+      <div>
+        <div className="p-4 mb-4 bg-yellow-100 text-yellow-800 rounded">
+          <h3 className="font-semibold mb-2">Google Maps API Key Missing</h3>
+          <p>The Google Maps API key is not configured. Please add your API key to the .env file:</p>
+          <pre className="bg-gray-100 p-2 mt-2 text-sm rounded">
+            VITE_GOOGLE_MAPS_API_KEY=your_api_key_here
+          </pre>
+        </div>
+        
+        {/* Use the fallback map component */}
+        <FallbackMap 
+          patientLocation={patientLocation}
+          destinationLocation={destinationLocation}
+          width={width}
+          height={height}
+        />
+      </div>
+    );
+  }
+  
   if (loadError) {
-    return <div className="p-4 bg-red-100 text-red-700 rounded">Error loading maps. Please check your API key.</div>
+    console.error("Google Maps loading error:", loadError);
+    return (
+      <div className="p-4 bg-red-100 text-red-700 rounded">
+        <h3 className="font-semibold mb-2">Error loading maps</h3>
+        <p>Please check your Google Maps API key and make sure it's properly configured.</p>
+        <p className="text-sm mt-2">Error details: {loadError.message}</p>
+        <p className="text-sm mt-2">API Key used: {googleMapsApiKey.substring(0, 5)}...</p>
+      </div>
+    );
   }
 
   if (!isLoaded) {
-    return <div className="p-4 text-center">Loading maps...</div>
+    console.log("Google Maps is still loading...");
+    return (
+      <div className="p-4 text-center bg-blue-50 rounded">
+        <div className="animate-pulse">Loading maps...</div>
+        <p className="text-sm mt-2">Using API Key: {googleMapsApiKey.substring(0, 5)}...</p>
+      </div>
+    );
   }
+  
+  console.log("Google Maps loaded successfully!");
 
   return (
     <div style={{ width, height }}>

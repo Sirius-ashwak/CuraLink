@@ -26,7 +26,7 @@ export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
-    allowedHosts: true,
+    allowedHosts: ['localhost', '127.0.0.1'],
   };
 
   const vite = await createViteServer({
@@ -79,7 +79,24 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Serve static files with cache control for production
+  app.use(express.static(distPath, {
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, path) => {
+      // Set cache control headers based on file type
+      if (path.endsWith('.html')) {
+        // HTML files - short cache time
+        res.setHeader('Cache-Control', 'public, max-age=0');
+      } else if (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg)$/)) {
+        // Static assets - longer cache time with validation
+        res.setHeader('Cache-Control', 'public, max-age=86400, must-revalidate');
+      } else if (path.match(/\.(woff|woff2|ttf|otf|eot)$/)) {
+        // Fonts - very long cache time
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    }
+  }));
 
   // fall through to index.html if the file doesn't exist
   app.use("*", (_req, res) => {

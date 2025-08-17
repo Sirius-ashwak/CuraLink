@@ -46,6 +46,19 @@ export class SecretManagerService {
    * Get a secret value from Secret Manager or local cache
    */
   async getSecret(secretName: string, envVarFallback?: string): Promise<string> {
+    // Check if Secret Manager is disabled in development
+    if (process.env.USE_SECRET_MANAGER === 'false') {
+      console.log(`🔧 Secret Manager disabled, using environment variables for ${secretName}`);
+      const envValue = process.env[envVarFallback || secretName] || '';
+      if (envValue) {
+        console.log(`✅ Using ${secretName} from environment variables`);
+        return envValue;
+      } else {
+        console.warn(`⚠️ ${secretName} not found in environment variables`);
+        return '';
+      }
+    }
+
     // Always try Secret Manager first, regardless of initialization status
     try {
       // Make sure we have a project ID
