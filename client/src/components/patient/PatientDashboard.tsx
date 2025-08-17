@@ -8,21 +8,19 @@ import NotificationToast from "../notifications/NotificationToast";
 import SymptomChecker from "../chatbot/SymptomChecker";
 import DoctorMatcher from "../telehealth/DoctorMatcher";
 import MedicineTracker from "../medicines/MedicineTracker";
-import EmergencyTransportForm from "../emergencyTransport/EmergencyTransportForm";
 import EmergencyTransportList from "../emergencyTransport/EmergencyTransportList";
-import EnhancedEmergencyForm from "../EmergencyTransport/EnhancedEmergencyForm";
-import NearbyFacilitiesMap from "../EmergencyTransport/NearbyFacilitiesMap";
+import EnhancedEmergencyForm from "../emergencyTransport/EnhancedEmergencyForm";
+import NearbyFacilitiesMap from "../emergencyTransport/NearbyFacilitiesMap";
 import SideNavigation from "../layout/SideNavigation";
-import { LoadingScreen } from "@/components/ui/loading-screen";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { LoadingScreen } from "../../components/ui/loading-screen";
+import { Tabs, TabsContent } from "../../components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { CalendarDays, Video, Bot, Pill, UserSearch, Ambulance } from "lucide-react";
-import { AppointmentWithUsers } from "@shared/schema";
 
 export default function PatientDashboard() {
   const { user } = useAuth();
   const { appointments, isLoading } = useAppointments();
-  // WebSocket removed for better reliability
+  // WebSocket removed for better reliability in remote areas
   const [, setLocation] = useLocation();
   const [showNotification, setShowNotification] = useState(false);
   const [notification, setNotification] = useState({ title: "", message: "" });
@@ -401,7 +399,7 @@ export default function PatientDashboard() {
                         Nearby Facilities
                       </h3>
                       <NearbyFacilitiesMap 
-                        onSelectFacility={(name, address) => {
+                        onSelectFacility={() => {
                           // This will auto-fill the destination in the form
                         }}
                       />
@@ -424,7 +422,7 @@ export default function PatientDashboard() {
           message={notification.message}
           onClose={() => setShowNotification(false)}
           type={notification.title.includes("Emergency") ? "destructive" : 
-                notification.title.includes("Appointment") ? "success" :
+                notification.title.includes("Appointment") ? "success" : 
                 notification.title.includes("Medicine") ? "warning" :
                 "default"}
         />

@@ -1,7 +1,7 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertAppointmentSchema, insertEmergencyTransportSchema } from "@shared/schema";
+import { insertUserSchema, insertAppointmentSchema, insertEmergencyTransportSchema } from "../shared/schema";
 import { z } from "zod";
 import { WebSocketServer } from 'ws';
 
@@ -37,6 +37,7 @@ import aiDiagnosisRoutes from "./routes/aiDiagnosis";
 import videoConsultationRoutes from "./routes/videoConsultation";
 import realPrescriptionsRoutes from "./routes/realPrescriptions";
 import seedProfilesRoutes from "./routes/seedProfiles";
+import translationRoutes from "./routes/translation";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -249,6 +250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/ai-diagnosis', aiDiagnosisRoutes);
   app.use('/api/video-consultation', videoConsultationRoutes);
   app.use('/api/seed-profiles', seedProfilesRoutes);
+  app.use('/api/translation', translationRoutes);
 
   // Health check endpoint
   // Industry-ready monitoring and compliance dashboard

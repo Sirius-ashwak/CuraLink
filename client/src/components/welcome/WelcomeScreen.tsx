@@ -25,7 +25,7 @@ export default function WelcomeScreen() {
 
   return (
     <div className="w-full max-w-md px-6 py-8 flex flex-col h-full text-white">
-      <h1 className="text-3xl font-bold mb-10 mt-12">Welcome to AI Health Bridge</h1>
+      <h1 className="text-3xl font-bold mb-10 mt-12">Welcome to Curalink</h1>
       
       <div className="space-y-6 flex-1">
         <div className="flex items-start space-x-4">

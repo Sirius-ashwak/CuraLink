@@ -17,11 +17,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { User, Lock, Shield, Phone, Heart, FileText, CalendarDays, BadgeCheck, Upload } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { getUserProfile, updateProfileSettings, uploadProfileImage } from '@/lib/profileService';
+import ProfileImageUploader from '@/components/profile/ProfileImageUploader';
 
 export default function Profile() {
   const { user, setUser } = useAuth();
@@ -49,6 +48,19 @@ export default function Profile() {
     }
   });
   
+  // Update form data when user changes
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: user.firstName || prev.firstName,
+        lastName: user.lastName || prev.lastName,
+        email: user.email || prev.email,
+        phone: user.profile?.phone || prev.phone
+      }));
+    }
+  }, [user]);
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -62,31 +74,19 @@ export default function Profile() {
     
     if (user) {
       try {
-        // Update profile in Firebase
-        const profileData = {
-          name: `${formData.firstName} ${formData.lastName}`,
-          phone: formData.phone
-        };
-        
-        // Update the user profile in Firestore
-        await updateProfileSettings(
-          user.id.toString(), 
-          user.role, 
-          profileData,
-          { name: `${formData.firstName} ${formData.lastName}`, email: formData.email }
-        );
-        
-        // Update local user state
-        setUser({
-          ...user,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          profile: {
-            ...user.profile,
-            phone: formData.phone
-          }
-        });
+        // Update the user profile in local state
+        if (setUser) {
+          setUser({
+            ...user,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            profile: {
+              ...user.profile,
+              phone: formData.phone
+            }
+          });
+        }
         
         toast({
           title: "Profile updated",
@@ -154,6 +154,18 @@ export default function Profile() {
     });
   };
   
+  const handleImageUploaded = (imageUrl: string) => {
+    if (user && setUser) {
+      setUser({
+        ...user,
+        profile: {
+          ...user.profile,
+          avatar: imageUrl
+        }
+      });
+    }
+  };
+  
   if (!user) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -174,83 +186,13 @@ export default function Profile() {
     );
   }
   
-  const firstLetters = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
-  
   return (
     <div className="container py-10 max-w-5xl mx-auto">
       <div className="flex items-center space-x-4 mb-8">
-        <div className="relative">
-          <input
-            type="file"
-            id="profile-image-upload"
-            className="hidden"
-            accept="image/*"
-            onChange={async (e) => {
-              if (e.target.files && e.target.files[0]) {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                
-                reader.onload = async (event) => {
-                  if (event.target?.result && user) {
-                    try {
-                      // Show uploading toast
-                      toast({
-                        title: "Uploading image...",
-                        description: "Please wait while we upload your profile image.",
-                      });
-                      
-                      // Upload to Firebase Storage
-                      const imageUrl = await uploadProfileImage(
-                        user.id.toString(),
-                        user.role,
-                        event.target.result as string,
-                        file.type
-                      );
-                      
-                      // Update user state to show new image
-                      setUser({
-                        ...user,
-                        profile: {
-                          ...user.profile,
-                          profileImageUrl: imageUrl
-                        }
-                      });
-                      
-                      toast({
-                        title: "Image uploaded",
-                        description: "Your profile image has been updated successfully.",
-                        variant: "default"
-                      });
-                    } catch (error) {
-                      console.error('Error uploading image:', error);
-                      toast({
-                        title: "Upload failed",
-                        description: "There was a problem uploading your image. Please try again.",
-                        variant: "destructive"
-                      });
-                    }
-                  }
-                };
-                
-                reader.readAsDataURL(file);
-              }
-            }}
-          />
-          
-          <Avatar className="h-20 w-20 bg-gradient-to-r from-indigo-500 to-blue-600 shadow-lg cursor-pointer"
-            onClick={() => document.getElementById('profile-image-upload')?.click()}>
-            {user.profile?.profileImageUrl ? (
-              <AvatarImage src={user.profile.profileImageUrl} alt={`${user.firstName} ${user.lastName}`} />
-            ) : (
-              <AvatarFallback className="text-2xl text-white">{firstLetters}</AvatarFallback>
-            )}
-          </Avatar>
-          
-          <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center shadow-lg cursor-pointer"
-            onClick={() => document.getElementById('profile-image-upload')?.click()}>
-            <Upload className="h-4 w-4 text-white" />
-          </div>
-        </div>
+        <ProfileImageUploader 
+          onImageUploaded={handleImageUploaded}
+        />
+        
         <div>
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-blue-600">
             {user.firstName} {user.lastName}

@@ -65,9 +65,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const staticUser = {
           id: 1,
           email: "patient@example.com",
-          name: "Sample Patient",
+          firstName: "Sample",
+          lastName: "Patient",
           role: "patient",
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          profile: {
+            avatar: null,
+            phone: "+1-555-123-4567"
+          }
         };
         setUser(staticUser);
         return staticUser;
@@ -75,10 +80,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const staticDoctor = {
           id: 2,
           email: "doctor@example.com",
-          name: "Dr. Jane Smith",
+          firstName: "Dr. Jane",
+          lastName: "Smith",
           role: "doctor",
           specialty: "General Medicine",
           createdAt: new Date().toISOString(),
+          profile: {
+            avatar: null,
+            phone: "+1-555-987-6543"
+          },
           doctorInfo: {
             id: 1,
             userId: 2,
@@ -126,7 +136,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const newUser = {
         ...userData,
         id: Date.now(),
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        profile: {
+          avatar: null,
+          phone: userData.phone || ""
+        }
       };
       setUser(newUser);
       return newUser;

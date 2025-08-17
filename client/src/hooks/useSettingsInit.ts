@@ -51,13 +51,19 @@ export const useSettingsInit = () => {
       if (settings.appearance.theme === 'light') {
         document.documentElement.classList.remove('dark');
         document.documentElement.classList.add('light');
+        document.body.classList.remove('dark');
+        document.body.classList.add('light');
       } else if (settings.appearance.theme === 'dark') {
         document.documentElement.classList.remove('light');
         document.documentElement.classList.add('dark');
+        document.body.classList.remove('light');
+        document.body.classList.add('dark');
       } else if (settings.appearance.theme === 'system') {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         document.documentElement.classList.remove(prefersDark ? 'light' : 'dark');
         document.documentElement.classList.add(prefersDark ? 'dark' : 'light');
+        document.body.classList.remove(prefersDark ? 'light' : 'dark');
+        document.body.classList.add(prefersDark ? 'dark' : 'light');
       }
       
       // Apply animation settings

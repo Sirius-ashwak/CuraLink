@@ -9,7 +9,8 @@ import {
   Shield,
   MoreVertical, 
   ArrowRight,
-  X
+  X,
+  Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,6 +55,11 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
     // Handle external navigation for industry dashboard
     if (tabName === 'industry-dashboard') {
       window.location.href = '/industry-dashboard';
+      return;
+    }
+    // Handle external navigation for translation demo
+    if (tabName === 'translation') {
+      window.location.href = '/translation';
       return;
     }
     onTabChange(tabName);
@@ -102,6 +108,12 @@ export default function SideNavigation({ activeTab, onTabChange }: SideNavigatio
       label: 'Industry Dashboard', 
       icon: <Shield className="h-4.5 w-4.5" />,
       colorClass: 'text-emerald-400'
+    },
+    { 
+      id: 'translation', 
+      label: 'Translation', 
+      icon: <Globe className="h-4.5 w-4.5" />,
+      colorClass: 'text-sky-400'
     }
   ];
 

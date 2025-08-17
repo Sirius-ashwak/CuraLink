@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 
 import { ThemeProvider } from "./context/ThemeContext";
 import { SettingsProvider } from "./context/SettingsContext";
+import { TranslationProvider } from "./context/TranslationContext";
 import { LightThemeProvider } from "./components/light-theme/LightThemeProvider";
 import ForceLight from "./components/light-theme/ForceLight";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -29,6 +30,7 @@ import SymptomChecker from "@/pages/SymptomChecker";
 import IndustryDashboard from "@/pages/IndustryDashboard";
 import MapTest from "@/pages/MapTest";
 import MapboxEmergencyPage from "@/pages/MapboxEmergencyPage";
+import TranslationDemo from "@/pages/TranslationDemo";
 
 function Router() {
   return (
@@ -52,6 +54,7 @@ function Router() {
       <Route path="/industry-dashboard" component={IndustryDashboard} />
       <Route path="/map-test" component={MapTest} />
       <Route path="/mapbox-emergency" component={MapboxEmergencyPage} />
+      <Route path="/translation" component={TranslationDemo} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -65,10 +68,12 @@ function App() {
     <ErrorBoundary>
       <SettingsProvider>
         <ThemeProvider>
-          <AuthProvider>
-            <Router />
-            <Toaster />
-          </AuthProvider>
+          <TranslationProvider>
+            <AuthProvider>
+              <Router />
+              <Toaster />
+            </AuthProvider>
+          </TranslationProvider>
         </ThemeProvider>
       </SettingsProvider>
     </ErrorBoundary>

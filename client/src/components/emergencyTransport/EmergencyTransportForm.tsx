@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import queryClient from '@/lib/reactQueryClient';
 import { MapPin, Loader2, Ambulance, Car, Plane, PersonStanding } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -50,33 +49,6 @@ export default function EmergencyTransportForm() {
     },
   });
 
-  // Function to find nearby hospitals using Google Places API
-  const findNearbyHospitals = async (lat: number, lng: number) => {
-    setIsLoadingHospitals(true);
-    try {
-      const response = await fetch(`/api/maps/nearby-hospitals?lat=${lat}&lng=${lng}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch nearby hospitals');
-      }
-      const data = await response.json();
-      setNearbyHospitals(data.hospitals || []);
-    } catch (error) {
-      console.error('Error finding nearby hospitals:', error);
-      toast({
-        title: 'Error',
-        description: 'Unable to find nearby hospitals. Please enter destination manually.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoadingHospitals(false);
-    }
-  };
-
-  // Function to set destination to a selected hospital
-  const selectHospital = (hospitalAddress: string) => {
-    form.setValue('destination', hospitalAddress);
-  };
-
   // Function to get user's current location
   const getUserLocation = () => {
     if (!navigator.geolocation) {
@@ -106,12 +78,6 @@ export default function EmergencyTransportForm() {
       });
     };
     
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 5000,
-      maximumAge: 0
-    };
-    
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const coords = {
@@ -119,104 +85,87 @@ export default function EmergencyTransportForm() {
           lng: position.coords.longitude
         };
         setUserCoordinates(coords);
-        
-        // Try to get address from coordinates using reverse geocoding
-        fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.lat},${coords.lng}&key=${import.meta.env.VITE_GOOGLE_CLOUD_API_KEY}`)
-          .then(response => response.json())
-          .then(data => {
-            if (data.results && data.results.length > 0) {
-              const address = data.results[0].formatted_address;
-              form.setValue('pickupLocation', address);
-              
-              // Find nearby hospitals once we have the user's location
-              findNearbyHospitals(coords.lat, coords.lng);
-            } else {
-              // Fallback if geocoding doesn't return results
-              form.setValue('pickupLocation', `Location at ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`);
-              findNearbyHospitals(coords.lat, coords.lng);
-            }
-          })
-          .catch((err) => {
-            console.error('Geocoding error:', err);
-            // Still try to find hospitals even if geocoding fails
-            findNearbyHospitals(coords.lat, coords.lng);
-          })
-          .finally(() => setIsLoadingLocation(false));
+        form.setValue('pickupLocation', `Location at ${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`);
+        findNearbyHospitals(coords.lat, coords.lng);
+        setIsLoadingLocation(false);
       },
       (error) => {
         console.error("Error getting location", error);
-        
-        // Show error message with option to use sample location
-        toast({
-          title: 'Location Permission Required',
-          description: 'Please allow location access or use the sample location button below.',
-          variant: 'destructive',
-          action: (
-            <Button variant="secondary" size="sm" onClick={useSampleLocation}>
-              Use Sample Location
-            </Button>
-          ),
-          duration: 10000,
-        });
-        
-        setIsLoadingLocation(false);
-      },
-      options
+        useSampleLocation();
+      }
     );
   };
 
-  const onSubmit = async (data: EmergencyTransportFormData) => {
+  // Function to find nearby hospitals (simulated)
+  const findNearbyHospitals = (lat: number, lng: number) => {
+    setIsLoadingHospitals(true);
+    
+    // Simulated hospital data for demonstration
+    setTimeout(() => {
+      setNearbyHospitals([
+        { name: 'City General Hospital', address: '123 Main St, San Francisco, CA', distance: '2.5km' },
+        { name: 'Memorial Medical Center', address: '456 Oak Ave, San Francisco, CA', distance: '3.2km' },
+        { name: 'Community Health Hospital', address: '789 Pine St, San Francisco, CA', distance: '4.1km' }
+      ]);
+      setIsLoadingHospitals(false);
+    }, 1000);
+  };
+
+  // Function to set destination to a selected hospital
+  const selectHospital = (hospitalAddress: string) => {
+    form.setValue('destination', hospitalAddress);
+  };
+
+  const handleSubmit = async (data: EmergencyTransportFormData) => {
     if (!user) {
       toast({
-        title: 'Error',
-        description: 'You must be logged in to request emergency transport',
-        variant: 'destructive',
+        title: "Error",
+        description: "You must be logged in to request emergency transport",
+        variant: "destructive"
       });
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      
+      // Create the transport request payload
+      const transportRequest = {
+        ...data,
+        patientId: user.id,
+        pickupCoordinates: userCoordinates ? `${userCoordinates.lat},${userCoordinates.lng}` : undefined
+      };
+
+      // Make the API request
       const response = await fetch('/api/emergency-transport', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          patientId: user.id,
-          reason: data.reason,
-          pickupLocation: data.pickupLocation,
-          destination: data.destination,
-          notes: data.notes || null,
-          pickupCoordinates: userCoordinates ? `${userCoordinates.lat},${userCoordinates.lng}` : null,
-          urgency: data.urgency,
-          vehicleType: data.vehicleType
-        }),
+        body: JSON.stringify(transportRequest)
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Transport request error:', errorData);
-        throw new Error(errorData.message || 'Failed to submit emergency transport request');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      const result = await response.json();
+      
+      toast({
+        title: "Emergency Transport Requested",
+        description: "Your emergency transport request has been submitted. Help is on the way.",
+      });
+      
       // Reset form
       form.reset();
+      setUserCoordinates(null);
+      setNearbyHospitals([]);
       
-      // Invalidate query to refresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/emergency-transport'] });
-
-      toast({
-        title: 'Emergency Transport Requested',
-        description: 'Your emergency transport request has been submitted. Help is on the way.',
-      });
     } catch (error) {
       console.error('Emergency transport request error:', error);
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to submit emergency transport request. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to submit emergency transport request. Please try again.",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
@@ -236,7 +185,7 @@ export default function EmergencyTransportForm() {
       </CardHeader>
       <CardContent className="px-4 sm:px-6 pt-0">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 sm:space-y-4">
             <FormField
               control={form.control}
               name="reason"

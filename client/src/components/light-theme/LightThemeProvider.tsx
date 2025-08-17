@@ -39,6 +39,27 @@ export const LightThemeProvider: React.FC<LightThemeProviderProps> = ({
       // Apply to body as well for extra selectors
       document.body.classList.add('light');
       document.body.classList.remove('dark');
+      
+      // Set CSS variables directly
+      root.style.setProperty('--background', '210 40% 98%');
+      root.style.setProperty('--foreground', '222 47% 11%');
+      root.style.setProperty('--card', '0 0% 100%');
+      root.style.setProperty('--card-foreground', '222 47% 11%');
+      root.style.setProperty('--popover', '0 0% 100%');
+      root.style.setProperty('--popover-foreground', '222 47% 11%');
+      root.style.setProperty('--primary', '210 100% 50%');
+      root.style.setProperty('--primary-foreground', '0 0% 100%');
+      root.style.setProperty('--secondary', '210 40% 96.1%');
+      root.style.setProperty('--secondary-foreground', '222 47% 11%');
+      root.style.setProperty('--muted', '210 40% 96.1%');
+      root.style.setProperty('--muted-foreground', '215 16% 47%');
+      root.style.setProperty('--accent', '210 40% 96.1%');
+      root.style.setProperty('--accent-foreground', '222 47% 11%');
+      root.style.setProperty('--destructive', '0 84.2% 60.2%');
+      root.style.setProperty('--destructive-foreground', '210 40% 98%');
+      root.style.setProperty('--border', '214.3 31.8% 91.4%');
+      root.style.setProperty('--input', '214.3 31.8% 91.4%');
+      root.style.setProperty('--ring', '221.2 83.2% 53.3%');
     }
     
     return () => {
