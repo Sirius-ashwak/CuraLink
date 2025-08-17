@@ -1,6 +1,6 @@
 # 🏥 Curalink - Advanced Telehealth Platform
 
-A cutting-edge, HIPAA-compliant telehealth platform designed for seamless cross-platform accessibility, featuring comprehensive healthcare services with AI-powered assistance.
+A cutting-edge, HIPAA-compliant telehealth platform designed for seamless cross-platform accessibility, featuring comprehensive healthcare services with AI-powered assistance, multi-language support, and advanced emergency mapping systems.
 
 ## 🚀 Key Features
 
@@ -10,12 +10,14 @@ A cutting-edge, HIPAA-compliant telehealth platform designed for seamless cross-
 - **Voice Processing**: Speech-to-text for voice commands and notes
 - **Medicine Information**: Comprehensive drug information and interactions
 - **Smart Recommendations**: Personalized health recommendations
+- **30+ Demo Medicines**: Pre-loaded medicine database with realistic inventory
 
 ### 👥 User Management & Authentication
 - **Multi-Role System**: Patients, Doctors, and Healthcare Providers
 - **Secure Authentication**: JWT-based authentication with session management
 - **Profile Management**: Comprehensive user profiles with medical history
 - **Role-Based Access**: Different permissions for different user types
+- **Translation Support**: Multi-language interface with 5+ languages
 
 ### 📅 Appointment Management
 - **Smart Scheduling**: AI-assisted appointment scheduling
@@ -31,11 +33,42 @@ A cutting-edge, HIPAA-compliant telehealth platform designed for seamless cross-
 - **HIPAA Compliance**: Secure, compliant data storage
 - **Healthcare Interoperability**: FHIR R4 standard compliance
 
-### 🚑 Emergency Services
-- **Emergency Transport**: Real-time ambulance dispatch
+### 🚑 Advanced Emergency Services & Maps
+- **Multiple Map Technologies**: Google Maps + Mapbox integration
+- **Emergency Transport**: Real-time ambulance dispatch with multiple tracking options
 - **Location Tracking**: GPS-based emergency response
 - **Driver Assignment**: Automated driver dispatch system
 - **Real-time Updates**: Live status tracking for emergency services
+- **Nearby Facilities**: Interactive maps showing nearby healthcare facilities
+- **Professional Emergency Maps**: Advanced Mapbox-powered emergency visualization
+- **Fallback Systems**: Graceful degradation when API keys are unavailable
+
+### 🗺️ Map Components Available
+1. **Google Maps Components**:
+   - SimpleMap: Basic mapping functionality
+   - EmergencyTransportMap: Advanced emergency transport tracking
+   - NearbyFacilitiesMap: Healthcare facility location finder
+
+2. **Mapbox Components**:
+   - ProfessionalEmergencyMap: Advanced emergency visualization
+   - MapboxEmergencyMap: Real-time vehicle tracking
+   - EmergencyTransportMapboxDemo: Interactive demo system
+
+3. **Fallback Components**:
+   - FallbackMap: Static map display when APIs are unavailable
+
+### 🌍 Multi-Language Support
+- **5 Languages**: English, Spanish, French, German, Chinese
+- **Real-time Translation**: Dynamic language switching
+- **Translation Context**: React-based translation system
+- **Cultural Adaptation**: Localized healthcare terminology
+
+### 💊 Medicine Management System
+- **Medicine Tracker**: Comprehensive medication management
+- **30+ Demo Medicines**: Pre-loaded with realistic data
+- **15+ Categories**: Pain relief, antibiotics, diabetes, blood pressure, etc.
+- **Inventory Management**: Stock levels and reorder alerts
+- **Dosage Information**: Detailed medication instructions
 
 ### 🔒 Enterprise Security & OWASP Compliance
 - **OWASP Top 10 Compliant**: 100% protection against all major web vulnerabilities
@@ -49,29 +82,181 @@ A cutting-edge, HIPAA-compliant telehealth platform designed for seamless cross-
 - **Session Management**: Secure 30-minute timeout sessions
 - **Real-time Monitoring**: Continuous security threat detection
 
-## 🛠 Technology Stack
+## 🛠️ Technology Stack
 
 ### Frontend
-- **React 18** with TypeScript
+- **React 18** with TypeScript for type-safe development
 - **Vite** for fast development and building
-- **Tailwind CSS** with shadcn/ui components
-- **TanStack Query** for state management
-- **Wouter** for routing
-- **Framer Motion** for animations
+- **TailwindCSS** for responsive UI design
+- **Lucide React** for modern iconography
+- **React Router DOM** for navigation
+- **React Hook Form** for form management
 
 ### Backend
-- **Node.js** with Express.js
-- **TypeScript** for type safety
-- **RESTful API** for reliable communication
-- **Firebase** for authentication and storage
-- **Drizzle ORM** with PostgreSQL support
+- **Node.js** with Express.js framework
+- **TypeScript** for backend type safety
+- **PostgreSQL** with Drizzle ORM
+- **JWT Authentication** for secure access
+- **Twilio** for SMS and video services
+- **Google Cloud Storage** for file management
 
-### AI & Cloud Services
-- **Google Gemini AI** for healthcare AI features
-- **Google Cloud Healthcare API** for FHIR compliance
-- **Google Cloud Vision** for medical image analysis
-- **Google Cloud Speech-to-Text** for voice processing
-- **Twilio** for video calls and SMS
+### Mapping & Location Services
+- **Google Maps API** for basic mapping functionality
+- **Mapbox GL JS** for advanced interactive maps
+- **Geolocation API** for location tracking
+- **Real-time GPS** for emergency services
+
+### AI & Machine Learning
+- **Google Gemini** for AI-powered healthcare analysis
+- **Speech Recognition API** for voice processing
+- **Medical Image Analysis** using computer vision
+- **Natural Language Processing** for symptom analysis
+
+### Cloud Infrastructure
+- **Google Cloud Platform** (Primary deployment)
+- **Render.com** (Alternative deployment)
+- **Firebase** for real-time features
+- **Cloud SQL** for database hosting
+
+## 🔧 Environment Variables Required
+
+### Core APIs
+```env
+# Google Services
+GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_for_client
+GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
+
+# Mapbox (Required for advanced emergency maps)
+VITE_MAPBOX_ACCESS_TOKEN=your_mapbox_access_token_here
+
+# AI Services
+GEMINI_API_KEY=your_gemini_api_key
+VITE_GEMINI_API_KEY=your_gemini_api_key_for_client
+
+# Twilio Communications
+TWILIO_ACCOUNT_SID=your_twilio_account_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
+```
+
+### Database & Authentication
+```env
+# Database
+DATABASE_URL=postgresql://username:password@host:port/database
+DB_HOST=your_database_host
+DB_USER=your_database_user
+DB_PASSWORD=your_database_password
+DB_NAME=your_database_name
+
+# Authentication
+JWT_SECRET=your_jwt_secret_key
+SESSION_SECRET=your_session_secret
+```
+
+### Deployment Configuration
+```env
+# Application Settings
+NODE_ENV=production
+PORT=8080
+FRONTEND_URL=https://your-frontend-domain.com
+
+# Google Cloud
+GOOGLE_CLOUD_PROJECT_ID=your_project_id
+GCLOUD_STORAGE_BUCKET=your_storage_bucket
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ and npm/yarn
+- PostgreSQL database
+- Google Cloud Project with enabled APIs
+- Mapbox account (for advanced maps)
+
+### 1. Clone and Install
+```bash
+git clone https://github.com/yourusername/curalink.git
+cd curalink
+npm install
+```
+
+### 2. Environment Setup
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Add your API keys to .env file
+# See Environment Variables section above
+```
+
+### 3. Database Setup
+```bash
+# Run database migrations
+npm run db:migrate
+
+# Seed demo data (optional)
+npm run db:seed
+```
+
+### 4. Development
+```bash
+# Start development servers
+npm run dev
+
+# Backend: http://localhost:3000
+# Frontend: http://localhost:5173
+```
+
+## 📱 Map Features
+
+### Available Emergency Maps
+1. **Professional Emergency Map** (Mapbox-powered)
+   - Real-time vehicle tracking
+   - Interactive emergency zones
+   - Advanced visualization
+   - Requires: `VITE_MAPBOX_ACCESS_TOKEN`
+
+2. **Google Maps Emergency Transport**
+   - Basic emergency dispatch
+   - Location tracking
+   - Facility finder
+   - Requires: `VITE_GOOGLE_MAPS_API_KEY`
+
+3. **Fallback Maps**
+   - Static emergency information
+   - Works without API keys
+   - Basic location display
+
+### Map Component Usage
+```typescript
+// Mapbox Professional Emergency Map
+import { ProfessionalEmergencyMap } from './components/maps/ProfessionalEmergencyMap';
+
+// Google Maps Emergency Transport
+import { EmergencyTransportMap } from './components/maps/EmergencyTransportMap';
+
+// Fallback Map (no API required)
+import { FallbackMap } from './components/maps/FallbackMap';
+```
+
+## 🔐 API Configuration Guide
+
+### Google Maps API Setup
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable Maps JavaScript API, Places API, Geocoding API
+3. Create API key and add to environment variables
+4. Configure API key restrictions for security
+
+### Mapbox API Setup
+1. Sign up at [Mapbox](https://www.mapbox.com/)
+2. Create access token from account dashboard
+3. Add `VITE_MAPBOX_ACCESS_TOKEN` to your .env file
+4. Configure token scopes for your use case
+
+### Missing API Key Behavior
+- **Google Maps**: Falls back to simple location display
+- **Mapbox Maps**: Shows black screen, requires valid token
+- **Emergency Services**: Uses fallback components when APIs unavailable
 
 ## 📋 Prerequisites
 
