@@ -9,9 +9,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { MapPin, Loader2, Ambulance, Car, Plane, PersonStanding } from 'lucide-react';
+import { MapPin, Loader2, Ambulance, Car, Plane, PersonStanding, Map } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import LeafletEmergencyMap from '@/components/maps/LeafletEmergencyMap';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+interface Location {
+  lat: number;
+  lng: number;
+}
 
 const emergencyTransportSchema = z.object({
   reason: z.string().min(5, { message: "Please provide a reason for transport" }),
@@ -29,13 +36,15 @@ const emergencyTransportSchema = z.object({
 type EmergencyTransportFormData = z.infer<typeof emergencyTransportSchema>;
 
 export default function EmergencyTransportForm() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userCoordinates, setUserCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [userCoordinates, setUserCoordinates] = useState<Location | null>(null);
+  const [destinationCoordinates, setDestinationCoordinates] = useState<Location | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [nearbyHospitals, setNearbyHospitals] = useState<Array<{name: string, address: string, distance: string}>>([]);
   const [isLoadingHospitals, setIsLoadingHospitals] = useState(false);
+  const [activeTab, setActiveTab] = useState('form');
 
   const form = useForm<EmergencyTransportFormData>({
     resolver: zodResolver(emergencyTransportSchema),
@@ -48,6 +57,39 @@ export default function EmergencyTransportForm() {
       vehicleType: 'ambulance',
     },
   });
+
+  // Show loading state while authentication is being checked
+  if (isAuthLoading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto flex items-center justify-center py-20">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-500" />
+          <p className="text-gray-600">Loading emergency transport form...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if user is not authenticated
+  if (!user) {
+    console.log('EmergencyTransportForm: User not authenticated, showing auth required message');
+    return (
+      <div className="w-full max-w-4xl mx-auto flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Ambulance className="h-8 w-8 text-red-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Authentication Required</h3>
+          <p className="text-gray-600 mb-4">You must be logged in to request emergency transport.</p>
+          <Button onClick={() => window.location.href = '/login'}>
+            Go to Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('EmergencyTransportForm: User authenticated, rendering form. User:', user);
 
   // Function to get user's current location
   const getUserLocation = () => {
@@ -62,19 +104,19 @@ export default function EmergencyTransportForm() {
 
     setIsLoadingLocation(true);
     
-    // Use default San Francisco coordinates for demo/testing if geolocation fails
+    // Use default India coordinates for demo/testing if geolocation fails
     const useSampleLocation = () => {
       const sampleCoords = {
-        lat: 37.7749,
-        lng: -122.4194 // San Francisco
+        lat: 28.6139,
+        lng: 77.2090 // New Delhi, India
       };
       setUserCoordinates(sampleCoords);
-      form.setValue('pickupLocation', '123 Market Street, San Francisco, CA 94103');
+      form.setValue('pickupLocation', 'Connaught Place, New Delhi, India');
       findNearbyHospitals(sampleCoords.lat, sampleCoords.lng);
       setIsLoadingLocation(false);
       toast({
         title: 'Using Sample Location',
-        description: 'Using San Francisco as sample location for demonstration.',
+        description: 'Using New Delhi as sample location for demonstration.',
       });
     };
     
@@ -96,16 +138,60 @@ export default function EmergencyTransportForm() {
     );
   };
 
+  // Function to handle location selection from map
+  const handleMapLocationSelect = (location: Location) => {
+    setDestinationCoordinates(location);
+    
+    // Try to get a more user-friendly location name for India
+    const getLocationName = (lat: number, lng: number) => {
+      // Approximate location names for India (you can expand this)
+      if (lat >= 28.5 && lat <= 28.8 && lng >= 77.0 && lng <= 77.3) {
+        return 'New Delhi Area';
+      } else if (lat >= 19.0 && lat <= 19.2 && lng >= 72.8 && lng <= 73.0) {
+        return 'Mumbai Area';
+      } else if (lat >= 12.9 && lat <= 13.1 && lng >= 77.5 && lng <= 77.7) {
+        return 'Bangalore Area';
+      } else if (lat >= 22.5 && lat <= 22.7 && lng >= 88.3 && lng <= 88.5) {
+        return 'Kolkata Area';
+      } else if (lat >= 13.0 && lat <= 13.2 && lng >= 80.2 && lng <= 80.4) {
+        return 'Chennai Area';
+      } else {
+        return `Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      }
+    };
+    
+    const locationName = getLocationName(location.lat, location.lng);
+    form.setValue('destination', locationName);
+    
+    toast({
+      title: '📍 Destination Selected!',
+      description: `Location set to: ${locationName}. Switch back to the form to complete your request.`,
+    });
+  };
+
+  // Function to reverse geocode coordinates to address (simplified)
+  const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+    try {
+      // This would normally use a geocoding service like Mapbox or Google
+      // For now, return a formatted coordinate string
+      return `Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    } catch (error) {
+      console.error('Reverse geocoding error:', error);
+      return `Location: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    }
+  };
+
   // Function to find nearby hospitals (simulated)
   const findNearbyHospitals = (lat: number, lng: number) => {
     setIsLoadingHospitals(true);
     
-    // Simulated hospital data for demonstration
+    // Simulated hospital data for India
     setTimeout(() => {
       setNearbyHospitals([
-        { name: 'City General Hospital', address: '123 Main St, San Francisco, CA', distance: '2.5km' },
-        { name: 'Memorial Medical Center', address: '456 Oak Ave, San Francisco, CA', distance: '3.2km' },
-        { name: 'Community Health Hospital', address: '789 Pine St, San Francisco, CA', distance: '4.1km' }
+        { name: 'All India Institute of Medical Sciences (AIIMS)', address: 'Sri Aurobindo Marg, Ansari Nagar, New Delhi', distance: '2.5km' },
+        { name: 'Safdarjung Hospital', address: 'Ansari Nagar West, New Delhi', distance: '3.2km' },
+        { name: 'Ram Manohar Lohia Hospital', address: 'Baba Kharak Singh Marg, New Delhi', distance: '4.1km' },
+        { name: 'Lady Hardinge Medical College', address: 'Connaught Place, New Delhi', distance: '1.8km' }
       ]);
       setIsLoadingHospitals(false);
     }, 1000);
@@ -117,7 +203,14 @@ export default function EmergencyTransportForm() {
   };
 
   const handleSubmit = async (data: EmergencyTransportFormData) => {
+    console.log('=== FORM SUBMISSION START ===');
+    console.log('handleSubmit called with data:', data);
+    console.log('Current user state:', user);
+    console.log('User coordinates:', userCoordinates);
+    console.log('Destination coordinates:', destinationCoordinates);
+    
     if (!user) {
+      console.error('handleSubmit: User is null, cannot proceed');
       toast({
         title: "Error",
         description: "You must be logged in to request emergency transport",
@@ -126,14 +219,34 @@ export default function EmergencyTransportForm() {
       return;
     }
 
+    // Validate that we have coordinates
+    if (!userCoordinates || !destinationCoordinates) {
+      toast({
+        title: "Location Required",
+        description: "Please select both pickup and destination locations on the map",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // Create the transport request payload
+      // Create the transport request payload with coordinates
       const transportRequest = {
-        ...data,
-        patientId: user.id,
-        pickupCoordinates: userCoordinates ? `${userCoordinates.lat},${userCoordinates.lng}` : undefined
+        patientId: user?.id ? parseInt(user.id.toString()) : 1, // Ensure patientId is an integer
+        pickupLocation: data.pickupLocation || (userCoordinates ? `Location: ${userCoordinates.lat.toFixed(4)}, ${userCoordinates.lng.toFixed(4)}` : ''),
+        destination: data.destination || (destinationCoordinates ? `Location: ${destinationCoordinates.lat.toFixed(4)}, ${destinationCoordinates.lng.toFixed(4)}` : ''),
+        reason: data.reason,
+        urgency: data.urgency,
+        vehicleType: data.vehicleType,
+        pickupCoordinates: userCoordinates ? `${userCoordinates.lat},${userCoordinates.lng}` : '',
+        destinationCoordinates: destinationCoordinates ? `${destinationCoordinates.lat},${destinationCoordinates.lng}` : '',
+        notes: data.notes || ''
       };
+
+      console.log('Submitting transport request:', transportRequest);
+      console.log('User object:', user);
+      console.log('User ID type:', user?.id ? typeof user.id : 'No user ID');
 
       // Make the API request
       const response = await fetch('/api/emergency-transport', {
@@ -145,26 +258,37 @@ export default function EmergencyTransportForm() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Server error response:', errorData);
+        console.error('Response status:', response.status);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
       
       toast({
-        title: "Emergency Transport Requested",
-        description: "Your emergency transport request has been submitted. Help is on the way.",
+        title: "🚑 Emergency Transport Requested!",
+        description: `Your request has been submitted successfully. Request ID: ${result.id || 'N/A'}. Help is on the way!`,
       });
       
-      // Reset form
+      // Show success message
+      toast({
+        title: "✅ Request Submitted Successfully!",
+        description: "Emergency services have been notified. You will receive updates shortly.",
+      });
+      
+      // Reset form and coordinates
       form.reset();
       setUserCoordinates(null);
+      setDestinationCoordinates(null);
       setNearbyHospitals([]);
+      setActiveTab('form');
       
     } catch (error) {
       console.error('Emergency transport request error:', error);
       toast({
-        title: "Error",
-        description: "Failed to submit emergency transport request. Please try again.",
+        title: "❌ Request Failed",
+        description: error instanceof Error ? error.message : "Failed to submit emergency transport request. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -173,19 +297,40 @@ export default function EmergencyTransportForm() {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-lg">
-      <CardHeader className="px-4 sm:px-6 pb-2 sm:pb-4">
-        <CardTitle className="text-xl sm:text-2xl text-center sm:text-left">
-          <span className="mr-2 inline-block">🚑</span> 
-          Request Emergency Transport
-        </CardTitle>
-        <CardDescription className="text-center sm:text-left text-sm">
-          For patients in rural areas who need immediate transportation to medical facilities
-        </CardDescription>
-      </CardHeader>
+    <div className="w-full max-w-4xl mx-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="form">
+            <Ambulance className="w-4 h-4 mr-2" />
+            Request Form
+          </TabsTrigger>
+          <TabsTrigger value="map">
+            <Map className="w-4 h-4 mr-2" />
+            Interactive Map
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="form">
+          <Card className="shadow-lg">
+            <CardHeader className="px-4 sm:px-6 pb-2 sm:pb-4">
+              <CardTitle className="text-xl sm:text-2xl text-center sm:text-left">
+                <span className="mr-2 inline-block">🚑</span> 
+                Request Emergency Transport
+              </CardTitle>
+                             <CardDescription className="text-center sm:text-left text-sm">
+                 For patients across India who need immediate transportation to medical facilities. 
+                 Select your pickup and destination locations on the interactive map.
+               </CardDescription>
+            </CardHeader>
       <CardContent className="px-4 sm:px-6 pt-0">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3 sm:space-y-4">
+            {/* Debug info - remove in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded">
+                Debug: User ID: {user?.id || 'Not loaded'}, Auth Loading: {isAuthLoading ? 'Yes' : 'No'}
+              </div>
+            )}
             <FormField
               control={form.control}
               name="reason"
@@ -384,30 +529,184 @@ export default function EmergencyTransportForm() {
             <Button 
               type="submit" 
               className="w-full h-10 sm:h-11 mt-2 sm:mt-4" 
-              disabled={isSubmitting}
+              disabled={isSubmitting || !userCoordinates || !destinationCoordinates}
               variant="destructive"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  <span>Submitting...</span>
+                  <span>Submitting Request...</span>
+                </>
+              ) : !userCoordinates || !destinationCoordinates ? (
+                <>
+                  <MapPin className="h-4 w-4 mr-2" />
+                  <span>Select Locations on Map First</span>
                 </>
               ) : (
                 <>
                   <Ambulance className="h-4 w-4 mr-2" />
-                  <span>Request Emergency Transport</span>
+                  <span>🚑 Request Emergency Transport</span>
                 </>
               )}
             </Button>
+            
+            {/* Location Status Indicator */}
+            <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${userCoordinates ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                  <span>Pickup: {userCoordinates ? '✓ Set' : 'Not set'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${destinationCoordinates ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                  <span>Destination: {destinationCoordinates ? '✓ Set' : 'Not set'}</span>
+                </div>
+              </div>
+              {userCoordinates && destinationCoordinates && (
+                <p className="text-xs text-green-600 mt-2 text-center">
+                  🎯 Both locations set! You can now submit your request.
+                </p>
+              )}
+            </div>
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="flex justify-center text-xs sm:text-sm text-muted-foreground px-4 sm:px-6 py-3">
-        <div className="flex items-center">
-          <span className="text-red-500 mr-1">⚠️</span>
-          For life-threatening emergencies, please call emergency services directly.
-        </div>
-      </CardFooter>
-    </Card>
+            <CardFooter className="flex justify-center text-xs sm:text-sm text-muted-foreground px-4 sm:px-6 py-3">
+              <div className="flex items-center">
+                <span className="text-red-500 mr-1">⚠️</span>
+                For life-threatening emergencies, please call emergency services directly.
+              </div>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="map">
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Select Pickup & Destination
+              </CardTitle>
+              <CardDescription>
+                Click on the map to select your pickup location and destination. 
+                {userCoordinates && destinationCoordinates && (
+                  <span className="text-green-600 ml-2">
+                    ✓ Locations selected
+                  </span>
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Location Status */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-3 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      <span className="font-medium text-sm">Pickup Location</span>
+                    </div>
+                    {userCoordinates ? (
+                      <p className="text-xs text-gray-600">
+                        {form.getValues('pickupLocation') || `${userCoordinates.lat.toFixed(4)}, ${userCoordinates.lng.toFixed(4)}`}
+                      </p>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={getUserLocation}
+                          disabled={isLoadingLocation}
+                        >
+                          {isLoadingLocation ? (
+                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                          ) : (
+                            <MapPin className="h-3 w-3 mr-1" />
+                          )}
+                          Get Location
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="p-3 border rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <span className="font-medium text-sm">Destination</span>
+                    </div>
+                    {destinationCoordinates ? (
+                      <p className="text-xs text-gray-600">
+                        {form.getValues('destination') || `${destinationCoordinates.lat.toFixed(4)}, ${destinationCoordinates.lng.toFixed(4)}`}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-500">Click on map to select</p>
+                    )}
+                  </div>
+                </div>
+
+                                 {/* Interactive Map */}
+                 <div className="border rounded-lg overflow-hidden">
+                   {user && userCoordinates ? (
+                     <div>
+                       {(() => { console.log('Rendering map with:', { user, userCoordinates, destinationCoordinates }); return null; })()}
+                       <div className="text-xs text-gray-500 p-2 bg-gray-100 rounded mb-2">
+                         Debug: Map props - userLocation: {JSON.stringify(userCoordinates)}, destination: {JSON.stringify(destinationCoordinates)}
+                       </div>
+                       <LeafletEmergencyMap
+                         userLocation={userCoordinates ?? undefined}
+                         destination={destinationCoordinates ?? undefined}
+                         emergencyType="medical"
+                         showRoute={!!(userCoordinates && destinationCoordinates)}
+                         onLocationSelect={handleMapLocationSelect}
+                         vehicles={[]} // No vehicles shown in form mode
+                         height="400px"
+                         className="w-full"
+                       />
+                     </div>
+                   ) : (
+                     <div className="h-[400px] flex items-center justify-center bg-gray-100">
+                       <div className="text-center text-gray-500">
+                         <MapPin className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                         <p>Please set your pickup location first</p>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+
+                {/* Map Instructions */}
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <h4 className="font-medium text-sm mb-2">How to use the map:</h4>
+                  <ul className="text-xs text-gray-600 space-y-1">
+                    <li>• Click "Get Location" to set your current position as pickup</li>
+                    <li>• Click anywhere on the map to set your destination</li>
+                    <li>• Blue marker shows your pickup location</li>
+                    <li>• Red marker shows your destination</li>
+                    <li>• Switch back to "Request Form" to complete your request</li>
+                  </ul>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => setActiveTab('form')}
+                    disabled={!userCoordinates || !destinationCoordinates}
+                  >
+                    Back to Form
+                  </Button>
+                  {userCoordinates && destinationCoordinates && (
+                    <Button
+                      onClick={() => setActiveTab('form')}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      Locations Set - Complete Request
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
