@@ -18,8 +18,8 @@ import {
 } from 'lucide-react';
 
 // Professional Mapbox access token from environment variables
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
-const MAPBOX_STYLE = import.meta.env.VITE_MAPBOX_STYLE_URL || "mapbox://styles/sirius-07/cmef6ik44007201s69ii3er7i";
+const MAPBOX_TOKEN = (import.meta.env as any).VITE_MAPBOX_ACCESS_TOKEN;
+const MAPBOX_STYLE = (import.meta.env as any).VITE_MAPBOX_STYLE_URL || "mapbox://styles/sirius-07/cmef6ik44007201s69ii3er7i";
 
 interface Location {
   lat: number;
@@ -463,19 +463,53 @@ const ProfessionalEmergencyMap: React.FC<ProfessionalEmergencyMapProps> = ({
       </div>
 
       {/* Main Map */}
-      <Map
-        ref={mapRef}
-        {...viewState}
-        onMove={evt => setViewState(evt.viewState)}
-        mapboxAccessToken={MAPBOX_TOKEN}
-        style={{ width: '100%', height: '100%' }}
-        mapStyle={mapStyle}
-        onClick={(e) => {
-          if (onLocationSelect) {
-            onLocationSelect({ lat: e.lngLat.lat, lng: e.lngLat.lng });
-          }
-        }}
-      >
+      {!MAPBOX_TOKEN ? (
+        // Fallback when Mapbox token is missing
+        <div className="w-full h-full bg-gray-900 flex items-center justify-center text-white">
+          <div className="text-center p-8">
+            <MapPin className="mx-auto mb-4 h-16 w-16 text-gray-400" />
+            <h3 className="text-xl font-semibold mb-2">Professional Emergency Map Unavailable</h3>
+            <p className="text-gray-300 mb-4">
+              Advanced emergency mapping requires a Mapbox access token.
+            </p>
+            <div className="text-sm text-gray-400 bg-gray-800 p-4 rounded mb-4">
+              <p className="font-semibold mb-2">To enable this feature:</p>
+              <p>1. Sign up at mapbox.com</p>
+              <p>2. Get a Mapbox access token</p>
+              <p>3. Add VITE_MAPBOX_ACCESS_TOKEN to your .env file</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm max-w-md">
+              <div className="bg-red-900 p-3 rounded">
+                <div className="flex items-center mb-1">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  <span className="font-semibold">Critical</span>
+                </div>
+                <span className="text-red-400 text-lg">{liveIncidents.filter(i => i.priority === 'critical').length}</span>
+              </div>
+              <div className="bg-blue-900 p-3 rounded">
+                <div className="flex items-center mb-1">
+                  <Ambulance className="h-4 w-4 mr-2" />
+                  <span className="font-semibold">Active Units</span>
+                </div>
+                <span className="text-blue-400 text-lg">{liveVehicles.filter(v => v.status !== 'out_of_service').length}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <Map
+          ref={mapRef}
+          {...viewState}
+          onMove={evt => setViewState(evt.viewState)}
+          mapboxAccessToken={MAPBOX_TOKEN}
+          style={{ width: '100%', height: '100%' }}
+          mapStyle={mapStyle}
+          onClick={(e) => {
+            if (onLocationSelect) {
+              onLocationSelect({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+            }
+          }}
+        >
         {/* Navigation Controls */}
         <NavigationControl position="bottom-right" />
         <FullscreenControl position="bottom-right" />
@@ -718,6 +752,7 @@ const ProfessionalEmergencyMap: React.FC<ProfessionalEmergencyMapProps> = ({
           </Popup>
         )}
       </Map>
+      )}
 
       {/* Legend */}
       <div className="absolute bottom-4 left-4 z-10 bg-black bg-opacity-80 rounded-lg p-3 text-white">

@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import AppointmentSchedule from "./AppointmentSchedule";
 import SimpleAvailabilityManager from "./SimpleAvailabilityManager";
 import PatientRecords from "./PatientRecords";
-import SimpleEmergencyTransport from "./SimpleEmergencyTransport";
+import EmergencyTransportForm from "../emergencyTransport/EmergencyTransportForm";
 import NotificationToast from "../notifications/NotificationToast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -249,7 +249,7 @@ function OldDoctorDashboard() {
         </TabsContent>
         
         <TabsContent value="emergency-transport">
-          <SimpleEmergencyTransport />
+          <EmergencyTransportForm />
         </TabsContent>
       </Tabs>
       

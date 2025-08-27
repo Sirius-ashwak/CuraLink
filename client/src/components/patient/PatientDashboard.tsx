@@ -9,7 +9,7 @@ import SymptomChecker from "../chatbot/SymptomChecker";
 import DoctorMatcher from "../telehealth/DoctorMatcher";
 import MedicineTracker from "../medicines/MedicineTracker";
 import EmergencyTransportList from "../emergencyTransport/EmergencyTransportList";
-import EnhancedEmergencyForm from "../emergencyTransport/EnhancedEmergencyForm";
+import EmergencyTransportForm from "../emergencyTransport/EmergencyTransportForm";
 import NearbyFacilitiesMap from "../emergencyTransport/NearbyFacilitiesMap";
 import SideNavigation from "../layout/SideNavigation";
 import { LoadingScreen } from "../../components/ui/loading-screen";
@@ -122,37 +122,37 @@ export default function PatientDashboard() {
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_25px_rgba(59,130,246,0.6)] transition-all duration-300 transform group-hover:scale-110">
                   <CalendarDays className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="text-sm font-medium text-center text-white group-hover:text-blue-300 transition-colors duration-300">Book Appointment</span>
+                                 <span className="text-sm font-medium text-center text-white group-hover:text-blue-300 transition-all duration-300">Book Appointment</span>
               </a>
               <a onClick={() => setActiveTab("ai-chat")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-purple-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(124,58,237,0.5)] group-hover:shadow-[0_0_25px_rgba(124,58,237,0.6)] transition-all duration-300 transform group-hover:scale-110">
                   <Bot className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="text-sm font-medium text-center text-white group-hover:text-purple-300 transition-colors duration-300">AI Health Chat</span>
+                                 <span className="text-sm font-medium text-center text-white group-hover:text-purple-300 transition-all duration-300">AI Health Chat</span>
               </a>
               <a onClick={() => setActiveTab("medicine-tracker")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-green-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(16,185,129,0.5)] group-hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] transition-all duration-300 transform group-hover:scale-110">
                   <Pill className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="text-sm font-medium text-center text-white group-hover:text-green-300 transition-colors duration-300">Medicine Tracker</span>
+                                 <span className="text-sm font-medium text-center text-white group-hover:text-green-300 transition-all duration-300">Medicine Tracker</span>
               </a>
               <a onClick={() => setActiveTab("doctor-matcher")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-sky-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(14,165,233,0.5)] group-hover:shadow-[0_0_25px_rgba(14,165,233,0.6)] transition-all duration-300 transform group-hover:scale-110">
                   <UserSearch className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="text-sm font-medium text-center text-white group-hover:text-sky-300 transition-colors duration-300">Find Doctor</span>
+                                 <span className="text-sm font-medium text-center text-white group-hover:text-sky-300 transition-all duration-300">Find Doctor</span>
               </a>
               <a onClick={() => setLocation("/video-call")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-indigo-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(79,70,229,0.5)] group-hover:shadow-[0_0_25px_rgba(79,70,229,0.6)] transition-all duration-300 transform group-hover:scale-110">
                   <Video className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="text-sm font-medium text-center text-white group-hover:text-indigo-300 transition-colors duration-300">Video Consult</span>
+                                 <span className="text-sm font-medium text-center text-white group-hover:text-indigo-300 transition-all duration-300">Video Consult</span>
               </a>
               <a onClick={() => setActiveTab("emergency-transport")} className="group flex flex-col items-center p-6 rounded-xl bg-gradient-to-b from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 transition-all duration-300 shadow-lg hover:shadow-rose-900/20 cursor-pointer border border-gray-800/50 backdrop-blur-sm">
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(244,63,94,0.5)] group-hover:shadow-[0_0_25px_rgba(244,63,94,0.6)] transition-all duration-300 transform group-hover:scale-110">
                   <Ambulance className="h-7 w-7 text-white drop-shadow-[0_0_3px_rgba(255,255,255,0.6)]" />
                 </div>
-                <span className="text-sm font-medium text-center text-white group-hover:text-rose-300 transition-colors duration-300">Emergency Transport</span>
+                                 <span className="text-sm font-medium text-center text-white group-hover:text-rose-300 transition-all duration-300">Emergency Transport</span>
               </a>
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function PatientDashboard() {
               </h3>
               <a 
                 onClick={() => setActiveTab("appointments")} 
-                className="text-indigo-400 text-sm cursor-pointer hover:text-indigo-300 transition-colors flex items-center gap-2 group px-3 py-1.5 rounded-full border border-indigo-900/40 hover:border-indigo-700/40 hover:bg-indigo-900/20"
+                className="text-indigo-400 text-sm cursor-pointer hover:text-indigo-300 transition-all flex items-center gap-2 group px-3 py-1.5 rounded-full border border-indigo-900/40 hover:border-indigo-700/40 hover:bg-indigo-900/20"
               >
                 View all <span className="transform group-hover:translate-x-1 transition-transform duration-300">→</span>
               </a>
@@ -230,7 +230,7 @@ export default function PatientDashboard() {
                 </CardHeader>
                 <CardContent className="pt-4">
                   <p className="text-sm text-gray-300 mb-4 leading-relaxed">Get instant answers to your health questions and symptoms from our AI companion.</p>
-                  <a onClick={() => setActiveTab("ai-chat")} className="inline-flex items-center text-blue-400 text-sm font-medium cursor-pointer hover:text-blue-300 transition-colors duration-300 group-hover:translate-x-1 transform transition-transform">
+                  <a onClick={() => setActiveTab("ai-chat")} className="inline-flex items-center text-blue-400 text-sm font-medium cursor-pointer hover:text-blue-300 transition-all duration-300 group-hover:translate-x-1 transform">
                     Chat with AI Assistant <span className="ml-1 text-xs">→</span>
                   </a>
                 </CardContent>
@@ -247,7 +247,7 @@ export default function PatientDashboard() {
                 </CardHeader>
                 <CardContent className="pt-4">
                   <p className="text-sm text-gray-300 mb-4 leading-relaxed">Answer a few questions about your symptoms to find doctors who specialize in your needs.</p>
-                  <a onClick={() => setActiveTab("doctor-matcher")} className="inline-flex items-center text-purple-400 text-sm font-medium cursor-pointer hover:text-purple-300 transition-colors duration-300 group-hover:translate-x-1 transform transition-transform">
+                  <a onClick={() => setActiveTab("doctor-matcher")} className="inline-flex items-center text-purple-400 text-sm font-medium cursor-pointer hover:text-purple-300 transition-all duration-300 group-hover:translate-x-1 transform">
                     Find Matching Doctors <span className="ml-1 text-xs">→</span>
                   </a>
                 </CardContent>
@@ -264,7 +264,7 @@ export default function PatientDashboard() {
                 </CardHeader>
                 <CardContent className="pt-4">
                   <p className="text-sm text-gray-300 mb-4 leading-relaxed">Keep track of your medications, get reminders, and learn more about your prescriptions.</p>
-                  <a onClick={() => setActiveTab("medicine-tracker")} className="inline-flex items-center text-green-400 text-sm font-medium cursor-pointer hover:text-green-300 transition-colors duration-300 group-hover:translate-x-1 transform transition-transform">
+                  <a onClick={() => setActiveTab("medicine-tracker")} className="inline-flex items-center text-green-400 text-sm font-medium cursor-pointer hover:text-green-300 transition-all duration-300 group-hover:translate-x-1 transform">
                     Manage Medicines <span className="ml-1 text-xs">→</span>
                   </a>
                 </CardContent>
@@ -281,7 +281,7 @@ export default function PatientDashboard() {
                 </CardHeader>
                 <CardContent className="pt-4">
                   <p className="text-sm text-gray-300 mb-4 leading-relaxed">Request emergency medical transport if you're in a rural area and need immediate assistance.</p>
-                  <a onClick={() => setActiveTab("emergency-transport")} className="inline-flex items-center text-rose-400 text-sm font-medium cursor-pointer hover:text-rose-300 transition-colors duration-300 group-hover:translate-x-1 transform transition-transform">
+                  <a onClick={() => setActiveTab("emergency-transport")} className="inline-flex items-center text-rose-400 text-sm font-medium cursor-pointer hover:text-rose-300 transition-all duration-300 group-hover:translate-x-1 transform">
                     Request Transport <span className="ml-1 text-xs">→</span>
                   </a>
                 </CardContent>
@@ -387,9 +387,7 @@ export default function PatientDashboard() {
               <div className="h-[650px] overflow-auto p-5">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-2">
-                    <EnhancedEmergencyForm 
-                      onTransportRequested={() => {}} 
-                      patientId={user?.id?.toString() || '1'} 
+                    <EmergencyTransportForm 
                     />
                   </div>
                   <div className="space-y-4">

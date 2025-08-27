@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import AppointmentSchedule from "./AppointmentSchedule";
 import PatientRecords from "./PatientRecords";
-import SimpleEmergencyTransport from "./SimpleEmergencyTransport";
+import EmergencyTransportForm from "../emergencyTransport/EmergencyTransportForm";
 import SimpleAvailabilityManager from "./SimpleAvailabilityManager";
 import RealMedicalTools from "./RealMedicalTools";
 
@@ -417,7 +417,7 @@ export default function EnhancedDoctorDashboard() {
           </TabsContent>
 
           <TabsContent value="emergency">
-            <SimpleEmergencyTransport />
+            <EmergencyTransportForm />
           </TabsContent>
 
           <TabsContent value="availability">

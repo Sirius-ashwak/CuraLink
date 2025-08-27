@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import EmergencyTransportMap from '../maps/EmergencyTransportMap';
+import MapboxEmergencyMap from '../maps/MapboxEmergencyMap';
 import SimpleMap from '../maps/SimpleMap';
 import { firestore } from '../../lib/googleCloud';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, onSnapshot, Timestamp } from 'firebase/firestore';
