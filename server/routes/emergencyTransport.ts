@@ -72,8 +72,11 @@ router.get("/:id", async (req: Request, res: Response) => {
  */
 router.post("/", async (req: Request, res: Response) => {
   try {
+    console.log('Received emergency transport request:', req.body);
+    
     const validationResult = insertEmergencyTransportSchema.safeParse(req.body);
     if (!validationResult.success) {
+      console.error('Validation errors:', validationResult.error.errors);
       return res.status(400).json({ 
         message: "Invalid emergency transport data",
         errors: validationResult.error.errors
@@ -124,7 +127,10 @@ router.post("/", async (req: Request, res: Response) => {
     res.status(201).json(transport);
   } catch (error) {
     console.error("Error creating emergency transport:", error);
-    res.status(500).json({ message: "Failed to create emergency transport" });
+    res.status(500).json({ 
+      message: "Failed to create emergency transport", 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    });
   }
 });
 

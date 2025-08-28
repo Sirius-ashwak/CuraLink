@@ -249,7 +249,7 @@ export default function EmergencyTransportForm() {
       console.log('User ID type:', user?.id ? typeof user.id : 'No user ID');
 
       // Make the API request
-      const response = await fetch('/api/emergency-transport', {
+      const response = await fetch('/api/emergency/transport', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -257,11 +257,38 @@ export default function EmergencyTransportForm() {
         body: JSON.stringify(transportRequest)
       });
 
+      // Enhanced error handling
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Server error response:', errorData);
-        console.error('Response status:', response.status);
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        let errorText = '';
+        let errorData = {};
+
+        try {
+          // Try to parse as JSON first
+          errorData = await response.json().catch(() => ({}));
+        } catch (jsonError) {
+          console.error('Failed to parse JSON error response:', jsonError);
+        }
+
+        // If JSON parsing fails, try to get text
+        try {
+          errorText = await response.text();
+        } catch (textError) {
+          console.error('Failed to get error text:', textError);
+        }
+
+        console.error('Server error response:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+          errorText
+        });
+
+        // Throw a detailed error
+        throw new Error(
+          (errorData as any)?.message || 
+          errorText || 
+          `HTTP error! status: ${response.status}`
+        );
       }
 
       const result = await response.json();

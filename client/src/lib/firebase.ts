@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import { getAuth } from "firebase/auth";
+import { getAuth, initializeAuth, browserLocalPersistence } from "firebase/auth";
 
 // Firebase configuration - using the values from .env
 const firebaseConfig = {
@@ -57,17 +57,40 @@ try {
       storage = null;
     }
     
-    // Initialize Auth
+    // Initialize Auth with more robust error handling
     try {
-      auth = getAuth(app);
+      // Use initializeAuth with local persistence
+      auth = initializeAuth(app, {
+        persistence: browserLocalPersistence
+      });
       console.log('✅ Firebase Auth initialized successfully');
     } catch (authError) {
       console.error('❌ Failed to initialize Firebase Auth:', authError);
+      
+      // Detailed error logging
+      if (authError instanceof Error) {
+        console.error('Error details:', {
+          name: authError.name,
+          message: authError.message,
+          stack: authError.stack
+        });
+      }
+      
       auth = null;
     }
   }
 } catch (error) {
   console.error('❌ Error initializing Firebase:', error);
+  
+  // Detailed error logging
+  if (error instanceof Error) {
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+  }
+  
   // Create fallback objects to prevent app crashes
   app = null;
   db = null;
