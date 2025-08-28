@@ -213,7 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Add missing emergency transport creation endpoint
-  app.post('/api/emergency-transport', express.json(), async (req, res) => {
+  app.post('/api/emergency/transport', express.json(), async (req, res) => {
     try {
       const transportData = insertEmergencyTransportSchema.parse(req.body);
       const transport = await storage.createEmergencyTransport(transportData);
